@@ -66,8 +66,12 @@ FOOBAR
 
 #define MAX_PLAYERS 6
 
-#define dt 20
-#define DELAY_AMOUNT 20
+#define dt 10
+#define DELAY_AMOUNT 1
+
+#define SCREEN_W 320
+#define SCREEN_H 240
+extern int screen_offset;
 
 typedef struct sprite sprite;
 struct sprite {

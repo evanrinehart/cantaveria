@@ -141,7 +141,7 @@ int loader_scanline(reader* rd, char* format, ...){
   }
   buf[i]='\0';
 
-printf("loader_scanline: %s\n",buf);
+//printf("loader_scanline: %s\n",buf);
 
   va_list ap;
   va_start(ap, format);

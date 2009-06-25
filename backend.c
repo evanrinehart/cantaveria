@@ -21,6 +21,7 @@
 */
 
 #include <SDL/SDL.h>
+#include <SDL/SDL_opengl.h>
 
 #include "game.h"
 #include "backend.h"
@@ -159,6 +160,7 @@ each screen can have one tile set of 256 tiles
 
 /*graphics data*/
 SDL_Surface* gfx[256];
+GLuint gfx_gl[256];
 int gfx_count = 0;
 
 sprite* sprites[256];
@@ -169,6 +171,8 @@ int anim_count = 0;
 
 int stage_enabled = 0;
 
+int screen_offset = 0;
+
 struct {
   int x, y;
 } camera;
@@ -176,7 +180,7 @@ struct {
 
 
 void draw_sprite_sdl(sprite* spr){
-  int x = spr->x - 0;
+  int x = spr->x - 0 + screen_offset;
   int y = spr->y - 0;
   int w = spr->w;
   int h = spr->h;
@@ -189,16 +193,32 @@ void draw_sprite_sdl(sprite* spr){
 }
 
 void draw_sprite_gl(sprite* spr){
-  int x = spr->x - camera.x;
+  int x = spr->x - camera.x + screen_offset;
   int y = spr->y - camera.y;
   int w = spr->w;
   int h = spr->h;
-  int f = spr->frame_counter;
+  int f = spr->current_frame;
 
-  //choose texture based on spr->sheet_number
-  //set texture coordinates based on f*w
-  //draw a quad at x y w h
-  
+  double X = 0;
+  double Y = 0;
+  double W = 16.0/256;
+  double H = 16.0/256;
+
+  glBindTexture( GL_TEXTURE_2D, gfx_gl[spr->gfx] );
+
+  glBegin( GL_QUADS );
+    glTexCoord2d(X,Y);
+    glVertex3f(x,y,0);
+
+    glTexCoord2d(X+W,Y);
+    glVertex3f(x+w,y,0);
+
+    glTexCoord2d(X+W,Y+H);
+    glVertex3f(x+w,y+h,0);
+
+    glTexCoord2d(X,Y+H);
+    glVertex3f(x,y+h,0);
+  glEnd();
 }
 
 void draw_screen_sdl(zone* z, int si, int sj){
@@ -225,10 +245,19 @@ void draw_screen_sdl(zone* z, int si, int sj){
     y += 16;
   }
 }
-int color = 0x0000ff00;
+
+void draw_screen_gl(zone* z, int si, int sj){
+
+
+}
+
+
+
 void draw(){
 
   if(!gl_flag){
+
+    SDL_FillRect(video, 0, 0x00ff0000);
 
     //draw walls and background
     if(stage_enabled){
@@ -246,6 +275,17 @@ void draw(){
   }
   else{
 
+    glClear( GL_COLOR_BUFFER_BIT );
+
+    if(stage_enabled){
+      draw_screen_gl(zones[0],0,0);
+    }
+
+    for(int i=0; i < sprite_count; i++){
+      draw_sprite_gl(sprites[i]);
+    }
+
+    SDL_GL_SwapBuffers();
   }
 
 }
@@ -276,8 +316,9 @@ void animate_sprites(){
 
 
 
-
+/********************/
 /* graphics loading */
+/********************/
 
 SDL_Surface* SDL_NewSurface(int w, int h){
   SDL_Surface* tmp = SDL_CreateRGBSurface(SDL_SRCCOLORKEY,w,h,32,0,0,0,0);
@@ -322,45 +363,56 @@ int load_gfx(char* filename){
   printf("loading %s\n",filename);
   char path[1024] = "gfx/";
   strncat(path, filename, 1023 - strlen(filename));
-  //char* buf = (char*)loader_readall(path,NULL);
   reader* rd = loader_open(path);
-  //if(!buf){
-  //  return -1;
-  //}
 
   char str[1024];
   int fcount, w, h;
-  //sscanf(buf,"%s %d %d %d\n",str,&fcount,&w,&h);
   loader_scanline(rd, "%s", str);
   loader_scanline(rd, "%d %d %d\n", &fcount,&w,&h);
 
   SDL_Surface* src = load_pixmap(str);
   if(!src){
-    //free(buf);
     loader_close(rd);
     return -1;
   }
-  SDL_Surface* dst = SDL_NewSurface(fcount*w,h);
 
-  for(int i=0; i < fcount; i++){
-    int x, y;
-    //sscanf(buf, "%d %d", &x, &y);
-    loader_scanline(rd, "%d %d", &x, &y);
-    SDL_Rect r1 = {  x,y,w,h};
-    SDL_Rect r2 = {i*w,0,w,h};
-    SDL_BlitSurface(src, &r1, dst, &r2);
+
+  if(!gl_flag){
+    SDL_Surface* dst = SDL_NewSurface(fcount*w,h);
+    for(int i=0; i < fcount; i++){
+      int x, y;
+      loader_scanline(rd, "%d %d", &x, &y);
+      SDL_Rect r1 = {  x,y,w,h};
+      SDL_Rect r2 = {i*w,0,w,h};
+      SDL_BlitSurface(src, &r1, dst, &r2);
+    }
+    int black = 0;
+    SDL_SetColorKey(dst, SDL_SRCCOLORKEY, black);
+    gfx[gfx_count++] = dst;
+  }
+  else{
+    GLuint texture;
+    SDL_Surface* conv = SDL_DisplayFormat(src);
+
+    glGenTextures( 1, &texture );
+    glBindTexture( GL_TEXTURE_2D, texture );
+
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glTexImage2D( GL_TEXTURE_2D, 0, 4, conv->w, conv->h, 0,
+                  GL_BGRA, GL_UNSIGNED_BYTE, conv->pixels );
+
+    SDL_FreeSurface(conv);
+
+    gfx_gl[gfx_count++] = texture;
   }
 
-  //SDL_BlitSurface(dst,0,video,0);
-
-  SDL_FreeSurface(src);
-  //free(buf);  
   loader_close(rd);
+  SDL_FreeSurface(src);
 
-  int black = 0;
-  SDL_SetColorKey(dst, SDL_SRCCOLORKEY, black);
-
-  gfx[gfx_count++] = dst;
   return gfx_count-1;
 }
 
@@ -368,10 +420,7 @@ int load_sprite(char* filename, int sprnum){
   printf("loading %s\n",filename);
   char path[1024] = "sprites/";
   strncat(path, filename, 1023 - strlen(filename));
-  //char* buf = (char*)loader_readall(path, NULL);
-  //if(!buf){
-  //  return -1;
- // }
+
   reader* rd = loader_open(path);
   if(!rd){
     return -1;
@@ -379,7 +428,6 @@ int load_sprite(char* filename, int sprnum){
 
   sprite* spr = malloc(sizeof(sprite));
   if(!spr){
-    //free(buf);
     loader_close(rd);
     return -1;
   }
@@ -398,7 +446,6 @@ int load_sprite(char* filename, int sprnum){
   int loop_mode;
   int frame_c;
   
-  //sscanf(buf,"%s %d %d %d %d",str,&w,&h,&loop_mode,&frame_count);
   loader_scanline(rd, "%s",str);
   loader_scanline(rd, "%d %d %d %d",&w,&h,&loop_mode,&frame_c);
   spr->w = w;
@@ -411,12 +458,10 @@ int load_sprite(char* filename, int sprnum){
       break;
     }
     int n;
-    //sscanf(buf,"%d",&n);
     loader_scanline(rd, "%d", &n);
     spr->frame_len[i] = n;
   }
 
-  //free(buf);
   loader_close(rd);
 
   int gfx = load_gfx(str);
@@ -428,6 +473,11 @@ int load_sprite(char* filename, int sprnum){
   
   return 0;
 }
+
+
+/********************/
+/* graphics control */
+/********************/
 
 sprite* enable_sprite(int sprnum){
   sprite* spr = copy_sprite(animations[sprnum]);
@@ -515,11 +565,15 @@ printf("current rez = %d x %d\n",vinfo->current_w,vinfo->current_h);
     H = vinfo->current_h;
   }
   else if(gl_flag){
-    W = 800;
-    H = 600;
+    //W = 320;
+    //H = 240;
+    W = 640;
+    H = 480;
+    //W = 960;
+    //H = 720;
   }
   else if(fullscreen){
-    W = 320;
+    W = 240*aspect;
     H = 240;
   }
   else{
@@ -530,12 +584,15 @@ printf("current rez = %d x %d\n",vinfo->current_w,vinfo->current_h);
   if(gl_flag){
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+    SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
     flags |= SDL_OPENGL;
   };
 
   if(fullscreen){
     flags |= SDL_FULLSCREEN;
+    screen_offset = (aspect*SCREEN_H - SCREEN_W)/2;
   }
+printf("screen offset: %d\n",screen_offset);
 
   video = SDL_SetVideoMode(W,H,32,flags);
   if(video == NULL){
@@ -544,9 +601,22 @@ printf("current rez = %d x %d\n",vinfo->current_w,vinfo->current_h);
   }
 
   if(gl_flag){
-    //set up opengl stuff
-  }
+    glEnable( GL_TEXTURE_2D );
 
+    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+    glViewport( 0, 0, W, H );
+    glClear( GL_COLOR_BUFFER_BIT );
+    glMatrixMode( GL_PROJECTION );
+    glLoadIdentity();
+    if(fullscreen){
+      glOrtho(0.0f, 240*aspect, 240, 0.0f, -1.0f, 1.0f);
+    }
+    else{
+      glOrtho(0.0f, 320, 240, 0.0f, -1.0f, 1.0f);
+    }
+    glMatrixMode( GL_MODELVIEW );
+    glLoadIdentity();
+  }
 
   //atexit(backend_quit);
 }

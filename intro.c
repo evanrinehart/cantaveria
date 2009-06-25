@@ -95,8 +95,8 @@ printf("you released joystick %d button %d\n",joy,button);
 
 void intro_update(){
   for(int i=0; i<4; i++){
-    spr[i]->x = 100*cos(t+i*3.14/2)+100;
-    spr[i]->y = 100*sin(t+i*3.14/2)+100;
+    spr[i]->x = 100*cos(t+i*3.14/2)+SCREEN_W/2-8;
+    spr[i]->y = 100*sin(t+i*3.14/2)+SCREEN_H/2-8;
   }
   t += 0.001*dt;
 }

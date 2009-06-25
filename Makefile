@@ -2,7 +2,7 @@ PROJECT = cantaveria
 CFLAGS = -std=c99 -Wall -g -O2
 OBJ = main.o util.o backend.o loader.o game.o title.o intro.o
 CC = gcc
-LIBS = -lSDL -lzzip
+LIBS = -lSDL -lGL -lzzip
 
 $(PROJECT): $(OBJ)
 	$(CC) -o $(PROJECT) $(LIBS) $(OBJ)
