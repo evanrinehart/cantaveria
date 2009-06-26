@@ -71,22 +71,39 @@ FOOBAR
 
 #define SCREEN_W 320
 #define SCREEN_H 240
-extern int screen_offset;
+
+#define MAX_GFX 256
+#define MAX_SPRITES 256
+#define MAX_ANIMATIONS 256
+
+#define COLOR_KEY 0x000000
+
+struct frame{
+  int x, y;
+  double x0, y0, x1, y1;
+};
 
 typedef struct sprite sprite;
 struct sprite {
   int number;
-  int frame_c;
   int frame_counter;
   int current_frame;
-  int gfx;
-  int frame_len[16];
-  int loop_mode;/*0 stopped, 1 once, 2 repeat, 3 pingpong, 4 evaporate*/
+  struct frame frame;
+  int gfxid;
+  int anim;
   int x, y, w, h, vx, vy;
   void (*update)(sprite*, void* ud);
   void* userdata;
 };
 
+typedef struct {
+  int w, h;
+  int loop_mode;/*0 stopped, 1 once, 2 repeat, 3 pingpong, 4 evaporate*/
+  int gfxid;
+  int frame_count;
+  short* frame_lens;
+  struct frame* frames;
+} animation;
 
 void backend_init(int argc, char* argv[]);
 void backend_quit();
@@ -103,7 +120,7 @@ int butnum(int joy, int name); /* get button number for button name */
 void control(int type, int par1, int par2); /* automatic control */
 
 int load_gfx(char* filename);
-int load_sprite(char* filename, int sprnum);
+int load_sprite(char* filename, int id);
 sprite* enable_sprite(int sprnum);
 void disable_sprite(sprite* spr);
 sprite* copy_sprite(sprite* spr);

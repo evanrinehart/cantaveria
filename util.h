@@ -21,3 +21,8 @@
 */
 
 void report_error(const char* format, ...);
+void fatal_error(const char* format, ...);
+void* xmalloc(size_t size);
+char* strxcpy(const char* str);
+void strmcat(char* dst, const char* src, size_t n);
+void out_of_memory(const char*);

@@ -158,15 +158,23 @@ each screen is 20x15 tiles, each tile is 16 pixels square
 each screen can have one tile set of 256 tiles
 */
 
+/***************/
 /*graphics data*/
-SDL_Surface* gfx[256];
-GLuint gfx_gl[256];
+/***************/
+
+struct {
+  char* filename;
+  SDL_Surface* surf;
+  GLuint texture;
+  int w;
+  int h;
+} gfx[MAX_GFX];
 int gfx_count = 0;
 
-sprite* sprites[256];
+sprite* sprites[MAX_SPRITES];
 int sprite_count = 0;
 
-sprite* animations[256];
+animation* animations[MAX_ANIMATIONS];
 int anim_count = 0;
 
 int stage_enabled = 0;
@@ -176,19 +184,25 @@ int screen_offset = 0;
 struct {
   int x, y;
 } camera;
-/*end graphics data*/
 
+
+
+/********************/
+/* drawing routines */
+/********************/
 
 void draw_sprite_sdl(sprite* spr){
   int x = spr->x - 0 + screen_offset;
   int y = spr->y - 0;
   int w = spr->w;
   int h = spr->h;
-  int f = spr->current_frame;
 
-  SDL_Surface* surf = gfx[spr->gfx];
-  SDL_Rect r1 = {f*w,0,w,h};
-  SDL_Rect r2 = {  x,y,w,h};
+  int X = spr->frame.x;
+  int Y = spr->frame.y;
+
+  SDL_Surface* surf = gfx[spr->gfxid].surf;
+  SDL_Rect r1 = {X,Y,w,h};
+  SDL_Rect r2 = {x,y,w,h};
   SDL_BlitSurface(surf,&r1,video,&r2);
 }
 
@@ -197,33 +211,32 @@ void draw_sprite_gl(sprite* spr){
   int y = spr->y - camera.y;
   int w = spr->w;
   int h = spr->h;
-  int f = spr->current_frame;
 
-  double X = 0;
-  double Y = 0;
-  double W = 16.0/256;
-  double H = 16.0/256;
+  glBindTexture( GL_TEXTURE_2D, gfx[spr->gfxid].texture );
 
-  glBindTexture( GL_TEXTURE_2D, gfx_gl[spr->gfx] );
+  double X0 = spr->frame.x0;
+  double Y0 = spr->frame.y0;
+  double X1 = spr->frame.x1;
+  double Y1 = spr->frame.y1;
 
   glBegin( GL_QUADS );
-    glTexCoord2d(X,Y);
+    glTexCoord2d(X0,Y0);
     glVertex3f(x,y,0);
 
-    glTexCoord2d(X+W,Y);
+    glTexCoord2d(X1,Y0);
     glVertex3f(x+w,y,0);
 
-    glTexCoord2d(X+W,Y+H);
+    glTexCoord2d(X1,Y1);
     glVertex3f(x+w,y+h,0);
 
-    glTexCoord2d(X,Y+H);
+    glTexCoord2d(X0,Y1);
     glVertex3f(x,y+h,0);
   glEnd();
 }
 
 void draw_screen_sdl(zone* z, int si, int sj){
   struct screen* scr = z->screens+si+z->w*sj;
-  SDL_Surface* surf = gfx[z->tileset];
+  SDL_Surface* surf = gfx[z->tileset].surf;
   int x = si*20*16 - camera.x;
   int y = sj*15*16 - camera.y;
 
@@ -257,7 +270,7 @@ void draw(){
 
   if(!gl_flag){
 
-    SDL_FillRect(video, 0, 0x00ff0000);
+    SDL_FillRect(video, 0, 0xffffffff);
 
     //draw walls and background
     if(stage_enabled){
@@ -275,6 +288,7 @@ void draw(){
   }
   else{
 
+    glClearColor(1.0,1.0,1.0,0.0);
     glClear( GL_COLOR_BUFFER_BIT );
 
     if(stage_enabled){
@@ -290,23 +304,35 @@ void draw(){
 
 }
 
+
+
+
+
+
+/***********/
+/* utility */
+/***********/
+
 void point_camera(int x, int y){
   camera.x = x;
   camera.y = y;
 }
 
-
-
 void animate_sprites(){
   for(int i=0; i<sprite_count; i++){
     sprite* spr = sprites[i];
+
     spr->frame_counter += dt;
-    while(spr->frame_counter > spr->frame_len[spr->current_frame]){
-      spr->frame_counter -= spr->frame_len[spr->current_frame];
+    animation* ani = animations[spr->anim];
+
+
+    while(spr->frame_counter > ani->frame_lens[spr->current_frame]){
+      spr->frame_counter -= ani->frame_lens[spr->current_frame];
       spr->current_frame++;
-      if(spr->current_frame == spr->frame_c){
+      if(spr->current_frame == ani->frame_count){
         spr->current_frame = 0;
       }
+      spr->frame = ani->frames[spr->current_frame];
     }
 
     if(spr->update) spr->update(spr, spr->userdata);
@@ -321,8 +347,17 @@ void animate_sprites(){
 /********************/
 
 SDL_Surface* SDL_NewSurface(int w, int h){
+  char prefix[32] = "SDL_NewSurface";
   SDL_Surface* tmp = SDL_CreateRGBSurface(SDL_SRCCOLORKEY,w,h,32,0,0,0,0);
+  if(!tmp){
+    out_of_memory(prefix);
+  }
+
   SDL_Surface* surf = SDL_DisplayFormat(tmp);
+  if(!surf){
+    out_of_memory(prefix);
+  }
+
   SDL_FreeSurface(tmp);
 
   SDL_FillRect(surf,0,0x00ffffff);
@@ -330,9 +365,31 @@ SDL_Surface* SDL_NewSurface(int w, int h){
   return surf;
 }
 
+/*
+load_pixmap filename
+  loads a pixmap file stored in the gfx/ subdir
+  returns an SDL surface in the 24bit format RGBRGBRGB...
+
+load_gfx filename
+  returns the gfx id of the graphics with filename
+  may or may not load a new gfx object with load_pixmap
+  in sdl mode this sets up the gfx surface for color key transparency
+  in opengl mode this converts the 24bit to 32bit texture with alpha channel
+
+load_sprite filename
+  reads a sprite definition from from the sprites/ subdir
+  loads a new animation structure as defined the file
+  uses load_gfx to get gfx id for animation graphics
+  therefore, may or may not load new graphics
+  returns an sprite id number used to instantiate new sprites
+*/
+
+
+
 SDL_Surface* load_pixmap(char* filename){
   char path[1024] = "gfx/";
-  strncat(path, filename, 1023 - strlen(filename));
+  strmcat(path, filename, 1024);
+
   reader* rd = loader_open(path);
   if(!rd){
     return NULL;
@@ -344,80 +401,104 @@ SDL_Surface* load_pixmap(char* filename){
   int w = header[12] + (header[13]<<8);
   int h = header[14] + (header[15]<<8);
   int bpp = header[16];
-
+printf("bpp = %d\n",bpp);
   SDL_Surface* surf = SDL_CreateRGBSurface(0,w,h,bpp,
-                      0x00ff0000,0x0000ff00,0x000000ff,0);
+                      0x00ff0000,0x0000ff00,0x000000ff,0xff000000);
+  if(!surf){
+    out_of_memory("load_pixmap");
+  }
   loader_read(rd, surf->pixels, w*(bpp/8)*h);
   loader_close(rd);
-
-  
 
   return surf;
 }
 
 int load_gfx(char* filename){
-  if(gfx_count == 256){
-    report_error("load_gfx: cannot load %s (%d already loaded)\n",filename,256);
-    return -1;
+  if(gfx_count == MAX_GFX){
+    fatal_error("load_gfx: cannot load any more than %d graphics\n",MAX_GFX);
   }
+
   printf("loading %s\n",filename);
-  char path[1024] = "gfx/";
-  strncat(path, filename, 1023 - strlen(filename));
-  reader* rd = loader_open(path);
 
-  char str[1024];
-  int fcount, w, h;
-  loader_scanline(rd, "%s", str);
-  loader_scanline(rd, "%d %d %d\n", &fcount,&w,&h);
 
-  SDL_Surface* src = load_pixmap(str);
-  if(!src){
-    loader_close(rd);
-    return -1;
+  for(int i=0; i<gfx_count; i++){/*check for already loaded gfx*/
+    if(strcmp(gfx[i].filename, filename)==0){
+      return i;
+    }
   }
 
+  SDL_Surface* src = load_pixmap(filename);
+  if(!src){
+    fatal_error("load_gfx: failed to load %s\n",filename);
+  }
 
   if(!gl_flag){
-    SDL_Surface* dst = SDL_NewSurface(fcount*w,h);
-    for(int i=0; i < fcount; i++){
-      int x, y;
-      loader_scanline(rd, "%d %d", &x, &y);
-      SDL_Rect r1 = {  x,y,w,h};
-      SDL_Rect r2 = {i*w,0,w,h};
-      SDL_BlitSurface(src, &r1, dst, &r2);
-    }
-    int black = 0;
-    SDL_SetColorKey(dst, SDL_SRCCOLORKEY, black);
-    gfx[gfx_count++] = dst;
+    SDL_Surface* surf = SDL_DisplayFormatAlpha(src);
+    SDL_SetAlpha(surf, 0, 0);
+
+    Uint32 key = SDL_MapRGB(surf->format, (COLOR_KEY&0xff0000)>>16, 
+                                          (COLOR_KEY&0x00ff00)>>8,
+                                          (COLOR_KEY&0x0000ff)>>0);
+    SDL_SetColorKey(surf, SDL_SRCCOLORKEY, key);
+
+    SDL_FreeSurface(src);
+    
+
+    gfx[gfx_count].filename = strxcpy(filename);
+    gfx[gfx_count].surf = surf;
+    gfx[gfx_count].w = surf->w;
+    gfx[gfx_count].h = surf->h;
   }
-  else{
+  else {
     GLuint texture;
-    SDL_Surface* conv = SDL_DisplayFormat(src);
+    
+    SDL_Surface* conv = SDL_CreateRGBSurface(0, src->w, src->h, 32,
+      0xff<<16,0xff<<8,0xff<<0,0);
+    
+    SDL_BlitSurface(src, NULL, conv, NULL);
+
+    int N = 0;
+    int M = 3;
+    Uint8* conv_bytes = conv->pixels;
+    Uint32 key = SDL_MapRGB(src->format,(COLOR_KEY&0xff0000)>>16, 
+                                        (COLOR_KEY&0x00ff00)>>8,
+                                        (COLOR_KEY&0x0000ff)>>0);
+    for(int i=0; i<src->w; i++){
+      for(int j=0; j<src->h; j++){
+        Uint32 pixel = *((Uint32*)(src->pixels+N));
+        conv_bytes[M] = pixel==key ? SDL_ALPHA_TRANSPARENT : SDL_ALPHA_OPAQUE;
+        N += src->format->BytesPerPixel;
+        M += 4;
+      }
+    }
 
     glGenTextures( 1, &texture );
     glBindTexture( GL_TEXTURE_2D, texture );
 
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     glTexImage2D( GL_TEXTURE_2D, 0, 4, conv->w, conv->h, 0,
                   GL_BGRA, GL_UNSIGNED_BYTE, conv->pixels );
 
-    SDL_FreeSurface(conv);
+    gfx[gfx_count].filename = strxcpy(filename);
+    gfx[gfx_count].texture = texture;
+    gfx[gfx_count].w = src->w;
+    gfx[gfx_count].h = src->h;
 
-    gfx_gl[gfx_count++] = texture;
+    SDL_FreeSurface(conv);
+    SDL_FreeSurface(src);
+
   }
 
-  loader_close(rd);
-  SDL_FreeSurface(src);
-
-  return gfx_count-1;
+  return gfx_count++;
 }
 
-int load_sprite(char* filename, int sprnum){
+int load_sprite(char* filename, int id){
   printf("loading %s\n",filename);
+
   char path[1024] = "sprites/";
   strncat(path, filename, 1023 - strlen(filename));
 
@@ -426,51 +507,49 @@ int load_sprite(char* filename, int sprnum){
     return -1;
   }
 
-  sprite* spr = malloc(sizeof(sprite));
-  if(!spr){
-    loader_close(rd);
-    return -1;
-  }
-  spr->number = sprnum;
-  spr->x = 0;
-  spr->y = 0;
-  spr->vx = 0;
-  spr->vy = 0;
-  spr->frame_counter = 0;
-  spr->current_frame = 0;
-  spr->update = NULL;
-  spr->userdata = NULL;
+  animation* ani = xmalloc(sizeof(animation));
 
   char str[1024];
   int w, h;
+  int frame_count;
   int loop_mode;
-  int frame_c;
   
-  loader_scanline(rd, "%s",str);
-  loader_scanline(rd, "%d %d %d %d",&w,&h,&loop_mode,&frame_c);
-  spr->w = w;
-  spr->h = h;
-  spr->loop_mode = loop_mode;
-  spr->frame_c = frame_c;
+  loader_scanline(rd,"%s",str);
+  loader_scanline(rd,"%d %d %d %d",&w,&h,&loop_mode,&frame_count);
 
-  for(int i=0; i < frame_c; i++){
-    if(i==16){
-      break;
+  ani->frame_lens = xmalloc(frame_count*sizeof(short));
+  ani->frames = xmalloc(frame_count*sizeof(struct frame));
+  ani->frame_count = frame_count;
+
+  int g = load_gfx(str);
+  if(g < 0)
+    return -1;
+
+  ani->gfxid = g;
+
+  int W = gfx[g].w;
+  int H = gfx[g].h;
+  ani->w = w;
+  ani->h = h;
+
+  for(int i=0; i < frame_count; i++){
+    int l, x, y;
+    loader_scanline(rd, "%d %d %d", &l, &x, &y);
+    ani->frame_lens[i] = l;
+    if(!gl_flag){
+      ani->frames[i].x = x;
+      ani->frames[i].y = y;
     }
-    int n;
-    loader_scanline(rd, "%d", &n);
-    spr->frame_len[i] = n;
+    else{
+      ani->frames[i].x0 = ((double)x)/W;
+      ani->frames[i].y0 = ((double)y)/H;
+      ani->frames[i].x1 = ((double)(x+w))/W;
+      ani->frames[i].y1 = ((double)(y+h))/W;
+    }
   }
 
   loader_close(rd);
-
-  int gfx = load_gfx(str);
-  if(gfx < 0)
-    return -1;
-  spr->gfx = gfx;
-
-  animations[sprnum] = spr;
-  
+  animations[id] = ani;  
   return 0;
 }
 
@@ -480,23 +559,58 @@ int load_sprite(char* filename, int sprnum){
 /********************/
 
 sprite* enable_sprite(int sprnum){
-  sprite* spr = copy_sprite(animations[sprnum]);
+  if(!animations[sprnum]){
+    fatal_error("enable_sprite: you just tried to enable sprite with type %d, which does not exist\n",sprnum);
+  }
+  if(sprite_count == MAX_SPRITES){
+    /* need a priority based way to create important sprites if full */
+    return NULL;
+  }
+  sprite* spr = xmalloc(sizeof(sprite));
+  animation* ani = animations[sprnum];
+
+  spr->number = sprite_count;
+  spr->frame_counter = 0;
+  spr->current_frame = 0;
+  spr->frame = ani->frames[0];
+  spr->gfxid = ani->gfxid;
+  spr->anim = sprnum;
+  spr->x = 0;
+  spr->y = 0;
+  spr->w = ani->w;
+  spr->h = ani->h;
+  spr->vx = 0;
+  spr->vy = 0;
+  spr->update = NULL;
+  spr->userdata = NULL;
+
   sprites[sprite_count++] = spr;
   return spr;
 }
 
 void disable_sprite(sprite* spr){
-  //swap spr and last sprite
+  sprite* tmp = sprites[spr->number];
+  sprites[spr->number] = sprites[sprite_count--];
+  free(tmp);
 }
 
 sprite* copy_sprite(sprite* spr){
-  sprite* copy = malloc(sizeof(sprite));
+  if(sprite_count == MAX_SPRITES){
+    /* need way to make important sprites when full */
+    return NULL;
+  }
+  sprite* copy = xmalloc(sizeof(sprite));
   *copy = *spr;
+  sprites[sprite_count++] = copy;
   return copy;
 }
 
 
 void backend_init(int argc, char* argv[]){
+
+  for(int i=0; i<MAX_ANIMATIONS; i++){
+    animations[i] = NULL;
+  }
 
   if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK)==-1){
     report_error("sdl: %s\n",SDL_GetError());
@@ -601,11 +715,16 @@ printf("screen offset: %d\n",screen_offset);
   }
 
   if(gl_flag){
-    glEnable( GL_TEXTURE_2D );
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    glEnable( GL_TEXTURE_2D );
     glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+
     glViewport( 0, 0, W, H );
+
     glClear( GL_COLOR_BUFFER_BIT );
+
     glMatrixMode( GL_PROJECTION );
     glLoadIdentity();
     if(fullscreen){
@@ -614,9 +733,33 @@ printf("screen offset: %d\n",screen_offset);
     else{
       glOrtho(0.0f, 320, 240, 0.0f, -1.0f, 1.0f);
     }
+
     glMatrixMode( GL_MODELVIEW );
     glLoadIdentity();
   }
+
+SDL_Rect** modes;
+int i;
+
+/* Get available fullscreen/hardware modes */
+modes = SDL_ListModes(NULL, SDL_FULLSCREEN|SDL_HWSURFACE);
+
+/* Check if there are any modes available */
+if (modes == (SDL_Rect**)0) {
+    printf("No modes available!\n");
+    exit(-1);
+}
+
+/* Check if our resolution is restricted */
+if (modes == (SDL_Rect**)-1) {
+    printf("All resolutions available.\n");
+}
+else{
+    /* Print valid modes */
+    printf("Available Modes\n");
+    for (i=0; modes[i]; ++i)
+      printf("  %d x %d\n", modes[i]->w, modes[i]->h);
+}
 
   //atexit(backend_quit);
 }

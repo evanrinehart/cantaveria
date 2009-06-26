@@ -59,8 +59,8 @@ reader* loader_open(char* filename){
   strncpy(buf+L,filename,1024-L);
   buf[1023] = 0;
 
-  reader* rd = malloc(sizeof(reader));
-  if(!rd) return NULL;
+  reader* rd = xmalloc(sizeof(reader));
+
   rd->next_c = -1;
   //rd->f = zzip_file_open(zzip_dir, buf, 0);
   rd->f = zzip_open(buf, 0);
@@ -97,11 +97,7 @@ unsigned char* loader_readall(char* filename, int* size){
     return NULL;
   }
   int N = zs.st_size;
-  unsigned char* buf = malloc(N);
-  if(!buf){
-    report_error("loader: out of memory\n");
-    return NULL;
-  }
+  unsigned char* buf = xmalloc(N);
   loader_read(rd,buf,N);
   if(size) *size = N;
   loader_close(rd);
