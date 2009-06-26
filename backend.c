@@ -670,10 +670,7 @@ void backend_init(int argc, char* argv[]){
   SDL_ShowCursor(SDL_DISABLE);
   const SDL_VideoInfo* vinfo = SDL_GetVideoInfo();
   
-  double aspect = vinfo->current_w*1.0 / vinfo->current_h;
 
-printf("aspect ratio = %g\n",aspect);
-printf("current rez = %d x %d\n",vinfo->current_w,vinfo->current_h);
   if(fullscreen && gl_flag){
     W = vinfo->current_w;
     H = vinfo->current_h;
@@ -687,13 +684,17 @@ printf("current rez = %d x %d\n",vinfo->current_w,vinfo->current_h);
     //H = 720;
   }
   else if(fullscreen){
-    W = 240*aspect;
+    W = 320;
     H = 240;
   }
   else{
     W = 320;
     H = 240;
   }
+
+  //double aspect = vinfo->current_w*1.0 / vinfo->current_h;
+  double aspect = ((double)W) / H;
+
 
   if(gl_flag){
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
