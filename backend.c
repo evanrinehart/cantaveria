@@ -402,7 +402,7 @@ SDL_Surface* load_pixmap(char* filename){
   int w = header[12] + (header[13]<<8);
   int h = header[14] + (header[15]<<8);
   int bpp = header[16];
-printf("bpp = %d\n",bpp);
+
   SDL_Surface* surf = SDL_CreateRGBSurface(0,w,h,bpp,
                       0x00ff0000,0x0000ff00,0x000000ff,0xff000000);
   if(!surf){
@@ -608,15 +608,13 @@ sprite* copy_sprite(sprite* spr){
 
 
 
-
+Sint16* lout;
+Sint16* rout;
 
 extern void process_audio(short lout[], short rout[], int len);
 
 void audio_callback(void *userdata, Uint8 *stream, int len){
   Sint16* out = (Sint16*)stream;
-
-  Sint16 lout[BUFFER_SIZE/2];
-  Sint16 rout[BUFFER_SIZE/2];
 
   process_audio(lout, rout, BUFFER_SIZE/2);
 
@@ -778,15 +776,25 @@ void backend_init(int argc, char* argv[]){
   audio.samples = BUFFER_SIZE/audio.channels;
   audio.callback = audio_callback;
 
-  printf("audio:\n");
-  printf(" sample rate = %d\n",SAMPLE_RATE);
-  printf(" channels = %d\n",audio.channels);
+  SDL_AudioSpec gotten;
 
-
-  if(SDL_OpenAudio(&audio, NULL)<0){
+  if(SDL_OpenAudio(&audio, &gotten)<0){
     report_error("sdl: cannot open audio (%s)\n", SDL_GetError());
     exit(-1);
   }
+
+  printf("audio:\n");
+  printf(" sample rate = %d\n",gotten.freq);
+  printf(" channels = %d\n",gotten.channels);
+  printf(" samples = %d\n",gotten.samples);
+  printf(" format = %d\n",gotten.format);
+
+  if(gotten.format != AUDIO_S16){
+    printf("    WARNING: audio format not AUDIO_S16 :(\n");
+  }
+
+  lout = xmalloc(gotten.samples*2);
+  rout = xmalloc(gotten.samples*2);
 
   printf(" sound on\n");
   SDL_PauseAudio(0);

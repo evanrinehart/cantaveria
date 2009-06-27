@@ -117,30 +117,41 @@ void backend_quit();
 void input(); /* pump event system */
 void draw();  /* draw all active graphics */
 
+void animate_sprites();
 
 int since(); /* ms since last time since() was called */
 void delay(int ms); /* wait ms ms */
 
+/* input */
 int keynum(int name); /* get key number for key name */
 int butnum(int joy, int name); /* get button number for button name */
 void control(int type, int par1, int par2); /* automatic control */
 
+/* gfx control */
 int load_gfx(char* filename);
 int load_sprite(char* filename, int id);
 sprite* enable_sprite(int sprnum);
 void disable_sprite(sprite* spr);
 sprite* copy_sprite(sprite* spr);
+void point_camera(int x, int y);
 
 
+/* sound control */
 int load_sound(char* filename);
 void play_sound(int id);
 int load_music(char* filename);
 int play_music(int id);
 
+/* stage */
+void load_stage(char* filename);
+void unload_stage();
 
-void load_map(char* filename);
-void unload_map();
 
-void point_camera(int x, int y);
-
-void animate_sprites();
+/* text */
+sprite* small_text(char* str);
+void clear_message();
+void set_message(char* str);
+void reposition_message(int x, int y);
+void resize_message(int w, int h);
+int message_width(char* str);
+int message_trim_index(char* str);
