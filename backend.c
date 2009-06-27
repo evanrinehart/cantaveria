@@ -27,6 +27,7 @@
 #include "backend.h"
 #include "util.h"
 #include "loader.h"
+#include "sound.h"
 
 SDL_Surface* video;
 int gl_flag = 0;
@@ -606,6 +607,28 @@ sprite* copy_sprite(sprite* spr){
 }
 
 
+
+
+
+extern void process_audio(short lout[], short rout[], int len);
+
+void audio_callback(void *userdata, Uint8 *stream, int len){
+  Sint16* out = (Sint16*)stream;
+
+  Sint16 lout[BUFFER_SIZE/2];
+  Sint16 rout[BUFFER_SIZE/2];
+
+  process_audio(lout, rout, BUFFER_SIZE/2);
+
+  int j = 0;
+  for(int i=0; i<len/2; i+=2){
+    out[i  ] = lout[j];
+    out[i+1] = rout[j];
+    j++;
+  }
+
+}
+
 void backend_init(int argc, char* argv[]){
 
   for(int i=0; i<MAX_ANIMATIONS; i++){
@@ -707,13 +730,20 @@ void backend_init(int argc, char* argv[]){
     flags |= SDL_FULLSCREEN;
     screen_offset = (aspect*SCREEN_H - SCREEN_W)/2;
   }
-printf("screen offset: %d\n",screen_offset);
+
+  printf("video:\n");
+  printf(" resolution: %d x %d %s\n",W,H,fullscreen?"fullscreen":"windowed");
+  printf(" aspect ratio: %g\n",((double)W)/H);
+  printf(" opengl: %s\n",gl_flag?"yes":"no");
+  printf(" x-offset: %d\n",screen_offset);
 
   video = SDL_SetVideoMode(W,H,32,flags);
   if(video == NULL){
     report_error("sdl: %s\n",SDL_GetError());
     exit(-1);
   }
+
+  printf(" video on\n");
 
   if(gl_flag){
     glEnable(GL_BLEND);
@@ -739,28 +769,49 @@ printf("screen offset: %d\n",screen_offset);
     glLoadIdentity();
   }
 
+
+  /* setup audio */
+  SDL_AudioSpec audio;
+  audio.freq = SAMPLE_RATE;
+  audio.format = AUDIO_S16;
+  audio.channels = 2;
+  audio.samples = BUFFER_SIZE/audio.channels;
+  audio.callback = audio_callback;
+
+  printf("audio:\n");
+  printf(" sample rate = %d\n",SAMPLE_RATE);
+  printf(" channels = %d\n",audio.channels);
+
+
+  if(SDL_OpenAudio(&audio, NULL)<0){
+    report_error("sdl: cannot open audio (%s)\n", SDL_GetError());
+    exit(-1);
+  }
+
+  printf(" sound on\n");
+  SDL_PauseAudio(0);
+
+
+  /* were done here */
+/*
 SDL_Rect** modes;
 int i;
 
-/* Get available fullscreen/hardware modes */
 modes = SDL_ListModes(NULL, SDL_FULLSCREEN|SDL_HWSURFACE);
 
-/* Check if there are any modes available */
 if (modes == (SDL_Rect**)0) {
     printf("No modes available!\n");
     exit(-1);
 }
 
-/* Check if our resolution is restricted */
 if (modes == (SDL_Rect**)-1) {
     printf("All resolutions available.\n");
 }
 else{
-    /* Print valid modes */
     printf("Available Modes\n");
     for (i=0; modes[i]; ++i)
       printf("  %d x %d\n", modes[i]->w, modes[i]->h);
 }
+*/
 
-  //atexit(backend_quit);
 }

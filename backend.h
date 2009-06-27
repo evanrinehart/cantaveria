@@ -78,6 +78,10 @@ FOOBAR
 
 #define COLOR_KEY 0x000000
 
+
+#define SAMPLE_RATE 44100
+#define BUFFER_SIZE 1024
+
 struct frame{
   int x, y;
   double x0, y0, x1, y1;
@@ -105,6 +109,8 @@ typedef struct {
   struct frame* frames;
 } animation;
 
+
+
 void backend_init(int argc, char* argv[]);
 void backend_quit();
 
@@ -124,6 +130,13 @@ int load_sprite(char* filename, int id);
 sprite* enable_sprite(int sprnum);
 void disable_sprite(sprite* spr);
 sprite* copy_sprite(sprite* spr);
+
+
+int load_sound(char* filename);
+void play_sound(int id);
+int load_music(char* filename);
+int play_music(int id);
+
 
 void load_map(char* filename);
 void unload_map();
