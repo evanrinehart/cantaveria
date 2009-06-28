@@ -71,3 +71,55 @@ void out_of_memory(const char* prefix){
   report_error("%s: out of memory", prefix);
   exit(-2);
 }
+
+
+
+/*
+decodes utf8 encoded string str and places the
+next character in u.
+returns the number of bytes of str consumed.
+*/
+int unicode_getc(char* str, utf32* u){
+  unsigned char b[4] = {str[0], str[1], str[2], str[3]};
+  unsigned char a[4] = {0,0,0,0};
+  int N;
+
+  /* 1111 0xf
+     1110 0xe
+     1100 0xc
+     1000 0x8 */
+
+  if((b[0] & 0x80) == 0){/*one byte sequence*/
+    a[3] = b[0];
+    N = 1;
+  }
+  else if(((b[0]&0xe0)==0xc0) &&
+          ((b[1]&0xc0)==0x80) ){/*two byte sequence*/
+    a[3] = ((b[0]&0x03)<<6)|(b[1]&0x3f);
+    a[2] = (b[0]&0x1c)>>2;
+    N = 2;
+  }
+  else if(((b[0]&0xf0)==0xe0) &&
+          ((b[1]&0xc0)==0x80) &&
+          ((b[2]&0xc0)==0x80) ){/*three byte sequence*/
+    a[3] = ((b[1]&0x03)<<6)|(b[2]&0x3f);
+    a[2] = ((b[0]&0x0f)<<4)|((b[1]&0x3c)>>2);
+    N = 3;
+  }
+  else if(((b[0]&0xf8)==0xf0) &&
+          ((b[1]&0xc0)==0x80) &&
+          ((b[2]&0xc0)==0x80) &&
+          ((b[3]&0xc0)==0x80) ){/*four byte sequence*/
+    a[3] =((b[2]&0x03)<<6)|(b[3]&0x3f);
+    a[2] =((b[1]&0x0f)<<4)|((b[2]&0x3c)>>2);
+    a[1] =((b[0]&0x03)<<2)|((b[1]&0x30)>>4);
+    N = 4;
+  }
+  else {
+    a[3] = '?';
+    N = 4;/*FIXME find next valid byte*/
+  }
+  *u = (a[0]<<24) | (a[1]<<16) | (a[2]<<8) | a[3];
+  return N;
+}
+

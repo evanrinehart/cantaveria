@@ -23,9 +23,8 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 
-#include "game.h"
 #include "backend.h"
-#include "util.h"
+#include "game.h"
 #include "loader.h"
 #include "sound.h"
 
@@ -616,13 +615,11 @@ extern void process_audio(short lout[], short rout[], int len);
 void audio_callback(void *userdata, Uint8 *stream, int len){
   Sint16* out = (Sint16*)stream;
 
-  process_audio(lout, rout, BUFFER_SIZE/2);
+  process_audio(lout, rout, BUFFER_SIZE);
 
-  int j = 0;
-  for(int i=0; i<len/2; i+=2){
-    out[i  ] = lout[j];
-    out[i+1] = rout[j];
-    j++;
+  for(int i=0; i<BUFFER_SIZE; i++){
+    out[i*2    ] = lout[i];
+    out[i*2 + 1] = rout[i];
   }
 
 }
@@ -642,12 +639,37 @@ void backend_init(int argc, char* argv[]){
   /* options */
   int fullscreen = 0;
   for(int i=0; i<argc; i++){
-    if(strncmp(argv[i], "-gl",5)==0){
+    if(!strcmp(argv[i], "-gl")){
       gl_flag = 1;
       continue;
     }
-    if(strncmp(argv[i], "-f",5)==0){
+    if(!strcmp(argv[i], "-f")){
       fullscreen = 1;
+    }
+    if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")){
+      printf("options:\n");
+      printf("  -gl   use opengl video mode\n");
+      printf("  -f    use fullscreen video mode\n");
+      printf("  -h    print this help\n");
+      printf("  -v    print version info\n");
+      exit(0);
+    }
+    if(!strcmp(argv[i], "-v")){
+      printf("cantaveria (v%d.%d)\n",VERSION_MAJOR,VERSION_MINOR);
+      printf("Copyright 2009 Evan Rinehart\n\n");
+
+      printf("This program is distributed under the terms of the GNU General\n"
+             "Public License (v2) and comes with ABSOLUTELY NO WARRANTY.\n\n");
+
+      printf("Send questions, comments, and bugs to evanrinehart@gmail.com\n\n");
+
+      printf("Send money to:\n");
+      printf("1850 Claiborne St\n");
+      printf("Mandeville, LA 70448\n");
+      printf("United States of America\n\n");
+
+      printf("Thanks! :)\n");
+      exit(0);
     }
   }
 
@@ -773,7 +795,7 @@ void backend_init(int argc, char* argv[]){
   audio.freq = SAMPLE_RATE;
   audio.format = AUDIO_S16;
   audio.channels = 2;
-  audio.samples = BUFFER_SIZE/audio.channels;
+  audio.samples = BUFFER_SIZE;
   audio.callback = audio_callback;
 
   SDL_AudioSpec gotten;

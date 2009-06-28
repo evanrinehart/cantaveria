@@ -7,11 +7,13 @@ LIBS = -lSDL -lGL -lzzip
 $(PROJECT): $(OBJ)
 	$(CC) -o $(PROJECT) $(LIBS) $(OBJ)
 
+
+
 game.o: game.h intro.h
 title.o: game.h backend.h title.h
 intro.o: game.h backend.h intro.h title.h
 util.o: util.h
-main.o: game.h backend.h intro.h loader.h
+main.o: game.h backend.h intro.h loader.h util.h
 backend.o: game.h backend.h util.h loader.h sound.h
 loader.o: loader.h util.h
 sound.o: sound.h

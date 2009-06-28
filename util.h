@@ -26,3 +26,11 @@ void* xmalloc(size_t size);
 char* strxcpy(const char* str);
 void strmcat(char* dst, const char* src, size_t n);
 void out_of_memory(const char*);
+
+//typedef struct {
+//  unsigned char b[4];
+ // unsigned long n;
+//} utf32;
+typedef unsigned long utf32;
+
+int unicode_getc(char* str, utf32* u);

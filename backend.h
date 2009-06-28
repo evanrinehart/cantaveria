@@ -20,6 +20,8 @@
    Boston, MA  02110-1301, USA
 */
 
+#include "util.h"
+
 enum {
 ESCAPE_KEY,
 PAUSE_KEY,
@@ -60,6 +62,9 @@ JOYPRESS,
 JOYRELEASE,
 FOOBAR
 };
+
+#define VERSION_MAJOR 0
+#define VERSION_MINOR 0
 
 #define JOY_MAX 32767
 #define JOY_MIN -32768
@@ -149,9 +154,9 @@ void unload_stage();
 
 /* text */
 sprite* small_text(char* str);
+void draw_small_text(char* str, int x, int y);
 void clear_message();
 void set_message(char* str);
+void append_message_character(utf32 u);
 void reposition_message(int x, int y);
 void resize_message(int w, int h);
-int message_width(char* str);
-int message_trim_index(char* str);
