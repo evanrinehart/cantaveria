@@ -60,6 +60,8 @@ int butnum(int joy, int name){
 
 void backend_quit(){
   printf("sdl: quit\n");
+  SDL_LockAudio();
+  SDL_CloseAudio();
   SDL_Quit();
 }
 
@@ -609,15 +611,16 @@ sprite* copy_sprite(sprite* spr){
 
 Sint16* lout;
 Sint16* rout;
+int buffer_size;
 
 extern void process_audio(short lout[], short rout[], int len);
 
 void audio_callback(void *userdata, Uint8 *stream, int len){
   Sint16* out = (Sint16*)stream;
 
-  process_audio(lout, rout, BUFFER_SIZE);
+  process_audio(lout, rout, buffer_size);
 
-  for(int i=0; i<BUFFER_SIZE; i++){
+  for(int i=0; i<buffer_size; i++){
     out[i*2    ] = lout[i];
     out[i*2 + 1] = rout[i];
   }
@@ -741,7 +744,7 @@ void backend_init(int argc, char* argv[]){
 
   if(gl_flag){
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+    //SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
     SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
     flags |= SDL_OPENGL;
   };
@@ -817,6 +820,7 @@ void backend_init(int argc, char* argv[]){
 
   lout = xmalloc(gotten.samples*2);
   rout = xmalloc(gotten.samples*2);
+  buffer_size = gotten.samples;
 
   printf(" sound on\n");
   SDL_PauseAudio(0);
