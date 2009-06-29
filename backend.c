@@ -307,6 +307,33 @@ void draw(){
 }
 
 
+/*******************/
+/* message control */
+/*******************/
+
+void set_message(char* str){
+  utf32 u;
+  int N = 0;
+  do {
+    N += unicode_getc(str+N, &u);
+    printf("%04lx ",u);
+  } while(u);
+  printf("\n");
+}
+
+void advance_message(){
+
+}
+
+void clear_message(){
+
+}
+
+void complete_message(){
+
+}
+
+
 
 
 

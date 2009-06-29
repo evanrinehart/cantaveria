@@ -123,3 +123,44 @@ int unicode_getc(char* str, utf32* u){
   return N;
 }
 
+
+
+void tree_insert(struct treenode* root, 
+                 int (*compare)(void* k1, void* k2), 
+                 void* key, void* value){
+  struct treenode* node = xmalloc(sizeof(struct treenode));
+  node->key = key;
+  node->value = value;
+  node->l = NULL;
+  node->r = NULL;
+
+  struct treenode* ptr = root;
+  while(1){
+    if( compare(ptr->key, key) < 0 ){
+      if(ptr->l){ptr = ptr->l;}
+      else{ptr->l = node; break;}
+    }
+    else if( compare(ptr->key, key) > 0){
+      if(ptr->r){ptr = ptr->r;}
+      else{ptr->r = node; break;}
+    }
+    else{ /* key already exists */
+      report_error("tree_insert: key already exists\n");
+      break;
+    }
+  }
+}
+
+void* tree_search(struct treenode* root,
+                  int (*compare)(void* k1, void* k2),
+                  void* key){
+  if(compare(key, root->key)>0){
+    return tree_search(root->r, compare, key);
+  }
+  else if(compare(key, root->key)<0){
+    return tree_search(root->l, compare, key);
+  }
+  else{
+    return root->value;
+  }
+}

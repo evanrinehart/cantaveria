@@ -155,8 +155,11 @@ void unload_stage();
 /* text */
 sprite* small_text(char* str);
 void draw_small_text(char* str, int x, int y);
-void clear_message();
+
 void set_message(char* str);
-void append_message_character(utf32 u);
+void advance_message();
+void clear_message();
+void complete_message();
+
 void reposition_message(int x, int y);
 void resize_message(int w, int h);

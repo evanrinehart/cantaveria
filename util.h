@@ -33,4 +33,22 @@ void out_of_memory(const char*);
 //} utf32;
 typedef unsigned long utf32;
 
+
+
 int unicode_getc(char* str, utf32* u);
+
+
+struct treenode {
+  struct treenode* l;
+  struct treenode* r;
+  void* key;
+  void* value;
+};
+
+void tree_insert(struct treenode* root, 
+                 int (*compare)(void* k1, void* k2), 
+                 void* key, void* value);
+
+void* tree_search(struct treenode* root,
+                  int (*compare)(void* k1, void* k2),
+                  void* key);
