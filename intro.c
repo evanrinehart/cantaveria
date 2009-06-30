@@ -35,7 +35,9 @@ double t;
 
 void intro_setup(){
 
-  set_message("abcd");
+  //set_message("abcd");
+
+  load_font("test.font");
 
   game.update = intro_update;
   game.handler = intro_handler;

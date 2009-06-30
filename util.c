@@ -125,7 +125,7 @@ int unicode_getc(char* str, utf32* u){
 
 
 
-void tree_insert(struct treenode* root, 
+void tree_insert(struct treenode* root,
                  int (*compare)(void* k1, void* k2), 
                  void* key, void* value){
   struct treenode* node = xmalloc(sizeof(struct treenode));
@@ -154,7 +154,10 @@ void tree_insert(struct treenode* root,
 void* tree_search(struct treenode* root,
                   int (*compare)(void* k1, void* k2),
                   void* key){
-  if(compare(key, root->key)>0){
+  if(root==NULL){
+    return NULL;
+  }
+  else if(compare(key, root->key)>0){
     return tree_search(root->r, compare, key);
   }
   else if(compare(key, root->key)<0){
@@ -164,3 +167,11 @@ void* tree_search(struct treenode* root,
     return root->value;
   }
 }
+
+
+
+int randint(int a, int b){
+  int L = b-a+1;
+  return (rand()%L)+a;
+}
+

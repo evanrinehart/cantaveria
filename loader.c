@@ -60,7 +60,7 @@ reader* loader_open(char* filename){
   buf[1023] = 0;
 
   reader* rd = xmalloc(sizeof(reader));
-
+//printf("loader: %s\n",buf);
   rd->next_c = -1;
   //rd->f = zzip_file_open(zzip_dir, buf, 0);
   rd->f = zzip_open(buf, 0);
@@ -118,12 +118,18 @@ int loader_scanline(reader* rd, char* format, ...){
       rd->next_c = -1;
     }
     else{
-      loader_read(rd, &c, 1);
+      int n = loader_read(rd, &c, 1);
+      if(n==0){
+        break;
+      }
     }
 
     /* see if it is a end of line sequence */
     if(c=='\r'){
-      loader_read(rd, &c, 1);
+      int n = loader_read(rd, &c, 1);
+      if(n==0){
+        break;
+      }
       if(c!='\n'){
         rd->next_c = c;
       }
@@ -136,8 +142,6 @@ int loader_scanline(reader* rd, char* format, ...){
     buf[i++] = c;
   }
   buf[i]='\0';
-
-//printf("loader_scanline: %s\n",buf);
 
   va_list ap;
   va_start(ap, format);

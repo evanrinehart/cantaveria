@@ -83,9 +83,10 @@ FOOBAR
 
 #define COLOR_KEY 0x000000
 
-
 #define SAMPLE_RATE 44100
 #define BUFFER_SIZE 1024
+
+#define RANDOM_SEED 57
 
 struct frame{
   int x, y;
@@ -135,6 +136,7 @@ void control(int type, int par1, int par2); /* automatic control */
 /* gfx control */
 int load_gfx(char* filename);
 int load_sprite(char* filename, int id);
+int load_font(char* filename);
 sprite* enable_sprite(int sprnum);
 void disable_sprite(sprite* spr);
 sprite* copy_sprite(sprite* spr);
