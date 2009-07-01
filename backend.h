@@ -20,8 +20,6 @@
    Boston, MA  02110-1301, USA
 */
 
-#include "util.h"
-
 enum {
 ESCAPE_KEY,
 PAUSE_KEY,
@@ -78,8 +76,7 @@ FOOBAR
 #define SCREEN_H 240
 
 #define MAX_GFX 256
-#define MAX_SPRITES 256
-#define MAX_ANIMATIONS 256
+
 
 #define COLOR_KEY 0x000000
 
@@ -88,34 +85,6 @@ FOOBAR
 
 #define RANDOM_SEED 57
 
-struct frame{
-  int x, y;
-  double x0, y0, x1, y1;
-};
-
-typedef struct sprite sprite;
-struct sprite {
-  int number;
-  int frame_counter;
-  int current_frame;
-  struct frame frame;
-  int gfxid;
-  int anim;
-  int x, y, w, h, vx, vy;
-  void (*update)(sprite*, void* ud);
-  void* userdata;
-};
-
-typedef struct {
-  int w, h;
-  int loop_mode;/*0 stopped, 1 once, 2 repeat, 3 pingpong, 4 evaporate*/
-  int gfxid;
-  int frame_count;
-  short* frame_lens;
-  struct frame* frames;
-} animation;
-
-
 
 void backend_init(int argc, char* argv[]);
 void backend_quit();
@@ -123,10 +92,11 @@ void backend_quit();
 void input(); /* pump event system */
 void draw();  /* draw all active graphics */
 
-void animate_sprites();
-
 int since(); /* ms since last time since() was called */
 void delay(int ms); /* wait ms ms */
+
+void update_video();
+void clear_video();
 
 /* input */
 int keynum(int name); /* get key number for key name */
@@ -135,13 +105,9 @@ void control(int type, int par1, int par2); /* automatic control */
 
 /* gfx control */
 int load_gfx(char* filename);
-int load_sprite(char* filename, int id);
-int load_font(char* filename);
-sprite* enable_sprite(int sprnum);
-void disable_sprite(sprite* spr);
-sprite* copy_sprite(sprite* spr);
-void point_camera(int x, int y);
-
+void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H);
+int gfx_width(int gfxid);
+int gfx_height(int gfxid);
 
 /* sound control */
 int load_sound(char* filename);
@@ -149,20 +115,5 @@ void play_sound(int id);
 int load_music(char* filename);
 int play_music(int id);
 
-/* stage */
-void load_stage(char* filename);
-void unload_stage();
 
 
-/* text */
-sprite* small_text(char* str);
-void draw_small_text(char* str, int x, int y);
-void printf_small(int x, int y, char* format, ...);
-
-void set_message(char* str);
-void advance_message();
-void clear_message();
-void complete_message();
-
-void reposition_message(int x, int y);
-void resize_message(int w, int h);

@@ -25,6 +25,7 @@
 
 #include "game.h"
 #include "backend.h"
+#include "graphics.h"
 #include "title.h"
 #include "intro.h"
 

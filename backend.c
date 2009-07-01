@@ -25,6 +25,7 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 
+#include "util.h"
 #include "backend.h"
 #include "game.h"
 #include "loader.h"
@@ -175,20 +176,9 @@ struct {
 } gfx[MAX_GFX];
 int gfx_count = 0;
 
-sprite* sprites[MAX_SPRITES];
-int sprite_count = 0;
-
-animation* animations[MAX_ANIMATIONS];
-int anim_count = 0;
-
-int stage_enabled = 0;
-
 int screen_offset_x = 0;
 int screen_offset_y = 0;
 
-struct {
-  int x, y;
-} camera;
 
 
 
@@ -230,99 +220,6 @@ void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H){
   }
 }
 
-void draw_sprite(sprite* spr){
-  int x = spr->x - 0;
-  int y = spr->y - 0;
-  int W = spr->w;
-  int H = spr->h;
-  int X = spr->frame.x;
-  int Y = spr->frame.y;
-  int g = spr->gfxid;
-  draw_gfx(g, x, y, X, Y, W, H);
-}
-
-void draw_sprite_sdl(sprite* spr){
-  int x = spr->x - 0;
-  int y = spr->y - 0;
-  int w = spr->w;
-  int h = spr->h;
-
-  int X = spr->frame.x;
-  int Y = spr->frame.y;
-
-  SDL_Surface* surf = gfx[spr->gfxid].surf;
-  SDL_Rect r1 = {X,Y,w,h};
-  SDL_Rect r2 = {x,y,w,h};
-  SDL_BlitSurface(surf,&r1,video,&r2);
-}
-
-void draw_sprite_gl(sprite* spr){
-  int x = spr->x - camera.x + screen_offset_x;
-  int y = spr->y - camera.y + screen_offset_y;
-  int w = spr->w;
-  int h = spr->h;
-
-  glBindTexture( GL_TEXTURE_2D, gfx[spr->gfxid].texture );
-
-  double X0 = spr->frame.x0;
-  double Y0 = spr->frame.y0;
-  double X1 = spr->frame.x1;
-  double Y1 = spr->frame.y1;
-
-  glBegin( GL_QUADS );
-    glTexCoord2d(X0,Y0);
-    glVertex3f(x,y,0);
-
-    glTexCoord2d(X1,Y0);
-    glVertex3f(x+w,y,0);
-
-    glTexCoord2d(X1,Y1);
-    glVertex3f(x+w,y+h,0);
-
-    glTexCoord2d(X0,Y1);
-    glVertex3f(x,y+h,0);
-  glEnd();
-}
-
-
-
-
-
-
-void draw_screen_sdl(zone* z, int si, int sj){
-  struct screen* scr = z->screens+si+z->w*sj;
-  SDL_Surface* surf = gfx[z->tileset].surf;
-  int x = si*20*16 - camera.x;
-  int y = sj*15*16 - camera.y;
-
-  for(int j=0; j < 15; j++){
-    for(int i=0; i < 20; i++){
-      if(x > 320 || y > 240 || x < -16 || y < -16) continue;
-      int gfx = scr->tiles[i][j].gfx;
-      if(gfx != 0){
-        SDL_Rect r1 = {gfx&7,gfx>>3,16,16};
-        SDL_Rect r2 = {    x,     y,16,16};
-        SDL_BlitSurface(surf,&r1,video,&r2);
-      }
-      else{
-        //draw background
-      }
-      x += 16;
-    }
-    x -= 320;
-    y += 16;
-  }
-}
-
-
-
-
-void draw_screen_gl(zone* z, int si, int sj){
-
-
-}
-
-
 void clear_video(){
   if(!gl_flag){
     SDL_FillRect(video, 0, 0);
@@ -341,248 +238,6 @@ void update_video(){
     SDL_GL_SwapBuffers();
   }
 }
-
-void draw(){
-static int N = 0;
-  clear_video();
-
-  for(int i=0; i<sprite_count; i++){
-    draw_sprite(sprites[i]);
-  }
-
-  //draw_small_text(ABC,50,50);
-  printf_small(50,50,"%d %p %g",N,sprites,sin(N/100.0));
-  N++;
-
-  update_video();
-
-}
-
-
-/*******************/
-/* message control */
-/*******************/
-
-typedef struct {
-  utf32 u;
-  int gfx;
-  int x, y, w, h;
-  int k1, k2;
-} vwchar;
-
-struct treenode* chartree = NULL;
-
-int minifont_gfx = 0;
-
-
-int ptrcomp(void* k1, void* k2){
-  return (k2 - k1);
-}
-
-void set_message(char* str){
-  utf32 u;
-  int N = unicode_getc(str, &u);
-  while(u) {
-    vwchar* C = tree_search(chartree, ptrcomp, (void*)u);
-    if(C){
-/* append this character to the message
-   if the current word is too long,
-   move the current word to the next line
-   if the current word is longer than a whole line
-   then just break here (would happen with japanese).
- */
-      //printf("%04lx[%lc] ",u, C->u);
-    }
-    else{
-/*
-character not found, so use a rectangle or something
-use four tiny numbers to indicate the character
-do the same as above
-*/
-     //printf("%04lx[???] ", u);
-    }
-    N += unicode_getc(str+N, &u);
-  };
-  printf("\n");
-}
-
-void advance_message(){
-
-}
-
-void clear_message(){
-
-}
-
-void complete_message(){
-
-}
-
-
-void init_text(){
-  vwchar* C = xmalloc(sizeof(vwchar));
-  C->gfx = 0;
-  C->u = ' ';
-  C->x = 0;
-  C->y = 0;
-  C->w = 7;
-  C->k1 = 0;
-  C->k2 = 0;
-  chartree = xmalloc(sizeof(treenode));
-  chartree->l = NULL;
-  chartree->r = NULL;
-  chartree->value = C;
-  chartree->key = (void*)' ';
-
-  //set font height
-
-  minifont_gfx = load_gfx("smallfont.tga");
-}
-
-
-vwchar* load_vwchar(reader* rd, int gfx){
-  utf32 u;
-  int x, y, w, k1, k2;
-  char str[256];
-  int ret = loader_scanline(rd, "%256s %d %d %d %d %d\n",str,&x,&y,&w,&k1,&k2);
-  if(ret == EOF){
-    return NULL;
-  }
-  unicode_getc(str,&u);
-  vwchar* C = xmalloc(sizeof(vwchar));
-  C->gfx = gfx;
-  C->u = u;
-  C->x = x;
-  C->y = y;
-  C->w = w;
-  C->k1 = k1;
-  C->k2 = k2;
-  return C;
-}
-
-void print_tree(treenode* node){
-  printf("(%lx,",(utf32)node->key);
-  if(node->l){
-    print_tree(node->l);
-  }
-  else{
-    printf("()");
-  }
-printf(",");
-  if(node->r){
-    print_tree(node->r);
-  }
-  else{
-    printf("()");
-  }
-  printf(")");
-}
-
-
-void randomly_insert(vwchar* C[], int count){
-  for(int i=0; i<count-1; i++){
-    int j = randint(0,count-i-1);
-    tree_insert(chartree, ptrcomp, (void*)C[j]->u, C[j]);
-    C[j] = C[count-i-1];
-    C[count-i-1] = NULL;
-  }
-}
-
-
-int load_font(char* filename){
-  printf("load_font: loading %s\n",filename);
-  char buf[256] = "fonts/";
-  strmcat(buf, filename, 256);
-  reader* rd = loader_open(buf);
-  if(!rd){
-    fatal_error("load_font: cannot open %s\n",filename);
-  }
-
-  char str[256];
-  loader_scanline(rd, "%256s", str);
-  int gfx = load_gfx(str);
-
-  /* we read 64 characters at a time and insert them
-     randomly into the binary search tree. this is supposed
-     to help produce a more balanced tree. */
-  vwchar* C[64];
-  int ptr = 0;
-  int N = 0;
-  C[ptr] = load_vwchar(rd, gfx);
-  while(C[ptr]){
-    N++;
-    if(ptr==64){
-      randomly_insert(C, 64);
-      ptr = 0;
-    }
-    else{
-      C[++ptr] = load_vwchar(rd, gfx);
-    }
-  }
-
-  randomly_insert(C, ptr);
-
-  printf("  loaded %d characters\n",N); 
-
-printf("  character tree is the following\n");
-print_tree(chartree);
-printf("\n");
-
-  return 0;
-}
-
-
-
-void draw_small_text(char* str, int x, int y){
-  for(char* c=str; *c; c++){
-    int X = *c & 0x0f;
-    int Y = *c >> 4;
-    draw_gfx(minifont_gfx, x, y, X*4, Y*9, 3, 8);
-    x+=4;
-  }
-}
-
-void printf_small(int x, int y, char* format, ...){
-  char str[128];
-  va_list ap;
-  va_start(ap, format);
-  vsnprintf(str, 128, format, ap);
-  va_end(ap);
-  str[127]='\0';
-  draw_small_text(str, x, y);
-}
-
-/***********/
-/* utility */
-/***********/
-
-void point_camera(int x, int y){
-  camera.x = x;
-  camera.y = y;
-}
-
-void animate_sprites(){
-  for(int i=0; i<sprite_count; i++){
-    sprite* spr = sprites[i];
-
-    spr->frame_counter += dt;
-    animation* ani = animations[spr->anim];
-
-
-    while(spr->frame_counter > ani->frame_lens[spr->current_frame]){
-      spr->frame_counter -= ani->frame_lens[spr->current_frame];
-      spr->current_frame++;
-      if(spr->current_frame == ani->frame_count){
-        spr->current_frame = 0;
-      }
-      spr->frame = ani->frames[spr->current_frame];
-    }
-
-    if(spr->update) spr->update(spr, spr->userdata);
-
-  }
-}
-
 
 
 /********************/
@@ -739,111 +394,12 @@ int load_gfx(char* filename){
   return gfx_count++;
 }
 
-int load_sprite(char* filename, int id){
-  printf("loading %s\n",filename);
-
-  char path[1024] = "sprites/";
-  strncat(path, filename, 1023 - strlen(filename));
-
-  reader* rd = loader_open(path);
-  if(!rd){
-    return -1;
-  }
-
-  animation* ani = xmalloc(sizeof(animation));
-
-  char str[256];
-  int w, h;
-  int frame_count;
-  int loop_mode;
-  
-  loader_scanline(rd,"%256s",str);
-  loader_scanline(rd,"%d %d %d %d",&w,&h,&loop_mode,&frame_count);
-
-  ani->frame_lens = xmalloc(frame_count*sizeof(short));
-  ani->frames = xmalloc(frame_count*sizeof(struct frame));
-  ani->frame_count = frame_count;
-
-  int g = load_gfx(str);
-  if(g < 0)
-    return -1;
-
-  ani->gfxid = g;
-
-  int W = gfx[g].w;
-  int H = gfx[g].h;
-  ani->w = w;
-  ani->h = h;
-
-  for(int i=0; i < frame_count; i++){
-    int l, x, y;
-    loader_scanline(rd, "%d %d %d", &l, &x, &y);
-    ani->frame_lens[i] = l;
-    ani->frames[i].x = x;
-    ani->frames[i].y = y;
-    ani->frames[i].x0 = ((double)x)/W;
-    ani->frames[i].y0 = ((double)y)/H;
-    ani->frames[i].x1 = ((double)(x+w))/W;
-    ani->frames[i].y1 = ((double)(y+h))/W;
-  }
-
-  loader_close(rd);
-  animations[id] = ani;  
-  return 0;
+int gfx_width(int gfxid){
+  return gfx[gfxid].w;
 }
 
-
-
-
-/********************/
-/* graphics control */
-/********************/
-
-sprite* enable_sprite(int sprnum){
-  if(!animations[sprnum]){
-    fatal_error("enable_sprite: you just tried to enable sprite with type %d, which does not exist\n",sprnum);
-  }
-  if(sprite_count == MAX_SPRITES){
-    /* need a priority based way to create important sprites if full */
-    return NULL;
-  }
-  sprite* spr = xmalloc(sizeof(sprite));
-  animation* ani = animations[sprnum];
-
-  spr->number = sprite_count;
-  spr->frame_counter = 0;
-  spr->current_frame = 0;
-  spr->frame = ani->frames[0];
-  spr->gfxid = ani->gfxid;
-  spr->anim = sprnum;
-  spr->x = 0;
-  spr->y = 0;
-  spr->w = ani->w;
-  spr->h = ani->h;
-  spr->vx = 0;
-  spr->vy = 0;
-  spr->update = NULL;
-  spr->userdata = NULL;
-
-  sprites[sprite_count++] = spr;
-  return spr;
-}
-
-void disable_sprite(sprite* spr){
-  sprite* tmp = sprites[spr->number];
-  sprites[spr->number] = sprites[sprite_count--];
-  free(tmp);
-}
-
-sprite* copy_sprite(sprite* spr){
-  if(sprite_count == MAX_SPRITES){
-    /* need way to make important sprites when full */
-    return NULL;
-  }
-  sprite* copy = xmalloc(sizeof(sprite));
-  *copy = *spr;
-  sprites[sprite_count++] = copy;
-  return copy;
+int gfx_height(int gfxid){
+  return gfx[gfxid].h;
 }
 
 
@@ -877,10 +433,6 @@ void backend_init(int argc, char* argv[]){
   srand(RANDOM_SEED);
 
 
-
-  for(int i=0; i<MAX_ANIMATIONS; i++){
-    animations[i] = NULL;
-  }
 
   if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK)==-1){
     report_error("sdl: %s\n",SDL_GetError());
@@ -1086,9 +638,6 @@ void backend_init(int argc, char* argv[]){
   printf(" sound on\n");
   SDL_PauseAudio(0);
 
-
-
-  init_text();
 
 
   /* were done here */

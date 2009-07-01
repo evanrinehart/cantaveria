@@ -38,7 +38,7 @@ struct game {
 
 struct tile {
   unsigned char type;
-  unsigned char gfx;
+  unsigned char id;
 };
 
 struct screen {

@@ -26,6 +26,8 @@
 #include "backend.h"
 #include "intro.h"
 #include "loader.h"
+#include "graphics.h"
+#include "text.h"
 
 void update(){
 
@@ -52,16 +54,26 @@ void main_loop(){
   }
 }
 
+void main_init(int argc, char* argv[]){
+  backend_init(argc, argv);
+  loader_init("");
+  graphics_init();
+  text_init();
+}
+
+void main_quit(){
+  loader_quit();
+  backend_quit();
+}
+
 int main(int argc, char* argv[]){
 
-  backend_init(argc, argv);
-  loader_init("data");
+  main_init(argc, argv);
 
   intro_setup();
   main_loop();
 
-  loader_quit();
-  backend_quit();
+  main_quit();
 
   return 0;
 
