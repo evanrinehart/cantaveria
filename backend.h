@@ -157,6 +157,7 @@ void unload_stage();
 /* text */
 sprite* small_text(char* str);
 void draw_small_text(char* str, int x, int y);
+void printf_small(int x, int y, char* format, ...);
 
 void set_message(char* str);
 void advance_message();

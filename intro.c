@@ -35,7 +35,7 @@ double t;
 
 void intro_setup(){
 
-  load_font("test.font");
+  load_font("default.font");
 
 
   set_message("AB ウ DE");

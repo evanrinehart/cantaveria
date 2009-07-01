@@ -158,12 +158,15 @@ void* tree_search(struct treenode* root,
     return NULL;
   }
   else if(compare(root->key, key)>0){
+//printf("%p -> go right\n",root->key);
     return tree_search(root->r, compare, key);
   }
   else if(compare(root->key, key)<0){
+//printf("%p -> go left\n",root->key);
     return tree_search(root->l, compare, key);
   }
   else{
+//printf("%p -> found\n",key);
     return root->value;
   }
 }

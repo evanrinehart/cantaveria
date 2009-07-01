@@ -20,6 +20,8 @@
    Boston, MA  02110-1301, USA
 */
 
+#include <math.h>
+
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 
@@ -194,6 +196,51 @@ struct {
 /* drawing routines */
 /********************/
 
+void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H){
+  if(!gl_flag){
+    SDL_Surface* surf = gfx[gfxid].surf;
+    SDL_Rect r1 = {X,Y,W,H};
+    SDL_Rect r2 = {x,y,W,H};
+    SDL_BlitSurface(surf,&r1,video,&r2);
+  }
+  else{
+    double w = gfx[gfxid].w;
+    double h = gfx[gfxid].h;
+    double X0 = ((double)X)/w;
+    double X1 = X0 + ((double)W)/w;
+    double Y0 = ((double)Y)/h;
+    double Y1 = Y0 + ((double)H)/h;
+
+    x = x + screen_offset_x;
+    y = y + screen_offset_y;
+    glBindTexture( GL_TEXTURE_2D, gfx[gfxid].texture );
+    glBegin( GL_QUADS );
+      glTexCoord2d(X0,Y0);
+      glVertex3f(x,y,0);
+
+      glTexCoord2d(X1,Y0);
+      glVertex3f(x+W,y,0);
+
+      glTexCoord2d(X1,Y1);
+      glVertex3f(x+W,y+H,0);
+
+      glTexCoord2d(X0,Y1);
+      glVertex3f(x,y+H,0);
+    glEnd();
+  }
+}
+
+void draw_sprite(sprite* spr){
+  int x = spr->x - 0;
+  int y = spr->y - 0;
+  int W = spr->w;
+  int H = spr->h;
+  int X = spr->frame.x;
+  int Y = spr->frame.y;
+  int g = spr->gfxid;
+  draw_gfx(g, x, y, X, Y, W, H);
+}
+
 void draw_sprite_sdl(sprite* spr){
   int x = spr->x - 0;
   int y = spr->y - 0;
@@ -238,40 +285,7 @@ void draw_sprite_gl(sprite* spr){
 }
 
 
-void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H){
-  if(!gl_flag){
-    SDL_Surface* surf = gfx[gfxid].surf;
-    SDL_Rect r1 = {X,Y,W,H};
-    SDL_Rect r2 = {x,y,W,H};
-    SDL_BlitSurface(surf,&r1,video,&r2);
-  }
-  else{
-    double w = gfx[gfxid].w;
-    double h = gfx[gfxid].h;
-    double X0 = ((double)X)/w;
-    double X1 = X0 + ((double)W)/w;
-    double Y0 = ((double)Y)/h;
-    double Y1 = Y0 + ((double)H)/h;
 
-    //draw_gfx_gl(gfxid, x, y, X0, X1, Y0, Y1);
-    x = x + screen_offset_x;
-    y = y + screen_offset_y;
-    glBindTexture( GL_TEXTURE_2D, gfx[gfxid].texture );
-    glBegin( GL_QUADS );
-      glTexCoord2d(X0,Y0);
-      glVertex3f(x,y,0);
-
-      glTexCoord2d(X1,Y0);
-      glVertex3f(x+W,y,0);
-
-      glTexCoord2d(X1,Y1);
-      glVertex3f(x+W,y+H,0);
-
-      glTexCoord2d(X0,Y1);
-      glVertex3f(x,y+H,0);
-    glEnd();
-  }
-}
 
 
 
@@ -309,51 +323,38 @@ void draw_screen_gl(zone* z, int si, int sj){
 }
 
 
-
-void draw(){
-
-  char ABC[64] = "hello world! 45% 3.567";
-
+void clear_video(){
   if(!gl_flag){
-
     SDL_FillRect(video, 0, 0);
+  }
+  else{
+    glClearColor(0.0,0.0,0.0,0.0);
+    glClear( GL_COLOR_BUFFER_BIT );
+  }
+}
 
-    //draw walls and background
-    if(stage_enabled){
-      draw_screen_sdl(zones[0],0,0);
-    }
-
-    //draw sprites
-    for(int i=0; i < sprite_count; i++){
-      draw_sprite_sdl(sprites[i]);
-    }
-
-    //draw foreground tile/sprites
-
-
-    draw_small_text(ABC,50,50);
-
-
+void update_video(){
+  if(!gl_flag){
     SDL_UpdateRect(video,0,0,0,0);
   }
   else{
-
-    glClearColor(0.0,0.0,0.0,0.0);
-    glClear( GL_COLOR_BUFFER_BIT );
-
-    if(stage_enabled){
-      draw_screen_gl(zones[0],0,0);
-    }
-
-    for(int i=0; i < sprite_count; i++){
-      draw_sprite_gl(sprites[i]);
-    }
-
-    draw_small_text(ABC,50,50);
-
-
     SDL_GL_SwapBuffers();
   }
+}
+
+void draw(){
+static int N = 0;
+  clear_video();
+
+  for(int i=0; i<sprite_count; i++){
+    draw_sprite(sprites[i]);
+  }
+
+  //draw_small_text(ABC,50,50);
+  printf_small(50,50,"%d %p %g",N,sprites,sin(N/100.0));
+  N++;
+
+  update_video();
 
 }
 
@@ -390,7 +391,7 @@ void set_message(char* str){
    if the current word is longer than a whole line
    then just break here (would happen with japanese).
  */
-      printf("%04lx[%lc] ",u, C->u);
+      //printf("%04lx[%lc] ",u, C->u);
     }
     else{
 /*
@@ -398,7 +399,7 @@ character not found, so use a rectangle or something
 use four tiny numbers to indicate the character
 do the same as above
 */
-      printf("%04lx[???] ", u);
+     //printf("%04lx[???] ", u);
     }
     N += unicode_getc(str+N, &u);
   };
@@ -506,9 +507,10 @@ int load_font(char* filename){
      to help produce a more balanced tree. */
   vwchar* C[64];
   int ptr = 0;
-
+  int N = 0;
   C[ptr] = load_vwchar(rd, gfx);
   while(C[ptr]){
+    N++;
     if(ptr==64){
       randomly_insert(C, 64);
       ptr = 0;
@@ -520,7 +522,9 @@ int load_font(char* filename){
 
   randomly_insert(C, ptr);
 
-printf("load_font: character tree is the following\n");
+  printf("  loaded %d characters\n",N); 
+
+printf("  character tree is the following\n");
 print_tree(chartree);
 printf("\n");
 
@@ -536,6 +540,16 @@ void draw_small_text(char* str, int x, int y){
     draw_gfx(minifont_gfx, x, y, X*4, Y*9, 3, 8);
     x+=4;
   }
+}
+
+void printf_small(int x, int y, char* format, ...){
+  char str[128];
+  va_list ap;
+  va_start(ap, format);
+  vsnprintf(str, 128, format, ap);
+  va_end(ap);
+  str[127]='\0';
+  draw_small_text(str, x, y);
 }
 
 /***********/
@@ -765,16 +779,12 @@ int load_sprite(char* filename, int id){
     int l, x, y;
     loader_scanline(rd, "%d %d %d", &l, &x, &y);
     ani->frame_lens[i] = l;
-    if(!gl_flag){
-      ani->frames[i].x = x;
-      ani->frames[i].y = y;
-    }
-    else{
-      ani->frames[i].x0 = ((double)x)/W;
-      ani->frames[i].y0 = ((double)y)/H;
-      ani->frames[i].x1 = ((double)(x+w))/W;
-      ani->frames[i].y1 = ((double)(y+h))/W;
-    }
+    ani->frames[i].x = x;
+    ani->frames[i].y = y;
+    ani->frames[i].x0 = ((double)x)/W;
+    ani->frames[i].y0 = ((double)y)/H;
+    ani->frames[i].x1 = ((double)(x+w))/W;
+    ani->frames[i].y1 = ((double)(y+h))/W;
   }
 
   loader_close(rd);
@@ -978,7 +988,7 @@ void backend_init(int argc, char* argv[]){
   }
 
   //double aspect = vinfo->current_w*1.0 / vinfo->current_h;
-  double aspect = ((double)W) / H;
+  //double aspect = ((double)W) / H;
 
 
   if(gl_flag){
