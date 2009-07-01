@@ -157,10 +157,10 @@ void* tree_search(struct treenode* root,
   if(root==NULL){
     return NULL;
   }
-  else if(compare(key, root->key)>0){
+  else if(compare(root->key, key)>0){
     return tree_search(root->r, compare, key);
   }
-  else if(compare(key, root->key)<0){
+  else if(compare(root->key, key)<0){
     return tree_search(root->l, compare, key);
   }
   else{

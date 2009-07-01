@@ -181,7 +181,8 @@ int anim_count = 0;
 
 int stage_enabled = 0;
 
-int screen_offset = 0;
+int screen_offset_x = 0;
+int screen_offset_y = 0;
 
 struct {
   int x, y;
@@ -194,7 +195,7 @@ struct {
 /********************/
 
 void draw_sprite_sdl(sprite* spr){
-  int x = spr->x - 0 + screen_offset;
+  int x = spr->x - 0;
   int y = spr->y - 0;
   int w = spr->w;
   int h = spr->h;
@@ -209,8 +210,8 @@ void draw_sprite_sdl(sprite* spr){
 }
 
 void draw_sprite_gl(sprite* spr){
-  int x = spr->x - camera.x + screen_offset;
-  int y = spr->y - camera.y;
+  int x = spr->x - camera.x + screen_offset_x;
+  int y = spr->y - camera.y + screen_offset_y;
   int w = spr->w;
   int h = spr->h;
 
@@ -235,6 +236,44 @@ void draw_sprite_gl(sprite* spr){
     glVertex3f(x,y+h,0);
   glEnd();
 }
+
+
+void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H){
+  if(!gl_flag){
+    SDL_Surface* surf = gfx[gfxid].surf;
+    SDL_Rect r1 = {X,Y,W,H};
+    SDL_Rect r2 = {x,y,W,H};
+    SDL_BlitSurface(surf,&r1,video,&r2);
+  }
+  else{
+    double w = gfx[gfxid].w;
+    double h = gfx[gfxid].h;
+    double X0 = ((double)X)/w;
+    double X1 = X0 + ((double)W)/w;
+    double Y0 = ((double)Y)/h;
+    double Y1 = Y0 + ((double)H)/h;
+
+    //draw_gfx_gl(gfxid, x, y, X0, X1, Y0, Y1);
+    x = x + screen_offset_x;
+    y = y + screen_offset_y;
+    glBindTexture( GL_TEXTURE_2D, gfx[gfxid].texture );
+    glBegin( GL_QUADS );
+      glTexCoord2d(X0,Y0);
+      glVertex3f(x,y,0);
+
+      glTexCoord2d(X1,Y0);
+      glVertex3f(x+W,y,0);
+
+      glTexCoord2d(X1,Y1);
+      glVertex3f(x+W,y+H,0);
+
+      glTexCoord2d(X0,Y1);
+      glVertex3f(x,y+H,0);
+    glEnd();
+  }
+}
+
+
 
 void draw_screen_sdl(zone* z, int si, int sj){
   struct screen* scr = z->screens+si+z->w*sj;
@@ -261,6 +300,9 @@ void draw_screen_sdl(zone* z, int si, int sj){
   }
 }
 
+
+
+
 void draw_screen_gl(zone* z, int si, int sj){
 
 
@@ -270,9 +312,11 @@ void draw_screen_gl(zone* z, int si, int sj){
 
 void draw(){
 
+  char ABC[64] = "hello world! 45% 3.567";
+
   if(!gl_flag){
 
-    SDL_FillRect(video, 0, 0xffffffff);
+    SDL_FillRect(video, 0, 0);
 
     //draw walls and background
     if(stage_enabled){
@@ -286,11 +330,15 @@ void draw(){
 
     //draw foreground tile/sprites
 
+
+    draw_small_text(ABC,50,50);
+
+
     SDL_UpdateRect(video,0,0,0,0);
   }
   else{
 
-    glClearColor(1.0,1.0,1.0,0.0);
+    glClearColor(0.0,0.0,0.0,0.0);
     glClear( GL_COLOR_BUFFER_BIT );
 
     if(stage_enabled){
@@ -300,6 +348,9 @@ void draw(){
     for(int i=0; i < sprite_count; i++){
       draw_sprite_gl(sprites[i]);
     }
+
+    draw_small_text(ABC,50,50);
+
 
     SDL_GL_SwapBuffers();
   }
@@ -320,6 +371,7 @@ typedef struct {
 
 struct treenode* chartree = NULL;
 
+int minifont_gfx = 0;
 
 
 int ptrcomp(void* k1, void* k2){
@@ -328,12 +380,28 @@ int ptrcomp(void* k1, void* k2){
 
 void set_message(char* str){
   utf32 u;
-  int N = 0;
-  do {
-    N += unicode_getc(str+N, &u);
+  int N = unicode_getc(str, &u);
+  while(u) {
     vwchar* C = tree_search(chartree, ptrcomp, (void*)u);
-    printf("%04lx[%p] ",u, C);
-  } while(u);
+    if(C){
+/* append this character to the message
+   if the current word is too long,
+   move the current word to the next line
+   if the current word is longer than a whole line
+   then just break here (would happen with japanese).
+ */
+      printf("%04lx[%lc] ",u, C->u);
+    }
+    else{
+/*
+character not found, so use a rectangle or something
+use four tiny numbers to indicate the character
+do the same as above
+*/
+      printf("%04lx[???] ", u);
+    }
+    N += unicode_getc(str+N, &u);
+  };
   printf("\n");
 }
 
@@ -367,7 +435,7 @@ void init_text(){
 
   //set font height
 
-  //setup mini font
+  minifont_gfx = load_gfx("smallfont.tga");
 }
 
 
@@ -460,6 +528,15 @@ printf("\n");
 }
 
 
+
+void draw_small_text(char* str, int x, int y){
+  for(char* c=str; *c; c++){
+    int X = *c & 0x0f;
+    int Y = *c >> 4;
+    draw_gfx(minifont_gfx, x, y, X*4, Y*9, 3, 8);
+    x+=4;
+  }
+}
 
 /***********/
 /* utility */
@@ -789,7 +866,7 @@ void backend_init(int argc, char* argv[]){
 
   srand(RANDOM_SEED);
 
-  init_text();
+
 
   for(int i=0; i<MAX_ANIMATIONS; i++){
     animations[i] = NULL;
@@ -913,14 +990,9 @@ void backend_init(int argc, char* argv[]){
 
   if(fullscreen){
     flags |= SDL_FULLSCREEN;
-    screen_offset = (aspect*SCREEN_H - SCREEN_W)/2;
   }
 
-  printf("video:\n");
-  printf(" resolution: %d x %d %s\n",W,H,fullscreen?"fullscreen":"windowed");
-  printf(" aspect ratio: %g\n",((double)W)/H);
-  printf(" opengl: %s\n",gl_flag?"yes":"no");
-  printf(" x-offset: %d\n",screen_offset);
+
 
   video = SDL_SetVideoMode(W,H,32,flags);
   if(video == NULL){
@@ -928,7 +1000,6 @@ void backend_init(int argc, char* argv[]){
     exit(-1);
   }
 
-  printf(" video on\n");
 
   if(gl_flag){
     glEnable(GL_BLEND);
@@ -944,7 +1015,18 @@ void backend_init(int argc, char* argv[]){
     glMatrixMode( GL_PROJECTION );
     glLoadIdentity();
     if(fullscreen){
-      glOrtho(0.0f, 240*aspect, 240, 0.0f, -1.0f, 1.0f);
+      //glOrtho(0.0f, 240*aspect, 240, 0.0f, -1.0f, 1.0f);
+      //glOrtho(0.0f, 1280.0/3, 800.0/3, 0.0f, -1.0f, 1.0f);
+      int min = 9999;
+      int n = 0;
+      for(int i=1; i<10; i++){
+        if(abs(H/i - 240) < min){ min = H/i - 240; n = i; }
+      }
+      double new_w = ((double)W)/n;
+      double new_h = ((double)H)/n;
+      screen_offset_x = (new_w-320)/2;
+      screen_offset_y = (new_h-240)/2;
+      glOrtho(0.0f, new_w, new_h, 0.0f, -1.0f, 1.0f);
     }
     else{
       glOrtho(0.0f, 320, 240, 0.0f, -1.0f, 1.0f);
@@ -954,6 +1036,13 @@ void backend_init(int argc, char* argv[]){
     glLoadIdentity();
   }
 
+  printf("video:\n");
+  printf(" resolution: %d x %d %s\n",W,H,fullscreen?"fullscreen":"windowed");
+  printf(" aspect ratio: %g\n",((double)W)/H);
+  printf(" opengl: %s\n",gl_flag?"yes":"no");
+  printf(" x-offset: %d\n",screen_offset_x);
+  printf(" y-offset: %d\n",screen_offset_y);
+  printf(" video on\n");
 
   /* setup audio */
   SDL_AudioSpec audio;
@@ -986,6 +1075,10 @@ void backend_init(int argc, char* argv[]){
 
   printf(" sound on\n");
   SDL_PauseAudio(0);
+
+
+
+  init_text();
 
 
   /* were done here */

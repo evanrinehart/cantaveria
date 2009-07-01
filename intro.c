@@ -35,10 +35,13 @@ double t;
 
 void intro_setup(){
 
-  //set_message("abcd");
-
   load_font("test.font");
 
+
+  set_message("AB ウ DE");
+  complete_message();
+
+  
   game.update = intro_update;
   game.handler = intro_handler;
   game.end = 0;

@@ -55,7 +55,7 @@ void main_loop(){
 int main(int argc, char* argv[]){
 
   backend_init(argc, argv);
-  loader_init("cv.data");
+  loader_init("data");
 
   intro_setup();
   main_loop();
