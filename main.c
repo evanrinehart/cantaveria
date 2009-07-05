@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 
+#include "util.h"
 #include "game.h"
 #include "backend.h"
 #include "intro.h"

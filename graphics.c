@@ -104,15 +104,15 @@ void printf_small(int x, int y, char* format, ...){
 
 
 void draw(){
-  static int N = 0;
+  static int N = 2;
 
   for(int i=0; i<sprite_count; i++){
     draw_sprite(sprites[i]);
   }
 
   //draw_small_text(ABC,50,50);
-  printf_small(50,50,"%d %p %g",N,sprites,sin(N/100.0));
-  N++;
+  printf_small(50,40,"%5s %8s","N","[0,1]");
+  printf_small(50,50,"%5d %8g",N,prandr(&N,0,1));
 
   update_video();
   clear_video();

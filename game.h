@@ -33,6 +33,8 @@ struct game {
   struct handler handler;
   void (*update)();
   int end;
+
+  rng_state rng;
 };
 
 

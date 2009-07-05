@@ -27,15 +27,19 @@ char* strxcpy(const char* str);
 void strmcat(char* dst, const char* src, size_t n);
 void out_of_memory(const char*);
 
-int randint(int a, int b);
 
-//typedef struct {
-//  unsigned char b[4];
- // unsigned long n;
-//} utf32;
+
+
+
 typedef unsigned long utf32;
 
+typedef int rng_state;
+rng_state pseed(int s);
+int prand(rng_state* x);
+int prandi(rng_state* x, int a, int b);
+double prandr(rng_state* x, double a, double b);
 
+int randint(int a, int b);
 
 int unicode_getc(char* str, utf32* u);
 
@@ -55,4 +59,5 @@ void tree_insert(treenode* root,
 void* tree_search(treenode* root,
                   int (*compare)(void* k1, void* k2),
                   void* key);
+
 

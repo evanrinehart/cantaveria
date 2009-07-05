@@ -178,3 +178,30 @@ int randint(int a, int b){
   return (rand()%L)+a;
 }
 
+
+#define PRAND_MAX 65537
+
+rng_state pseed(int s){
+  rng_state x = 2;
+  for(int i=0; i<s; i++){
+    prand(&x);
+  }
+  return x;
+}
+
+int prand(rng_state* x){
+  int G = 75;
+  *x = (*x * G) % PRAND_MAX;
+  return *x;
+}
+
+int prandi(rng_state* x, int a, int b){
+  int L = b-a+1;
+  return (prand(x)%L)+a;
+}
+
+double prandr(rng_state* x, double a, double b){
+  double R = prand(x)/((double)PRAND_MAX);
+  double L = b-a;
+  return (R*L)+a;
+}

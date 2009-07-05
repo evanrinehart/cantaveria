@@ -21,6 +21,8 @@
 */
 
 #include <stdio.h>
+
+#include "util.h"
 #include "game.h"
 #include "intro.h"
 
@@ -33,4 +35,6 @@ void load_game(){
   game.update = intro_update;
   game.handler = intro_handler;
   game.end = 0;
+
+  game.rng = pseed(0);
 }

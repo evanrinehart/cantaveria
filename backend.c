@@ -33,6 +33,7 @@
 
 SDL_Surface* video;
 int gl_flag = 0;
+int fullscreen = 0;
 int W, H;
 
 int since(){
@@ -132,41 +133,6 @@ void control(int type, int par1, int par2){
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-/*
-drawing model
-
-the backend will draw the current state of the game
-in the following way.
-
-it will render a stage at a given position. a stage is
-N backgrounds
-1 background tiles
-1 wall tiles and
-1 foreground tiles
-
-then it will render the sprites
-
-
-the stage is measured in terms of screens
-each screen is 20x15 tiles, each tile is 16 pixels square
-each screen can have one tile set of 256 tiles
-*/
-
-/***************/
-/*graphics data*/
-/***************/
-
 struct {
   char* filename;
   SDL_Surface* surf;
@@ -262,27 +228,6 @@ SDL_Surface* SDL_NewSurface(int w, int h){
 
   return surf;
 }
-
-/*
-load_pixmap filename
-  loads a pixmap file stored in the gfx/ subdir
-  returns an SDL surface in the 24bit format RGBRGBRGB...
-
-load_gfx filename
-  returns the gfx id of the graphics with filename
-  may or may not load a new gfx object with load_pixmap
-  in sdl mode this sets up the gfx surface for color key transparency
-  in opengl mode this converts the 24bit to 32bit texture with alpha channel
-
-load_sprite filename
-  reads a sprite definition from from the sprites/ subdir
-  loads a new animation structure as defined the file
-  uses load_gfx to get gfx id for animation graphics
-  therefore, may or may not load new graphics
-  returns an sprite id number used to instantiate new sprites
-*/
-
-
 
 SDL_Surface* load_pixmap(char* filename){
   char path[256] = "gfx/";
@@ -428,27 +373,22 @@ void audio_callback(void *userdata, Uint8 *stream, int len){
 /* initialization */
 /******************/
 
-void backend_init(int argc, char* argv[]){
-
-  srand(RANDOM_SEED);
-
-
-
+void sdl_init(){
   if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK)==-1){
     report_error("sdl: %s\n",SDL_GetError());
     exit(-1);
   }
+}
 
+void parse_options(int argc, char* argv[], int* fullscreen, int* gl_flag){
 
-  /* options */
-  int fullscreen = 0;
   for(int i=0; i<argc; i++){
     if(!strcmp(argv[i], "-gl")){
-      gl_flag = 1;
+      *gl_flag = 1;
       continue;
     }
     if(!strcmp(argv[i], "-f")){
-      fullscreen = 1;
+      *fullscreen = 1;
     }
     if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")){
       printf("options:\n");
@@ -476,9 +416,9 @@ void backend_init(int argc, char* argv[]){
       exit(0);
     }
   }
+}
 
-
-  /* keymap */
+void load_keymap(){
   keymap[ESCAPE_KEY] = SDLK_ESCAPE;
   keymap[PAUSE_KEY] = SDLK_PAUSE;
 
@@ -496,8 +436,9 @@ void backend_init(int argc, char* argv[]){
   keymap[R_KEY] = SDLK_w;
   keymap[START_KEY] = SDLK_RETURN;
   keymap[SELECT_KEY] = SDLK_TAB;
+}
 
-  /* joysticks */
+void setup_joysticks(){
   int N = SDL_NumJoysticks();
   printf("sdl: detected %d joysticks\n",N);
   for(int i=0; i<N; i++){
@@ -509,8 +450,9 @@ void backend_init(int argc, char* argv[]){
     }
   }
 
+}
 
-  /* video */
+void setup_video(){
   int flags = 0;
 
   SDL_WM_SetCaption("cantaveria","cantaveria");
@@ -538,10 +480,6 @@ void backend_init(int argc, char* argv[]){
     W = 320;
     H = 240;
   }
-
-  //double aspect = vinfo->current_w*1.0 / vinfo->current_h;
-  //double aspect = ((double)W) / H;
-
 
   if(gl_flag){
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -606,7 +544,10 @@ void backend_init(int argc, char* argv[]){
   printf(" y-offset: %d\n",screen_offset_y);
   printf(" video on\n");
 
-  /* setup audio */
+}
+
+void setup_audio(){
+
   SDL_AudioSpec audio;
   audio.freq = SAMPLE_RATE;
   audio.format = AUDIO_S16;
@@ -638,28 +579,17 @@ void backend_init(int argc, char* argv[]){
   printf(" sound on\n");
   SDL_PauseAudio(0);
 
-
-
-  /* were done here */
-/*
-SDL_Rect** modes;
-int i;
-
-modes = SDL_ListModes(NULL, SDL_FULLSCREEN|SDL_HWSURFACE);
-
-if (modes == (SDL_Rect**)0) {
-    printf("No modes available!\n");
-    exit(-1);
 }
 
-if (modes == (SDL_Rect**)-1) {
-    printf("All resolutions available.\n");
-}
-else{
-    printf("Available Modes\n");
-    for (i=0; modes[i]; ++i)
-      printf("  %d x %d\n", modes[i]->w, modes[i]->h);
-}
-*/
+
+void backend_init(int argc, char* argv[]){
+
+  sdl_init();
+  parse_options(argc, argv, &fullscreen, &gl_flag);
+  load_keymap();
+  setup_joysticks();
+  setup_video();
+  setup_audio();
+  srand(RANDOM_SEED);
 
 }

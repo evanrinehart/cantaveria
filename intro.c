@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "util.h"
 #include "game.h"
 #include "backend.h"
 #include "graphics.h"
