@@ -26,6 +26,7 @@
 #include "util.h"
 #include "game.h"
 #include "backend.h"
+#include "loader.h"
 #include "graphics.h"
 #include "title.h"
 #include "intro.h"
@@ -88,7 +89,7 @@ void intro_update(){
 
 void intro_keydown(int key){
   printf("you pressed key %d\n",key);
-  if(key == keynum(ESCAPE_KEY)){
+  if(key == ESCAPE_KEY){
     title_setup();
     game.handler = title_handler;
     game.update = title_update;

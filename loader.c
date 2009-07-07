@@ -195,3 +195,46 @@ char* read_string(reader* rd){
   return S;
 }
 
+
+
+
+char** loader_readdir(char* path){
+  char buf[1024] = "data/";
+  strcat(buf, path);
+
+  ZZIP_DIR* dir = zzip_opendir(buf);
+
+  int N = 0;
+  ZZIP_DIRENT* ent;
+  while( (ent = zzip_readdir(dir)) ) N++;
+
+  char** res = xmalloc((N+1)*sizeof(char*));
+
+  zzip_closedir(dir);
+  zzip_opendir(buf);
+
+  int i = 0;
+  while(i < N+1){
+    ent = zzip_readdir(dir);
+    if(!ent){
+      res[i] = NULL;
+      i++;
+    }
+    else if(ent->d_name[0] == '.'){
+    }
+    else{
+      res[i] = xmalloc(strlen(ent->d_name)+1);
+      strcpy(res[i], ent->d_name);
+      i++;
+    }
+  }
+
+  return res;
+}
+
+void loader_freedirlist(char** list){
+  for(int i=0; list[i]; i++){
+    free(list[i]);
+  }
+}
+

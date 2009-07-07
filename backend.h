@@ -45,6 +45,7 @@ FIRE_BUTTON,
 JUMP_BUTTON,
 INVENTORY_BUTTON,
 SPECIAL_BUTTON,
+
 L_BUTTON,
 R_BUTTON,
 START_BUTTON,
@@ -57,8 +58,7 @@ KEYDOWN,
 JOYMOVEX,
 JOYMOVEY,
 JOYPRESS,
-JOYRELEASE,
-FOOBAR
+JOYRELEASE
 };
 
 #define VERSION_MAJOR 0
@@ -102,6 +102,7 @@ void clear_video();
 int keynum(int name); /* get key number for key name */
 int butnum(int joy, int name); /* get button number for button name */
 void control(int type, int par1, int par2); /* automatic control */
+void enable_alphanum(int yn);
 
 /* gfx control */
 int load_gfx(char* filename);

@@ -52,6 +52,7 @@ void delay(int ms){
 int keymap[32];
 int butmap[MAX_PLAYERS][8];
 int joymap[MAX_PLAYERS];
+int alphanum_enable = 0;
 
 int keynum(int name){
   return keymap[name];
@@ -60,6 +61,32 @@ int keynum(int name){
 int butnum(int joy, int name){
   return butmap[joy][name];
 }
+
+
+
+int joy2player(int joy){
+  for(int i=0; i<MAX_PLAYERS; i++){
+    if(joymap[i] == joy) return i;
+  }
+  return -1;
+}
+
+int key2name(int sym){
+  for(int i=0; i<14; i++){
+    if(keymap[i] == sym) return i;
+  }
+  return -1;
+}
+
+int button2name(int player, int but){
+  if(player < 0) return -1;
+  for(int i=0; i<8; i++){
+    if(butmap[i][player] == but) return i;
+  }
+  return -1;
+}
+
+
 
 
 void backend_quit(){
@@ -73,32 +100,54 @@ void backend_quit(){
 
 
 
-
+void enable_alphanum(int yn){
+  SDL_EnableUNICODE(yn);
+  alphanum_enable = yn;
+}
 
 void input(){
 
   SDL_Event e;
+  int name;
+  int player;
+  Uint16 uni16;
 
   while(SDL_PollEvent(&e) != 0){
     switch(e.type){
       case SDL_KEYDOWN:
-        game.handler.keydown(e.key.keysym.sym);
+
+        printf("keydown: unicode = %x\n",e.key.keysym.unicode);
+        uni16 = e.key.keysym.unicode;
+        if(uni16 != 0 && alphanum_enable){
+          //handle uni16
+        }
+        else{
+          name = key2name(e.key.keysym.sym);
+          if(name > -1) game.handler.keydown(name);
+        }
         break;
       case SDL_KEYUP:
-        game.handler.keyup(e.key.keysym.sym);
+        name = key2name(e.key.keysym.sym);
+        if(name > -1) game.handler.keyup(name);
         break;
       case SDL_JOYBUTTONDOWN:
-        game.handler.joypress(e.jbutton.which, e.jbutton.button);
+        player = joy2player(e.jbutton.which);
+        name = button2name(player, e.jbutton.button);
+        if(name > -1) game.handler.joypress(player, name);
         break;
       case SDL_JOYBUTTONUP:
-        game.handler.joyrelease(e.jbutton.which, e.jbutton.button);
+        player = joy2player(e.jbutton.which);
+        name = button2name(player, e.jbutton.button);
+        if(name > -1) game.handler.joyrelease(e.jbutton.which, name);
         break;
       case SDL_JOYAXISMOTION:
+        player = joy2player(e.jaxis.which);
+        if(player < 0) break;
         if(e.jaxis.axis == 0){
-          game.handler.joymovex(e.jaxis.which, e.jaxis.value);
+          game.handler.joymovex(player, e.jaxis.value);
         }
         else if(e.jaxis.axis == 1){
-          game.handler.joymovey(e.jaxis.which, e.jaxis.value);
+          game.handler.joymovey(player, e.jaxis.value);
         }
         break;
       case SDL_QUIT:
@@ -419,6 +468,9 @@ void parse_options(int argc, char* argv[], int* fullscreen, int* gl_flag){
 }
 
 void load_keymap(){
+
+  SDL_EnableUNICODE(1);
+
   keymap[ESCAPE_KEY] = SDLK_ESCAPE;
   keymap[PAUSE_KEY] = SDLK_PAUSE;
 
