@@ -57,3 +57,6 @@ void reposition_message(int x, int y);
 void resize_message(int w, int h);
 
 void animate_sprites();
+
+
+void enable_stage(int yn);

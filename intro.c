@@ -37,30 +37,30 @@ double t;
 
 void intro_setup(){
 
-  load_font("default.font");
+  //load_font("default.font");
 
 
-  set_message("AB ウ DE");
-  complete_message();
+  //set_message("AB ウ DE");
+  //complete_message();
 
   
   game.update = intro_update;
   game.handler = intro_handler;
   game.end = 0;
 
-  int m = load_sprite("sprite1.spr",0);
+  //int m = load_sprite("sprite1.spr",0);
 
   for(int i=0; i<4; i++){
-    spr[i] = enable_sprite(m);
+    //spr[i] = enable_sprite(m);
   }
-  spr[0]->x = 0;
-  spr[0]->y = 0;
-  spr[1]->x = 100;
-  spr[1]->y = 0;
-  spr[2]->x = 0;
-  spr[2]->y = 100;
-  spr[3]->x = 100;
-  spr[3]->y = 100;
+  //spr[0]->x = 0;
+  //spr[0]->y = 0;
+  //spr[1]->x = 100;
+  //spr[1]->y = 0;
+  //spr[2]->x = 0;
+  //spr[2]->y = 100;
+  //spr[3]->x = 100;
+  //spr[3]->y = 100;
   //load some graphics
   //place the graphics
   //if any, setup sprite update callbacks
@@ -69,10 +69,22 @@ void intro_setup(){
   
 */
 
+
+  load_zone("myzone");
+  enable_stage(1);
+
   printf("you just entered the intro\n");
 
 }
 
+
+void intro_update(){
+  //for(int i=0; i<4; i++){
+  //  spr[i]->x = 100*cos(t+i*3.14/2)+SCREEN_W/2-8;
+  //  spr[i]->y = 100*sin(t+i*3.14/2)+SCREEN_H/2-8;
+  //}
+  //t += 0.001*dt;
+}
 
 void intro_keydown(int key){
   printf("you pressed key %d\n",key);
@@ -101,15 +113,6 @@ printf("you pressed joystick %d button %d\n",joy,button);
 
 void intro_joyrelease(int joy, int button){
 printf("you released joystick %d button %d\n",joy,button);
-}
-
-
-void intro_update(){
-  for(int i=0; i<4; i++){
-    spr[i]->x = 100*cos(t+i*3.14/2)+SCREEN_W/2-8;
-    spr[i]->y = 100*sin(t+i*3.14/2)+SCREEN_H/2-8;
-  }
-  t += 0.001*dt;
 }
 
 struct handler intro_handler = {

@@ -68,7 +68,7 @@ void strmcat(char* dst, const char* src, size_t n){
 
 
 void out_of_memory(const char* prefix){
-  report_error("%s: out of memory", prefix);
+  report_error("%s: out of memory\n", prefix);
   exit(-2);
 }
 

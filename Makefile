@@ -9,7 +9,7 @@ $(PROJECT): $(OBJ)
 
 
 
-game.o: util.h game.h intro.h
+game.o: util.h loader.h game.h intro.h
 title.o: util.h game.h backend.h title.h
 intro.o: util.h game.h backend.h graphics.h intro.h title.h
 util.o: util.h
@@ -17,7 +17,7 @@ main.o: util.h game.h backend.h intro.h loader.h graphics.h text.h
 backend.o: game.h backend.h util.h loader.h sound.h
 loader.o: loader.h util.h
 sound.o: sound.h
-graphics.o: graphics.h backend.h loader.h util.h
+graphics.o: graphics.h backend.h loader.h util.h game.h
 text.o : text.h backend.h loader.h util.h
 
 backend.h: util.h

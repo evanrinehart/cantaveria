@@ -14,6 +14,8 @@ drawing commands. */
 #include "graphics.h"
 #include "loader.h"
 
+#include "game.h"
+
 
 /* graphics data */
 sprite* sprites[MAX_SPRITES];
@@ -23,6 +25,12 @@ animation* animations[MAX_ANIMATIONS];
 int anim_count = 0;
 
 int minifont_gfx = 0;
+
+
+
+int stage_enabled = 0;
+
+
 
 struct {
   int x, y;
@@ -83,6 +91,7 @@ void draw_screen(zone* z, int si, int sj){
 
 
 
+
 void draw_small_text(char* str, int x, int y){
   for(char* c=str; *c; c++){
     int X = *c & 0x0f;
@@ -91,6 +100,8 @@ void draw_small_text(char* str, int x, int y){
     x+=4;
   }
 }
+
+
 
 void printf_small(int x, int y, char* format, ...){
   char str[128];
@@ -104,15 +115,16 @@ void printf_small(int x, int y, char* format, ...){
 
 
 void draw(){
-  static int N = 2;
+
+  if(stage_enabled){
+    //draw_stage();
+  }
 
   for(int i=0; i<sprite_count; i++){
     draw_sprite(sprites[i]);
   }
 
-  //draw_small_text(ABC,50,50);
-  printf_small(50,40,"%5s %8s","N","[0,1]");
-  printf_small(50,50,"%5d %8g",N,prandr(&N,0,1));
+  printf_small(1,1,"testing stage");
 
   update_video();
   clear_video();
@@ -262,4 +274,9 @@ sprite* copy_sprite(sprite* spr){
   return copy;
 }
 
+
+
+void enable_stage(int yn){
+  stage_enabled = yn;
+}
 

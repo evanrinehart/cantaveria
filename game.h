@@ -37,20 +37,17 @@ struct game {
   rng_state rng;
 };
 
-
-struct tile {
-  unsigned char type;
-  unsigned char id;
-};
-
 struct screen {
-  struct tile tiles[20][15];
+  unsigned char tiles[20][15];
   int flags;
+  int exits[4];
 };
 
 typedef struct {
-  struct screen* screens;
-  int tileset;
+  char* name;
+  struct screen** screens;
+  int tileset_gfx;
+  char tileset_shapes[256];
   /*background*/
   int x,y,w,h;
 } zone;
@@ -69,3 +66,4 @@ SPRITE_FOUR
 
 void load_game();
 
+void load_zone(char* filename);

@@ -40,7 +40,7 @@ struct reader {
 ZZIP_DIR* zzip_dir;
 int errno;
 
-void loader_init(char* filename){
+void loader_init(){
   //zzip_dir = zzip_dir_open(filename, 0);
   //if(!zzip_dir){
   //  report_error("loader: unable to open game data in %s (%s)\n",
@@ -51,6 +51,13 @@ void loader_init(char* filename){
 
 void loader_quit(){
   //zzip_dir_close(zzip_dir);
+}
+
+reader* data_open(char* dir, char* filename){
+  char buf[1024];
+  strcpy(buf, dir);
+  strcat(buf, filename);
+  return loader_open(buf);
 }
 
 reader* loader_open(char* filename){
@@ -152,3 +159,39 @@ int loader_scanline(reader* rd, char* format, ...){
 
   return ret;
 }
+
+
+
+
+/*binary i/o*/
+unsigned char read_byte(reader* rd){
+  unsigned char c;
+  loader_read(rd, &c, 1);
+  return c;
+}
+
+short read_short(reader* rd){
+  unsigned char c[2];
+  loader_read(rd, c+0, 1);
+  loader_read(rd, c+1, 1);
+  return (c[0]<<8) | c[1];
+}
+
+int read_int(reader* rd){
+  unsigned char c[4];
+  loader_read(rd, c+0, 1);
+  loader_read(rd, c+1, 1);
+  loader_read(rd, c+2, 1);
+  loader_read(rd, c+3, 1);
+  return (c[0]<<24) | (c[1]<<16) | (c[2]<<8) | c[3];
+}
+
+char* read_string(reader* rd){
+  unsigned int L = read_int(rd);
+  if(L==0) return NULL;
+  char* S = xmalloc(L+1);
+  S[L] = '\0';
+  loader_read(rd, S, L);
+  return S;
+}
+

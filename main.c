@@ -31,9 +31,7 @@
 #include "text.h"
 
 void update(){
-
   animate_sprites();
-
   game.update();
 }
 
@@ -57,7 +55,7 @@ void main_loop(){
 
 void main_init(int argc, char* argv[]){
   backend_init(argc, argv);
-  loader_init("");
+  loader_init();
   graphics_init();
   text_init();
 }
