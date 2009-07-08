@@ -32,10 +32,6 @@
 
 struct game game;
 
-
-zone* zones[32];
-int zone_count;
-
 void load_game(){
   game.update = intro_update;
   game.handler = intro_handler;
@@ -76,7 +72,6 @@ void load_zone(char* filename){
   //struct tile tile;
 
   z->name = filename;
-  printf("loading zone \"%s\"\n",filename);
 
   char* str = read_string(rd);
   z->tileset_gfx = load_gfx(str);
@@ -112,8 +107,8 @@ void load_zone(char* filename){
       char* name = read_string(rd);
       scr->exits[i] = -1;
       if(name){
-        for(int j=0; j<zone_count; j++){
-          if(strcmp(zones[j]->name, name)==0){
+        for(int j=0; j<game.zone_count; j++){
+          if(strcmp(game.zones[j]->name, name)==0){
             scr->exits[i] = j;
           }
         }
@@ -141,6 +136,6 @@ void load_zone(char* filename){
 
   }
 
-  zones[zone_count++] = z;
+  game.zones[game.zone_count++] = z;
 }
 

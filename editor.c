@@ -29,36 +29,17 @@
 #include "graphics.h"
 #include "text.h"
 
-void update(){
-  
-}
 
-void main_loop(){
-  since();
-  int T = 0;
-  while(1){
-    T += since();
-    for(int i=0; i<T/dt; i++){
-      input();
-      update();
-    }
-    if(T/dt > 0){
-      draw();
-      T %= dt;
-    }
-    if(game.end){break;}
-    delay(DELAY_AMOUNT);
-  }
-}
+
+
+
 
 
 void edit_keydown(int key){
   printf("you pressed key %d\n",key);
-  if(key == keynum(ESCAPE_KEY)){
+  if(key == ESCAPE_KEY){
     game.end = 1;
   }
-
-  
 }
 
 void edit_keyup(int key){
@@ -95,12 +76,44 @@ void main_init(int argc, char* argv[]){
   game.handler = edit_handler;
   game.update = NULL;
 
+
+  char** list = loader_readdir("zones");
+  for(int i=0; list[i]; i++){
+    printf("loading zone \"%s\"\n",list[i]);
+    load_zone(list[i]);
+  }
+  loader_freedirlist(list);
+
   enable_stage(1);
 }
+
+
+void update(){
+  
+}
+
 
 void main_quit(){
   loader_quit();
   backend_quit();
+}
+
+void main_loop(){
+  since();
+  int T = 0;
+  while(1){
+    T += since();
+    for(int i=0; i<T/dt; i++){
+      input();
+      update();
+    }
+    if(T/dt > 0){
+      draw();
+      T %= dt;
+    }
+    if(game.end){break;}
+    delay(DELAY_AMOUNT);
+  }
 }
 
 int main(int argc, char* argv[]){

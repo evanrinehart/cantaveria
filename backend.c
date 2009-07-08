@@ -115,8 +115,6 @@ void input(){
   while(SDL_PollEvent(&e) != 0){
     switch(e.type){
       case SDL_KEYDOWN:
-
-        printf("keydown: unicode = %x\n",e.key.keysym.unicode);
         uni16 = e.key.keysym.unicode;
         if(uni16 != 0 && alphanum_enable){
           //handle uni16
@@ -255,6 +253,8 @@ void update_video(){
 }
 
 
+
+
 /********************/
 /* graphics loading */
 /********************/
@@ -293,7 +293,7 @@ SDL_Surface* load_pixmap(char* filename){
   int w = header[12] + (header[13]<<8);
   int h = header[14] + (header[15]<<8);
   int bpp = header[16];
-
+printf("load_pixmap: %s has bpp=%d\n",filename, bpp);
   SDL_Surface* surf = SDL_CreateRGBSurface(0,w,h,bpp,
                       0x00ff0000,0x0000ff00,0x000000ff,0xff000000);
   if(!surf){
@@ -344,11 +344,13 @@ int load_gfx(char* filename){
   else {
     GLuint texture;
     
-    SDL_Surface* conv = SDL_CreateRGBSurface(0, src->w, src->h, 32,
-      0xff<<16,0xff<<8,0xff<<0,0);
-    
-    SDL_BlitSurface(src, NULL, conv, NULL);
+    //SDL_Surface* conv = SDL_CreateRGBSurface(0, src->w, src->h, 32,
+     // 0xff<<16,0xff<<8,0xff<<0,0);
 
+    SDL_Surface* conv = SDL_DisplayFormatAlpha(src);
+    //SDL_SetAlpha(conv, 0, 0);
+    //SDL_BlitSurface(src, NULL, conv, NULL);
+//printf("bpp = %d\n",conv->format->BitsPerPixel);
     int N = 0;
     int M = 3;
     Uint8* conv_bytes = conv->pixels;
@@ -357,6 +359,9 @@ int load_gfx(char* filename){
                                         (COLOR_KEY&0x0000ff)>>0);
     for(int i=0; i<src->w; i++){
       for(int j=0; j<src->h; j++){
+
+//if(1){printf("M==%d totalbytes=%d\n",M,src->w*src->h*4);}
+
         Uint32 pixel = *((Uint32*)(src->pixels+N));
         conv_bytes[M] = pixel==key ? SDL_ALPHA_TRANSPARENT : SDL_ALPHA_OPAQUE;
         N += src->format->BytesPerPixel;
@@ -382,7 +387,6 @@ int load_gfx(char* filename){
 
     SDL_FreeSurface(conv);
     SDL_FreeSurface(src);
-
   }
 
   return gfx_count++;

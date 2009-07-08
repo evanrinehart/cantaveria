@@ -114,10 +114,43 @@ void printf_small(int x, int y, char* format, ...){
 }
 
 
+
+
+void draw_screen(zone* z, int si, int sj){
+
+  struct screen* scr = *(z->screens+si+z->w*sj);
+  int G = z->tileset_gfx;
+  int x = si*20*16 - camera.x;
+  int y = sj*15*16 - camera.y;
+
+  for(int j=0; j < 15; j++){
+    for(int i=0; i < 20; i++){
+      if(x > 320 || y > 240 || x < -16 || y < -16) continue;
+      int id = scr->tiles[i][j];
+      if(id != 0){
+        int X = (id&0xf)<<4;
+        int Y = (id>>4)<<4;
+        draw_gfx(G, x, y, X, Y, 16, 16);
+      }
+      else{
+        //draw background
+      }
+      x += 16;
+    }
+    x -= 320;
+    y += 16;
+  }
+
+}
+
+void draw_stage(){
+  draw_screen(game.zones[0], 0, 0);
+}
+
 void draw(){
 
   if(stage_enabled){
-    //draw_stage();
+    draw_stage();
   }
 
   for(int i=0; i<sprite_count; i++){

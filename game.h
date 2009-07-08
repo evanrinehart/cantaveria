@@ -29,13 +29,6 @@ struct handler {
   void (*joyrelease)(int joy, int button);
 };
 
-struct game {
-  struct handler handler;
-  void (*update)();
-  int end;
-
-  rng_state rng;
-};
 
 struct screen {
   unsigned char tiles[20][15];
@@ -53,8 +46,20 @@ typedef struct {
 } zone;
 
 
+
+
+struct game {
+  struct handler handler;
+  void (*update)();
+  int end;
+
+  rng_state rng;
+
+  zone* zones[32];
+  int zone_count;
+};
+
 extern struct game game;
-extern zone* zones[32];
 
 enum {
 SPRITE_ONE,
