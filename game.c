@@ -123,8 +123,8 @@ void load_zone(char* filename){
       scr->exits[2],
       scr->exits[3]);
 
-    for(int i=0; i<20; i++){
-      for(int j=0; j<15; j++){
+    for(int j=0; j<15; j++){
+      for(int i=0; i<20; i++){
         //tile.type = read_byte(rd);
         //tile.id = read_byte(rd);
         //scr->tiles[i][j] = tile;
