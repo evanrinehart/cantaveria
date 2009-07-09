@@ -31,19 +31,55 @@
 
 
 
+int cursor_x;
+int cursor_y;
+sprite* cursor;
+
+
+struct {
+  int flag;
+  int key;
+  int timer;
+} repeat;
 
 
 
+
+void cursor_control(int key){
+  switch(key){
+    case LEFT_KEY: cursor_x--; break;
+    case RIGHT_KEY: cursor_x++; break;
+    case UP_KEY: cursor_y--; break;
+    case DOWN_KEY: cursor_y++; break;
+  }
+
+  cursor->x = cursor_x*16;
+  cursor->y = cursor_y*16;
+}
 
 void edit_keydown(int key){
-  printf("you pressed key %d\n",key);
+
   if(key == ESCAPE_KEY){
     game.end = 1;
   }
+
+  switch(key){
+    case LEFT_KEY:
+    case RIGHT_KEY:
+    case UP_KEY:
+    case DOWN_KEY:
+      repeat.flag = 1;
+      repeat.key = key;
+      repeat.timer = 0;
+  }
+
+  cursor_control(key);
 }
 
 void edit_keyup(int key){
-printf("you release key %d\n",key);
+  if(key == repeat.key){
+    repeat.flag = 0;
+  }  
 }
 
 void edit_joymovex(int joy, int x){
@@ -85,11 +121,22 @@ void main_init(int argc, char* argv[]){
   loader_freedirlist(list);
 
   enable_stage(1);
+
+  cursor_x = 0;
+  cursor_y = 0;
+  int id = load_sprite("box.spr",SPR_BOX);
+  cursor = enable_sprite(SPR_BOX);
 }
 
 
 void update(){
-  
+  if(repeat.flag){
+    repeat.timer++;
+    if(repeat.timer > 40){
+      repeat.timer = 38;
+      cursor_control(repeat.key);
+    }
+  }
 }
 
 

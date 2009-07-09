@@ -45,9 +45,6 @@ typedef struct {
   int x,y,w,h;
 } zone;
 
-
-
-
 struct game {
   struct handler handler;
   void (*update)();
@@ -57,6 +54,10 @@ struct game {
 
   zone* zones[32];
   int zone_count;
+
+  int player_x;
+  int player_y;
+  int current_zone;
 };
 
 extern struct game game;
@@ -65,7 +66,8 @@ enum {
 SPRITE_ONE,
 SPRITE_TWO,
 SPRITE_THREE,
-SPRITE_FOUR
+SPRITE_FOUR,
+SPR_BOX
 };
 
 

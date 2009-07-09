@@ -472,9 +472,6 @@ void parse_options(int argc, char* argv[], int* fullscreen, int* gl_flag){
 }
 
 void load_keymap(){
-
-  SDL_EnableUNICODE(1);
-
   keymap[ESCAPE_KEY] = SDLK_ESCAPE;
   keymap[PAUSE_KEY] = SDLK_PAUSE;
 
