@@ -211,7 +211,7 @@ char** loader_readdir(char* path){
   char** res = xmalloc((N+1)*sizeof(char*));
 
   zzip_closedir(dir);
-  zzip_opendir(buf);
+  dir = zzip_opendir(buf);
 
   int i = 0;
   while(i < N+1){

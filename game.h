@@ -45,6 +45,8 @@ typedef struct {
   int x,y,w,h;
 } zone;
 
+#define ZONE_LOOKUP(Z,I,J) (I >= Z->w || J >= Z->h || I < 0 || J < 0 ? NULL : *(Z->screens + I + J*Z->w))
+
 struct game {
   struct handler handler;
   void (*update)();

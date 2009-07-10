@@ -47,8 +47,26 @@ struct {
   int timer;
 } repeat;
 
+int hold_fire;
 
 
+
+void press_fire(){
+  //if screen exists change tile
+  //else create new screen
+  zone* z = game.zones[game.current_zone];
+  int si = game.si;
+  int sj = game.sj;
+  struct screen* scr = ZONE_LOOKUP(z,si,sj);
+
+  if(!scr){
+    scr = xmalloc(sizeof(struct screen));
+    z->screens[si+z->w*sj] = scr;
+  }
+
+   scr->tiles[cursor_x-si*20][cursor_y-sj*15] = 33;
+  
+}
 
 void cursor_control(int key){
   switch(key){
@@ -57,6 +75,9 @@ void cursor_control(int key){
     case UP_KEY: cursor_y--; break;
     case DOWN_KEY: cursor_y++; break;
   }
+
+  if(cursor_x < 0){cursor_x = 0;}
+  if(cursor_y < 0){cursor_y = 0;}
 
   /*check for crossing a zone exit*/
 
@@ -81,10 +102,15 @@ void cursor_control(int key){
   screen_y = cursor_y/15;
   if(cursor_x < 0){screen_x--;}
   if(cursor_y < 0){screen_y--;}
+  game.si = screen_x;
+  game.sj = screen_y;
 
   cursor->x = cursor_x*16;
   cursor->y = cursor_y*16;
+
+  if(hold_fire) press_fire();
 }
+
 
 void edit_keydown(int key){
 
@@ -100,15 +126,21 @@ void edit_keydown(int key){
       repeat.flag = 1;
       repeat.key = key;
       repeat.timer = 0;
+      cursor_control(key);
+      break;
+    case FIRE_KEY:
+      hold_fire = 1;
+      press_fire();
+      break;
   }
 
-  cursor_control(key);
 }
 
 void edit_keyup(int key){
   if(key == repeat.key){
     repeat.flag = 0;
-  }  
+  }
+  if(key == FIRE_KEY) hold_fire = 0;
 }
 
 void edit_joymovex(int joy, int x){
@@ -174,6 +206,8 @@ void main_init(int argc, char* argv[]){
   camera_x = 0;
   camera_y = 0;
   point_camera(0,0);
+
+  hold_fire = 0;
 }
 
 

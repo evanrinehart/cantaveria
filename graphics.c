@@ -118,7 +118,8 @@ void printf_small(int x, int y, char* format, ...){
 
 void draw_screen(zone* z, int si, int sj){
 
-  struct screen* scr = *(z->screens+si+z->w*sj);
+  struct screen* scr = ZONE_LOOKUP(z,si,sj);
+  if(!scr) return;
   int G = z->tileset_gfx;
   int x = si*20*16 - camera.x;
   int y = sj*15*16 - camera.y;
@@ -147,7 +148,13 @@ void draw_stage(){
   int si = game.si;
   int sj = game.sj;
 
+  int table[8][2] = {{ 1,0},{ 1, 1},{0, 1},{-1, 1},
+                     {-1,0},{-1,-1},{0,-1},{ 1,-1}};
+
   draw_screen(z, si, sj);
+  for(int i=0; i<8; i++){
+    draw_screen(z, si+table[i][0], sj+table[i][1]);
+  }
 }
 
 void draw_sprites(){
