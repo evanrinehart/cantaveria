@@ -189,6 +189,8 @@ struct {
 } gfx[MAX_GFX];
 int gfx_count = 0;
 
+int screen_w = 320;
+int screen_h = 240;
 int screen_offset_x = 0;
 int screen_offset_y = 0;
 
@@ -199,7 +201,8 @@ int screen_offset_y = 0;
 /* drawing routines */
 /********************/
 
-void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H){
+void draw_gfx_raw(int gfxid, int x, int y, int X, int Y, int W, int H){
+  if(x > screen_w || y > screen_h || x+W < 0 || y+H < 0) return;
   if(!gl_flag){
     SDL_Surface* surf = gfx[gfxid].surf;
     SDL_Rect r1 = {X,Y,W,H};
@@ -214,8 +217,6 @@ void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H){
     double Y0 = ((double)Y)/h;
     double Y1 = Y0 + ((double)H)/h;
 
-    x = x + screen_offset_x;
-    y = y + screen_offset_y;
     glBindTexture( GL_TEXTURE_2D, gfx[gfxid].texture );
     glBegin( GL_QUADS );
       glTexCoord2d(X0,Y0);
@@ -231,6 +232,10 @@ void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H){
       glVertex3f(x,y+H,0);
     glEnd();
   }
+}
+
+void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H){
+  draw_gfx_raw(gfxid, x+screen_offset_x, y+screen_offset_y, X, Y, W, H);
 }
 
 void clear_video(){
@@ -580,17 +585,26 @@ void setup_video(){
       screen_offset_x = (new_w-320)/2;
       screen_offset_y = (new_h-240)/2;
       glOrtho(0.0f, new_w, new_h, 0.0f, -1.0f, 1.0f);
+      screen_w = new_w;
+      screen_h = new_h;
     }
     else{
       glOrtho(0.0f, 320, 240, 0.0f, -1.0f, 1.0f);
+      screen_w = 320;
+      screen_h = 240;
     }
 
     glMatrixMode( GL_MODELVIEW );
     glLoadIdentity();
   }
+  else{
+    screen_w = 320;
+    screen_h = 240;
+  }    
 
   printf("video:\n");
   printf(" resolution: %d x %d %s\n",W,H,fullscreen?"fullscreen":"windowed");
+  printf(" pixel dimensions: %d x %d\n",screen_w,screen_h);
   printf(" aspect ratio: %g\n",((double)W)/H);
   printf(" opengl: %s\n",gl_flag?"yes":"no");
   printf(" x-offset: %d\n",screen_offset_x);

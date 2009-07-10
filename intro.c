@@ -87,6 +87,15 @@ void intro_update(){
   //t += 0.001*dt;
 }
 
+
+void intro_draw(){
+  
+
+
+}
+
+
+
 void intro_keydown(int key){
   printf("you pressed key %d\n",key);
   if(key == ESCAPE_KEY){

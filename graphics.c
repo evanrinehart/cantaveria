@@ -48,8 +48,8 @@ void graphics_init(){
 /* drawing */
 
 void draw_sprite(sprite* spr){
-  int x = spr->x - 0;
-  int y = spr->y - 0;
+  int x = spr->x - camera.x;
+  int y = spr->y - camera.y;
   int W = spr->w;
   int H = spr->h;
   int X = spr->frame.x;
@@ -96,7 +96,7 @@ void draw_small_text(char* str, int x, int y){
   for(char* c=str; *c; c++){
     int X = *c & 0x0f;
     int Y = *c >> 4;
-    draw_gfx(minifont_gfx, x, y, X*4, Y*9, 3, 8);
+    draw_gfx_raw(minifont_gfx, x, y, X*4, Y*9, 3, 8);
     x+=4;
   }
 }
@@ -125,7 +125,6 @@ void draw_screen(zone* z, int si, int sj){
 
   for(int j=0; j < 15; j++){
     for(int i=0; i < 20; i++){
-      if(x > 320 || y > 240 || x < -16 || y < -16) continue;
       int id = scr->tiles[i][j];
       if(id != 0){
         int X = (id&0xf)<<4;
@@ -144,20 +143,23 @@ void draw_screen(zone* z, int si, int sj){
 }
 
 void draw_stage(){
-  draw_screen(game.zones[0], 0, 0);
+  zone* z = game.zones[game.current_zone];
+  int si = game.si;
+  int sj = game.sj;
+
+  draw_screen(z, si, sj);
 }
 
-void draw(){
-
-  if(stage_enabled){
-    draw_stage();
-  }
-
+void draw_sprites(){
   for(int i=0; i<sprite_count; i++){
     draw_sprite(sprites[i]);
   }
+}
 
-  printf_small(1,1,"testing stage");
+void draw(){
+  if(game.draw){
+    game.draw();
+  }
 
   update_video();
   clear_video();

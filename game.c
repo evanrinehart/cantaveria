@@ -35,9 +35,19 @@ struct game game;
 void load_game(){
   game.update = intro_update;
   game.handler = intro_handler;
+  game.draw = NULL;
+
   game.end = 0;
 
   game.rng = pseed(0);
+
+
+
+  game.player_x = 0;
+  game.player_y = 0;
+  game.si = 0;
+  game.sj = 0;
+  game.current_zone = 0;
 }
 
 
@@ -71,7 +81,8 @@ void load_zone(char* filename){
   struct screen* scr;
   //struct tile tile;
 
-  z->name = filename;
+  z->name = xmalloc(strlen(filename)+1);
+  strcpy(z->name, filename);
 
   char* str = read_string(rd);
   z->tileset_gfx = load_gfx(str);

@@ -107,6 +107,7 @@ void enable_alphanum(int yn);
 /* gfx control */
 int load_gfx(char* filename);
 void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H);
+void draw_gfx_raw(int gfxid, int x, int y, int X, int Y, int W, int H);
 int gfx_width(int gfxid);
 int gfx_height(int gfxid);
 

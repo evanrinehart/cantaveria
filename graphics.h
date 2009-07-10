@@ -31,10 +31,8 @@ typedef struct {
 void graphics_init();
 
 void draw();
-
-void draw_small_text(char* str, int x, int y);
-
-void printf_small(int x, int y, char* format, ...);
+void draw_sprites();
+void draw_stage();
 
 
 int load_sprite(char* filename, int id);

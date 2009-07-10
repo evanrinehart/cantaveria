@@ -48,6 +48,7 @@ typedef struct {
 struct game {
   struct handler handler;
   void (*update)();
+  void (*draw)();
   int end;
 
   rng_state rng;
@@ -55,9 +56,11 @@ struct game {
   zone* zones[32];
   int zone_count;
 
+  /*these track the location of the player*/
   int player_x;
   int player_y;
   int current_zone;
+  int si, sj;
 };
 
 extern struct game game;

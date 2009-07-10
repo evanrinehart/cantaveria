@@ -35,6 +35,11 @@ int cursor_x;
 int cursor_y;
 sprite* cursor;
 
+int camera_x;
+int camera_y;
+
+int screen_x;
+int screen_y;
 
 struct {
   int flag;
@@ -52,6 +57,30 @@ void cursor_control(int key){
     case UP_KEY: cursor_y--; break;
     case DOWN_KEY: cursor_y++; break;
   }
+
+  /*check for crossing a zone exit*/
+
+  if(cursor_x < camera_x){
+    camera_x--;
+    point_camera(camera_x*16, camera_y*16);
+  }
+  if(cursor_x >= camera_x+20){
+    camera_x++;
+    point_camera(camera_x*16, camera_y*16);
+  }
+  if(cursor_y < camera_y){
+    camera_y--;
+    point_camera(camera_x*16, camera_y*16);
+  }
+  if(cursor_y >= camera_y+15){
+    camera_y++;
+    point_camera(camera_x*16, camera_y*16);
+  }
+
+  screen_x = cursor_x/20;
+  screen_y = cursor_y/15;
+  if(cursor_x < 0){screen_x--;}
+  if(cursor_y < 0){screen_y--;}
 
   cursor->x = cursor_x*16;
   cursor->y = cursor_y*16;
@@ -98,10 +127,23 @@ void edit_joyrelease(int joy, int button){
 printf("you released joystick %d button %d\n",joy,button);
 }
 
+
+void edit_draw(){
+  draw_stage();
+  draw_sprites();
+  printf_small(1,1,"zone: %s",game.zones[0]->name);
+  printf_small(1,10,"screen: %d,%d",screen_x,screen_y);
+  printf_small(1,19,"cursor: %d,%d",cursor_x,cursor_y);
+  printf_small(1,28,"camera: %d,%d",camera_x,camera_y);
+}
+
 struct handler edit_handler = {
   edit_keydown, edit_keyup, edit_joymovex,
   edit_joymovey, edit_joypress, edit_joyrelease
 };
+
+
+
 
 void main_init(int argc, char* argv[]){
   backend_init(argc, argv);
@@ -109,9 +151,11 @@ void main_init(int argc, char* argv[]){
   graphics_init();
   text_init();
 
+  load_game();
+
   game.handler = edit_handler;
   game.update = NULL;
-
+  game.draw = edit_draw;
 
   char** list = loader_readdir("zones");
   for(int i=0; list[i]; i++){
@@ -124,8 +168,12 @@ void main_init(int argc, char* argv[]){
 
   cursor_x = 0;
   cursor_y = 0;
-  int id = load_sprite("box.spr",SPR_BOX);
+  load_sprite("box.spr",SPR_BOX);
   cursor = enable_sprite(SPR_BOX);
+
+  camera_x = 0;
+  camera_y = 0;
+  point_camera(0,0);
 }
 
 
@@ -138,6 +186,8 @@ void update(){
     }
   }
 }
+
+
 
 
 void main_quit(){
