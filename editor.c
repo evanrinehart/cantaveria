@@ -23,10 +23,12 @@
 #include <stdio.h>
 
 #include "util.h"
-#include "game.h"
 #include "backend.h"
-#include "loader.h"
 #include "graphics.h"
+#include "game.h"
+
+#include "loader.h"
+
 #include "text.h"
 
 
@@ -48,13 +50,14 @@ struct {
 } repeat;
 
 int hold_fire;
+unsigned char brush_tile;
 
 
 
 void press_fire(){
   //if screen exists change tile
   //else create new screen
-  zone* z = game.zones[game.current_zone];
+  zone* z = game.current_zone;
   int si = game.si;
   int sj = game.sj;
   struct screen* scr = ZONE_LOOKUP(z,si,sj);
@@ -64,7 +67,7 @@ void press_fire(){
     z->screens[si+z->w*sj] = scr;
   }
 
-   scr->tiles[cursor_x-si*20][cursor_y-sj*15] = 33;
+   scr->tiles[cursor_x-si*20][cursor_y-sj*15] = brush_tile;
   
 }
 
@@ -115,7 +118,7 @@ void cursor_control(int key){
 void edit_keydown(int key){
 
   if(key == ESCAPE_KEY){
-    game.end = 1;
+    end_program();
   }
 
   switch(key){
@@ -131,6 +134,12 @@ void edit_keydown(int key){
     case FIRE_KEY:
       hold_fire = 1;
       press_fire();
+      break;
+    case L_KEY:
+      brush_tile--;
+      break;
+    case R_KEY:
+      brush_tile++;
       break;
   }
 
@@ -185,7 +194,7 @@ void main_init(int argc, char* argv[]){
 
   load_game();
 
-  game.handler = edit_handler;
+  set_handler(edit_handler);
   game.update = NULL;
   game.draw = edit_draw;
 
@@ -195,6 +204,8 @@ void main_init(int argc, char* argv[]){
     load_zone(list[i]);
   }
   loader_freedirlist(list);
+
+  game.current_zone = game.zones[0];
 
   enable_stage(1);
 
@@ -242,7 +253,7 @@ void main_loop(){
       draw();
       T %= dt;
     }
-    if(game.end){break;}
+    if(ended()){break;}
     delay(DELAY_AMOUNT);
   }
 }

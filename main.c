@@ -23,11 +23,13 @@
 #include <stdio.h>
 
 #include "util.h"
-#include "game.h"
+
 #include "backend.h"
+#include "graphics.h"
+#include "game.h"
 #include "intro.h"
 #include "loader.h"
-#include "graphics.h"
+
 #include "text.h"
 
 void update(){
@@ -48,7 +50,7 @@ void main_loop(){
       draw();
       T %= dt;
     }
-    if(game.end){break;}
+    if(ended()){break;}
     delay(DELAY_AMOUNT);
   }
 }

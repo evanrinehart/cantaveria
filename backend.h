@@ -61,6 +61,16 @@ JOYPRESS,
 JOYRELEASE
 };
 
+struct handler {
+  void (*keydown)(int key);
+  void (*keyup)(int key);
+  void (*joymovex)(int joy, int x);
+  void (*joymovey)(int joy, int y);
+  void (*joypress)(int joy, int button);
+  void (*joyrelease)(int joy, int button);
+  //void (*keyentry)(utf32 u);
+};
+
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 0
 
@@ -94,6 +104,8 @@ void draw();  /* draw all active graphics */
 
 int since(); /* ms since last time since() was called */
 void delay(int ms); /* wait ms ms */
+void end_program();
+int ended();
 
 void update_video();
 void clear_video();
@@ -103,6 +115,7 @@ int keynum(int name); /* get key number for key name */
 int butnum(int joy, int name); /* get button number for button name */
 void control(int type, int par1, int par2); /* automatic control */
 void enable_alphanum(int yn);
+void set_handler(struct handler h);
 
 /* gfx control */
 int load_gfx(char* filename);

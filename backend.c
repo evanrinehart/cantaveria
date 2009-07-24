@@ -27,7 +27,7 @@
 
 #include "util.h"
 #include "backend.h"
-#include "game.h"
+//#include "game.h"
 #include "loader.h"
 #include "sound.h"
 
@@ -35,6 +35,21 @@ SDL_Surface* video;
 int gl_flag = 0;
 int fullscreen = 0;
 int W, H;
+int end = 0;
+
+struct handler handler;
+
+
+void set_handler(struct handler h){
+  handler = h;
+}
+
+void end_program(){
+  end = 1;
+}
+int ended(){
+  return end;
+}
 
 int since(){
   static int last = 0;
@@ -121,35 +136,35 @@ void input(){
         }
         else{
           name = key2name(e.key.keysym.sym);
-          if(name > -1) game.handler.keydown(name);
+          if(name > -1) handler.keydown(name);
         }
         break;
       case SDL_KEYUP:
         name = key2name(e.key.keysym.sym);
-        if(name > -1) game.handler.keyup(name);
+        if(name > -1) handler.keyup(name);
         break;
       case SDL_JOYBUTTONDOWN:
         player = joy2player(e.jbutton.which);
         name = button2name(player, e.jbutton.button);
-        if(name > -1) game.handler.joypress(player, name);
+        if(name > -1) handler.joypress(player, name);
         break;
       case SDL_JOYBUTTONUP:
         player = joy2player(e.jbutton.which);
         name = button2name(player, e.jbutton.button);
-        if(name > -1) game.handler.joyrelease(e.jbutton.which, name);
+        if(name > -1) handler.joyrelease(e.jbutton.which, name);
         break;
       case SDL_JOYAXISMOTION:
         player = joy2player(e.jaxis.which);
         if(player < 0) break;
         if(e.jaxis.axis == 0){
-          game.handler.joymovex(player, e.jaxis.value);
+          handler.joymovex(player, e.jaxis.value);
         }
         else if(e.jaxis.axis == 1){
-          game.handler.joymovey(player, e.jaxis.value);
+          handler.joymovey(player, e.jaxis.value);
         }
         break;
       case SDL_QUIT:
-        game.end = 1;
+        end_program();
         break;
     }
   }
@@ -159,22 +174,22 @@ void control(int type, int par1, int par2){
 
   switch(type){
     case KEYDOWN:
-      game.handler.keydown(par1);
+      handler.keydown(par1);
       break;
     case KEYUP:
-      game.handler.keyup(par1);
+      handler.keyup(par1);
       break;
     case JOYMOVEX:
-      game.handler.joymovex(par1, par2);
+      handler.joymovex(par1, par2);
       break;
     case JOYMOVEY:
-      game.handler.joymovey(par1, par2);
+      handler.joymovey(par1, par2);
       break;
     case JOYPRESS:
-      game.handler.joypress(par1, par2);
+      handler.joypress(par1, par2);
       break;
     case JOYRELEASE:
-      game.handler.joyrelease(par1, par2);
+      handler.joyrelease(par1, par2);
       break;
   }
 
@@ -407,11 +422,11 @@ int gfx_height(int gfxid){
 
 
 
-Sint16* lout;
-Sint16* rout;
+float* lout;
+float* rout;
 int buffer_size;
 
-extern void process_audio(short lout[], short rout[], int len);
+extern void process_audio(float lout[], float rout[], int len);
 
 void audio_callback(void *userdata, Uint8 *stream, int len){
   Sint16* out = (Sint16*)stream;
@@ -419,8 +434,8 @@ void audio_callback(void *userdata, Uint8 *stream, int len){
   process_audio(lout, rout, buffer_size);
 
   for(int i=0; i<buffer_size; i++){
-    out[i*2    ] = lout[i];
-    out[i*2 + 1] = rout[i];
+    out[i*2    ] = (Sint16)(lout[i]*32767);
+    out[i*2 + 1] = (Sint16)(rout[i]*32767);
   }
 
 }
@@ -477,6 +492,7 @@ void parse_options(int argc, char* argv[], int* fullscreen, int* gl_flag){
 }
 
 void load_keymap(){
+/*
   keymap[ESCAPE_KEY] = SDLK_ESCAPE;
   keymap[PAUSE_KEY] = SDLK_PAUSE;
 
@@ -494,6 +510,25 @@ void load_keymap(){
   keymap[R_KEY] = SDLK_w;
   keymap[START_KEY] = SDLK_RETURN;
   keymap[SELECT_KEY] = SDLK_TAB;
+*/
+
+  keymap[ESCAPE_KEY] = SDLK_ESCAPE;
+  keymap[PAUSE_KEY] = SDLK_PAUSE;
+
+  keymap[LEFT_KEY] = SDLK_a;
+  keymap[RIGHT_KEY] = SDLK_d;
+  keymap[UP_KEY] = SDLK_w;
+  keymap[DOWN_KEY] = SDLK_s;
+
+  keymap[FIRE_KEY] = SDLK_j;
+  keymap[JUMP_KEY] = SDLK_k;
+  keymap[INVENTORY_KEY] = SDLK_i;
+  keymap[SPECIAL_KEY] = SDLK_l;
+
+  keymap[L_KEY] = SDLK_q;
+  keymap[R_KEY] = SDLK_e;
+  keymap[START_KEY] = SDLK_u;
+  keymap[SELECT_KEY] = SDLK_o;
 }
 
 void setup_joysticks(){
@@ -639,8 +674,8 @@ void setup_audio(){
     printf("    WARNING: audio format not AUDIO_S16 :(\n");
   }
 
-  lout = xmalloc(gotten.samples*2);
-  rout = xmalloc(gotten.samples*2);
+  lout = xmalloc(gotten.samples*sizeof(float));
+  rout = xmalloc(gotten.samples*sizeof(float));
   buffer_size = gotten.samples;
 
   printf(" sound on\n");

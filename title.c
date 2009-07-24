@@ -23,24 +23,20 @@
 #include <stdio.h>
 
 #include "util.h"
-#include "game.h"
 #include "backend.h"
+#include "graphics.h"
+#include "game.h"
+
 #include "title.h"
 
 
-void title_setup(){
-  //load some graphics
-  //place the graphics
-  //if any, setup sprite update callbacks
 
-  printf("you just entered the title screen\n");
-}
 
 
 void title_keydown(int key){
   printf("you pressed key %d\n",key);
   if(key == ESCAPE_KEY){
-    game.end = 1;
+    end_program();
   }
 }
 
@@ -68,9 +64,23 @@ void title_update(){
 
 }
 
+void title_draw(){
+
+}
+
 struct handler title_handler = {
 title_keydown,title_keyup,title_joymovex,
 title_joymovey,title_joypress,title_joyrelease
 };
 
 
+void title_setup(){
+  //load some graphics
+  //place the graphics
+  //if any, setup sprite update callbacks
+  set_handler(title_handler);
+  game.update = title_update;
+  game.draw = title_draw;
+
+  printf("you just entered the title screen\n");
+}

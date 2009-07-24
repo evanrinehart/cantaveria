@@ -144,7 +144,7 @@ void draw_screen(zone* z, int si, int sj){
 }
 
 void draw_stage(){
-  zone* z = game.zones[game.current_zone];
+  zone* z = game.current_zone;
   int si = game.si;
   int sj = game.sj;
 
@@ -199,7 +199,7 @@ void animate_sprites(){
       spr->frame = ani->frames[spr->current_frame];
     }
 
-    if(spr->update) spr->update(spr, spr->userdata);
+    //if(spr->update) spr->update(spr, spr->userdata);
 
   }
 }
@@ -290,10 +290,10 @@ sprite* enable_sprite(int sprnum){
   spr->y = 0;
   spr->w = ani->w;
   spr->h = ani->h;
-  spr->vx = 0;
-  spr->vy = 0;
-  spr->update = NULL;
-  spr->userdata = NULL;
+  //spr->vx = 0;
+  //spr->vy = 0;
+  //spr->update = NULL;
+  //spr->userdata = NULL;
 
   sprites[sprite_count++] = spr;
   return spr;

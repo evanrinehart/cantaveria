@@ -27,9 +27,9 @@
 
 int sample_rate;
 
-short* sounds[64];
+float* sounds[64];
 
-void process_audio(short lout[], short rout[], int len){
+void process_audio(float lout[], float rout[], int len){
   for(int i=0; i<len; i++){
     lout[i] = 0;
     rout[i] = 0;
@@ -75,7 +75,7 @@ void init_sound(int rate){
 
   for(int N=0; N<2; N++){
     int L = sound_table[N][0];
-    sounds[N] = xmalloc(L*S*sizeof(short));
+    sounds[N] = xmalloc(L*S*sizeof(float));
     for(int i=0; i<L; i++){
       sounds[N][i] = sound_builders[N](N, i);
     }

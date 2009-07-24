@@ -14,9 +14,9 @@ struct sprite {
   struct frame frame;
   int gfxid;
   int anim;
-  int x, y, w, h, vx, vy;
-  void (*update)(sprite*, void* ud);
-  void* userdata;
+  int x, y, w, h;
+  //void (*update)(sprite*, void* ud);
+  //void* userdata;
 };
 
 typedef struct {

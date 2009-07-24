@@ -20,15 +20,8 @@
    Boston, MA  02110-1301, USA
 */
 
-struct handler {
-  void (*keydown)(int key);
-  void (*keyup)(int key);
-  void (*joymovex)(int joy, int x);
-  void (*joymovey)(int joy, int y);
-  void (*joypress)(int joy, int button);
-  void (*joyrelease)(int joy, int button);
-};
 
+#define PIXUP 1024
 
 struct screen {
   unsigned char tiles[20][15];
@@ -47,11 +40,41 @@ typedef struct {
 
 #define ZONE_LOOKUP(Z,I,J) (I >= Z->w || J >= Z->h || I < 0 || J < 0 ? NULL : *(Z->screens + I + J*Z->w))
 
+struct box{int x,y,w,h;};
+
+typedef struct {
+  struct box box; /*absolute coords*/
+  int x, y; /*absolute coords*/
+  int vx, vy; /* pixels per ms / 256 */
+  int xoff, yoff; /* pixel coords*/
+  int bxoff, byoff; /* absolute coords */
+  sprite* spr; /*pixel coords*/
+  int flags;
+} mobile;
+
+typedef struct {
+  struct box box;
+  int type;
+} bullet;
+
+typedef struct {
+  struct box box;
+  //sprite* spr;
+  int params[6];
+  int t;
+} moveplat;
+
+
+struct player_motion {
+  int state;
+  int timer;
+  
+};
+
+
 struct game {
-  struct handler handler;
   void (*update)();
   void (*draw)();
-  int end;
 
   rng_state rng;
 
@@ -61,8 +84,12 @@ struct game {
   /*these track the location of the player*/
   int player_x;
   int player_y;
-  int current_zone;
+  zone* current_zone;
   int si, sj;
+
+
+  /* entities */
+  
 };
 
 extern struct game game;
@@ -79,3 +106,10 @@ SPR_BOX
 void load_game();
 
 void load_zone(char* filename);
+
+
+int stage_collision(mobile* m, zone* z, int si, int sj);
+int box_collision(struct box* B1, struct box* B2);
+
+void update_mobile_motion(mobile* m);
+

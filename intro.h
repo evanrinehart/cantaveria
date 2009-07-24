@@ -22,6 +22,7 @@
 
 void intro_setup();
 void intro_update();
+void intro_draw();
 
 extern struct handler intro_handler;
 
