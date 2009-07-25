@@ -60,14 +60,33 @@ int shape_lookup(int X, int Y, int si, int sj, zone* z){
 
   int sioff = 0;
   int sjoff = 0;
-  if(I>=20) sioff=1;
-  if(I<0) sioff=-1;
-  if(J>=15) sjoff=1;
-  if(J<0) sjoff=-1;
+
+  if(I>=20){
+    sioff=1;
+    I -= 20;
+  }
+  if(I<0){
+    sioff=-1;
+    I += 20;
+  }
+  if(J>=15){
+    sjoff=1;
+    J -= 15;
+  }
+  if(J<0){
+    sjoff=-1;
+    J += 15;
+  }
+
+//printf("%d %d %d %d\n",I,J,sioff,sjoff);
+
 
   struct screen* scr = ZONE_LOOKUP(z,si+sioff,sj+sjoff);
   return z->tileset_shapes[scr->tiles[I][J]];
 }
+
+int cx = 0;
+int cy = 0;
 
 void player_update(int id){
   struct pstate* ps = pstate+id;
@@ -100,9 +119,14 @@ void player_update(int id){
   //stage_collision(p,game.current_zone,game.si,game.sj);
 
   struct box* B = &(p->box);
-  zone* z = game.current_zone;
-  int si = game.si;
-  int sj = game.sj;
+    
+  //zone* z = game.current_zone;
+  //int si = game.si;
+  //int sj = game.sj;
+
+  zone* z = p->z;
+  int si = p->si;
+  int sj = p->sj;
 
   if(p->vx > 0){
     int X = B->x + B->w + p->vx*dt;
@@ -153,6 +177,23 @@ void player_update(int id){
   }
 
   update_mobile_motion(p);
+
+  //point_camera(p->spr->x-320/2, p->spr->y-240/2);
+  static int sx = 0;
+  static int sy = 0;
+
+  if(p->vx > 0) sx = 1;
+  if(p->vx < 0) sx = -1;
+  if(p->vy > 0) sy = 1;
+  if(p->vy < 0) sy = -1;
+
+  cx = (cx*29 + (p->x + 320/4*PIXUP*sx))/30;
+  cy = (cy*29 + (p->y + 240/4*PIXUP*0))/30;
+  point_camera(cx/PIXUP - 320/2,cy/PIXUP - 240/2);
+
+  p->si = p->x/PIXUP/16/20 - z->x;
+  p->sj = p->y/PIXUP/16/15 - z->y;
+
 }
 
 void player_press(int id, int key){
@@ -212,6 +253,10 @@ void player_init(int id){
   p->bxoff = 0;
   p->byoff = 0;
   update_mobile_motion(p);
+
+  p->si = 0;
+  p->sj = 0;
+  p->z = game.zones[0];
 
   //ps->state = FALLING;
   ps->state = GROUND;

@@ -38,7 +38,7 @@ typedef struct {
   int x,y,w,h;
 } zone;
 
-#define ZONE_LOOKUP(Z,I,J) (I >= Z->w || J >= Z->h || I < 0 || J < 0 ? NULL : *(Z->screens + I + J*Z->w))
+#define ZONE_LOOKUP(Z,I,J) (I >= Z->w || J >= Z->h || I < 0 || J < 0 ? NULL : *(Z->screens + (I) + (J)*Z->w))
 
 struct box{int x,y,w,h;};
 
@@ -49,6 +49,8 @@ typedef struct {
   int xoff, yoff; /* pixel coords*/
   int bxoff, byoff; /* absolute coords */
   sprite* spr; /*pixel coords*/
+  zone* z;
+  int si, sj;
   int flags;
 } mobile;
 

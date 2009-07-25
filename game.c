@@ -66,7 +66,7 @@ L[?] list
 [S tileset]
 256[b shape]
 [s x] [s y] [s w] [s h]
-L[ [s w] [s h]
+L[ [s i] [s j]
   [b flags]
   300[b tile]
   4[S exit]  ]
