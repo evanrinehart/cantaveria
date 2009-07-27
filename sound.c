@@ -42,7 +42,7 @@ int load_sound(char* filename){
 }
 
 void play_sound(int id){
-  sounds[];
+  
 }
 
 

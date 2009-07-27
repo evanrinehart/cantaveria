@@ -56,6 +56,9 @@ struct pstate {
   int rwalk;
   int jump;
   mobile player;
+
+  int cam[2];
+  int cto[2];
 } pstate[6];
 
 mobile players[6];
@@ -98,28 +101,6 @@ void player_update(int id){
   struct pstate* ps = pstate+id;
   mobile* p = &(pstate[id].player);
 
-  int walk = ps->rwalk - ps->lwalk;
-  if(walk < 0 && p->vx > -120) p->vx += walk*2;
-  else if(walk > 0 && p->vx < 120) p->vx += walk*2;
-  else if(walk == 0 && ps->state == GROUND && p->vx != 0){
-    if(abs(p->vx)<5) p->vx = 0;
-    else if(p->vx > 0) p->vx -= 3;
-    else if(p->vx < 0) p->vx += 3;
-  }
-
-  if(ps->state==JUMPING){//jumping
-    p->vy += ps->jaccel;
-    if(p->vy > 0) ps->state = FALLING;
-  }
-  else if(ps->state == FALLING){
-    if(p->vy < 200){
-      p->vy += 5;
-    }
-  }
-  else if(ps->state == GROUND){
-    p->vy += 1;
-  }
-
   /*collision with stage*/
 
   //stage_collision(p,game.current_zone,game.si,game.sj);
@@ -133,6 +114,21 @@ void player_update(int id){
   zone* z = p->z;
   int si = p->si;
   int sj = p->sj;
+
+
+
+  int walk = ps->rwalk - ps->lwalk;
+  if(walk < 0 && p->vx > -120) p->vx += walk*2;
+  else if(walk > 0 && p->vx < 120) p->vx += walk*2;
+  else if(walk == 0 && ps->state == GROUND && p->vx != 0){
+    if(abs(p->vx)<5) p->vx = 0;
+    else if(p->vx > 0) p->vx -= 3;
+    else if(p->vx < 0) p->vx += 3;
+  }
+
+
+
+
 
   if(p->vx > 0){
     int X = B->x + B->w + p->vx*dt;
@@ -155,10 +151,25 @@ void player_update(int id){
     }
   }
 
+
+  if(ps->state==JUMPING){//jumping
+    p->vy += ps->jaccel;
+    if(p->vy > 0) ps->state = FALLING;
+  }
+  else if(ps->state == FALLING){
+    if(p->vy < 200){
+      p->vy += 5;
+    }
+  }
+  else if(ps->state == GROUND){
+    p->vy += 1;
+  }
+
   if(p->vy < 0){
     int Y = B->y + p->vy*dt;
-    int shape1 = shape_lookup(B->x,Y,si,sj,z);
-    int shape2 = shape_lookup(B->x+B->w-1,Y,si,sj,z);
+    int X = B->x + p->vx*dt;
+    int shape1 = shape_lookup(X,Y,si,sj,z);
+    int shape2 = shape_lookup(X+B->w-1,Y,si,sj,z);
     if(shape1||shape2){//tile is solid
       int P = (16*PIXUP);
       p->y = Y/P*P + P;
@@ -167,8 +178,9 @@ void player_update(int id){
   }
   else if(p->vy > 0){
     int Y = B->y + B->h + p->vy*dt;
-    int shape1 = shape_lookup(B->x,Y,si,sj,z);
-    int shape2 = shape_lookup(B->x+B->w-1,Y,si,sj,z);
+    int X = B->x + p->vx*dt;
+    int shape1 = shape_lookup(X,Y,si,sj,z);
+    int shape2 = shape_lookup(X+B->w-1,Y,si,sj,z);
     if(shape1||shape2){//tile is solid
       int P = (16*PIXUP);
       p->y = Y/P*P - B->h;
@@ -176,6 +188,7 @@ void player_update(int id){
       ps->state = GROUND;
     }
   }
+
 
   /*falling off cliff*/
   if(ps->state == GROUND && p->vy > 0){
@@ -186,9 +199,32 @@ void player_update(int id){
 
   //point_camera(p->spr->x-320/2, p->spr->y-240/2);
 
+  ps->cto[0] = (p->facing==LEFT ? -100 : 100)*PIXUP;
+  ps->cto[1] = 0;
+
   cx = (cx*29 + (p->x + 320/4*PIXUP*(p->facing==LEFT?-1:1)))/30;
   cy = (cy*29 + (p->y + 240/4*PIXUP*0))/30;
-  point_camera(cx/PIXUP - 320/2,cy/PIXUP - 240/2);
+
+  int xdiff = ps->cam[0] - (p->x + ps->cto[0]);
+  int ydiff = ps->cam[1] - (p->y + ps->cto[1]);
+  if(abs(xdiff) > 20*PIXUP){
+  if(xdiff > 0){
+    ps->cam[0] -= 1000;
+  }
+  if(xdiff < 0){
+    ps->cam[0] += 1000;
+  }
+  }
+
+  if(abs(ydiff) > 20*PIXUP){
+  if(ydiff > 0){
+    ps->cam[1] -= 1000;
+  }
+  if(ydiff < 0){
+    ps->cam[1] += 1000;
+  }
+  }
+  point_camera(ps->cam[0]/PIXUP - 320/2, ps->cam[1]/PIXUP - 240/2);
 
   p->si = p->x/PIXUP/16/20 - z->x;
   p->sj = p->y/PIXUP/16/15 - z->y;
@@ -243,7 +279,7 @@ void player_init(int id){
   p->spr = enable_sprite(SPR_BOX);
 
   p->box.w = (p->spr->w) * PIXUP;
-  p->box.h = (p->spr->h -2) * PIXUP;
+  p->box.h = (p->spr->h - 2) * PIXUP;
 
   p->x = 50*PIXUP;
   p->y = 50*PIXUP;
