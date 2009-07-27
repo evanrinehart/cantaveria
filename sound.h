@@ -24,3 +24,5 @@
 
 void init_sound();
 
+int load_sound(char* filename);
+void play_sound(int id);

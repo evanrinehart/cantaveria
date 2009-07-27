@@ -48,6 +48,7 @@ typedef struct {
   int vx, vy; /* pixels per ms / 256 */
   int xoff, yoff; /* pixel coords*/
   int bxoff, byoff; /* absolute coords */
+  enum {LEFT, RIGHT} facing;
   sprite* spr; /*pixel coords*/
   zone* z;
   int si, sj;

@@ -28,6 +28,7 @@
 int sample_rate;
 
 float* sounds[64];
+int id_ptr = 0;
 
 void process_audio(float lout[], float rout[], int len){
   for(int i=0; i<len; i++){
@@ -36,7 +37,13 @@ void process_audio(float lout[], float rout[], int len){
   }
 }
 
+int load_sound(char* filename){
+  
+}
 
+void play_sound(int id){
+  sounds[];
+}
 
 
 

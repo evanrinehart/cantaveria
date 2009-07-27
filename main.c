@@ -33,8 +33,14 @@
 #include "text.h"
 
 void update(){
+  fps_update();
+  console_clear();
+
+
   animate_sprites();
   game.update();
+
+
 }
 
 void main_loop(){

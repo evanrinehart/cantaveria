@@ -43,6 +43,12 @@ JUMPING,
 FALLING
 };
 
+char statenames[8][16] = {
+"GROUND",
+"JUMPING",
+"FALLING"
+};
+
 struct pstate {
   int state;
   int jaccel;
@@ -111,7 +117,7 @@ void player_update(int id){
     }
   }
   else if(ps->state == GROUND){
-    p->vy += 5;
+    p->vy += 1;
   }
 
   /*collision with stage*/
@@ -172,22 +178,15 @@ void player_update(int id){
   }
 
   /*falling off cliff*/
-  if(p->vy > 0 && ps->state == GROUND){
+  if(ps->state == GROUND && p->vy > 0){
     ps->state = FALLING;
   }
 
   update_mobile_motion(p);
 
   //point_camera(p->spr->x-320/2, p->spr->y-240/2);
-  static int sx = 0;
-  static int sy = 0;
 
-  if(p->vx > 0) sx = 1;
-  if(p->vx < 0) sx = -1;
-  if(p->vy > 0) sy = 1;
-  if(p->vy < 0) sy = -1;
-
-  cx = (cx*29 + (p->x + 320/4*PIXUP*sx))/30;
+  cx = (cx*29 + (p->x + 320/4*PIXUP*(p->facing==LEFT?-1:1)))/30;
   cy = (cy*29 + (p->y + 240/4*PIXUP*0))/30;
   point_camera(cx/PIXUP - 320/2,cy/PIXUP - 240/2);
 
@@ -202,9 +201,11 @@ void player_press(int id, int key){
 
   switch(key){
     case LEFT_KEY:
+      p->facing = LEFT;
       ps->lwalk = 1;
       break;
     case RIGHT_KEY:
+      p->facing = RIGHT;
       ps->rwalk = 1;
       break;
     case JUMP_KEY:
@@ -241,15 +242,15 @@ void player_init(int id){
 
   p->spr = enable_sprite(SPR_BOX);
 
-  p->box.w = p->spr->w * PIXUP;
-  p->box.h = p->spr->h * PIXUP;
+  p->box.w = (p->spr->w) * PIXUP;
+  p->box.h = (p->spr->h -2) * PIXUP;
 
   p->x = 50*PIXUP;
   p->y = 50*PIXUP;
   p->vx = 0;
   p->vy = 0;
   p->xoff = 0;
-  p->yoff = 0;
+  p->yoff = 2;
   p->bxoff = 0;
   p->byoff = 0;
   update_mobile_motion(p);
@@ -277,13 +278,6 @@ void player_hide(int id){
 double t;
 
 void intro_setup(){
-
-  //load_font("default.font");
-
-
-  //set_message("AB ウ DE");
-  //complete_message();
-
   set_handler(intro_handler);
   game.update = intro_update;
   game.draw = intro_draw;
@@ -299,8 +293,9 @@ void intro_setup(){
 
 void intro_update(){
   player_update(0);
+  console_printf("%d fps",get_fps());
+  console_printf("state: %s",statenames[pstate[0].state]);
 }
-
 
 void intro_draw(){
   draw_stage();
@@ -314,7 +309,7 @@ void intro_keydown(int key){
   player_press(0, key);
 
   if(key == ESCAPE_KEY){
-    title_setup();
+    end_program();
   }
 }
 

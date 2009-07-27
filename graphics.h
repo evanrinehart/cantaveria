@@ -58,3 +58,9 @@ void animate_sprites();
 
 
 void enable_stage(int yn);
+
+
+
+void console_clear();
+void console_printf(char* format, ...);
+void console_draw();

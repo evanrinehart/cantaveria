@@ -695,3 +695,29 @@ void backend_init(int argc, char* argv[]){
   srand(RANDOM_SEED);
 
 }
+
+
+
+/* fps */
+
+int fps = 0;
+int update_count = 0;
+int draw_count = 0;
+
+void fps_update(){
+  update_count++;
+  if(update_count == 100){
+    fps = draw_count * 100 / update_count;
+    update_count = 0;
+    draw_count = 0;
+  }
+}
+
+void fps_draw(){
+  draw_count++;
+}
+
+int get_fps(){
+  return fps;
+}
+

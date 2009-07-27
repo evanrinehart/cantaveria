@@ -164,9 +164,13 @@ void draw_sprites(){
 }
 
 void draw(){
+  fps_draw();
+
   if(game.draw){
     game.draw();
   }
+
+  console_draw();
 
   update_video();
   clear_video();
@@ -322,3 +326,26 @@ void enable_stage(int yn){
   stage_enabled = yn;
 }
 
+/* console */
+char console[25][80];
+int console_ptr = 0;
+
+void console_clear(){
+  console_ptr = 0;
+}
+
+void console_printf(char* format, ...){
+  if(console_ptr==25) return;
+  va_list ap;
+  va_start(ap, format);
+  vsnprintf(console[console_ptr], 80, format, ap);
+  console[console_ptr][79] = '\0';
+  console_ptr++;
+  va_end(ap);
+}
+
+void console_draw(){
+  for(int i=0; i<console_ptr; i++){
+    printf_small(1,9*i,"%s",console[i]);
+  }
+}

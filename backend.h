@@ -130,5 +130,6 @@ void play_sound(int id);
 int load_music(char* filename);
 int play_music(int id);
 
-
-
+void fps_update();
+void fps_draw();
+int get_fps();
