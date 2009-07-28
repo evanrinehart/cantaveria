@@ -54,6 +54,7 @@ struct pstate {
   int jaccel;
   int lwalk;
   int rwalk;
+  int uphold;
   int jump;
   mobile player;
 
@@ -199,40 +200,40 @@ void player_update(int id){
 
 }
 
-void update_camera(){
+void camera_update(){
   //point_camera(p->spr->x-320/2, p->spr->y-240/2);
+
+  static struct {
+    int x, y;
+    int xtar, ytar;
+  } cam;
 
   struct pstate* ps = pstate+0;
   mobile* p = &(pstate[0].player);
 
-  ps->cto[0] = (p->facing==LEFT ? -100 : 100)*PIXUP;
-  ps->cto[1] = 0;
-
-  int xdiff = ps->cam[0] - (p->x + ps->cto[0]);
-  int ydiff = ps->cam[1] - (p->y + ps->cto[1]);
-  if(abs(xdiff) > 20*PIXUP){
-  //if(xdiff > 0){
-      if(abs(xdiff/100) < 10){
-        ps->cam[0] -= xdiff/100;
-      }
-      else{
-        ps->cam[0] -= 10;
-      }
-  //}
-  //if(xdiff < 0){
-  //  ps->cam[0] += sqrt(-xdiff)*5;
-  //}
+  //cam.xtar = (p->facing==LEFT ? -100 : 100)*PIXUP;
+  //cam.xtar = 0;
+  if(p->vx > 0){
+    cam.xtar += 800; 
+    if(cam.xtar > 100*PIXUP) cam.xtar = 100*PIXUP;
+  }
+  else if(p->vx < 0){
+    cam.xtar -= 800;
+    if(cam.xtar < -100*PIXUP) cam.xtar = -100*PIXUP;
+  }
+  else{
+    //cam.xtar -= cam.xtar/75;
   }
 
-  if(abs(ydiff) > 20*PIXUP){
-  //if(ydiff > 0){
-    ps->cam[1] -= ydiff/100;
-  //}
-  //if(ydiff < 0){
-  //  ps->cam[1] += 2000;
-  //}
-  }
-  point_camera(ps->cam[0]/PIXUP - 320/2, ps->cam[1]/PIXUP - 240/2);
+  cam.ytar = ps->uphold * 100 * PIXUP;
+
+  int xdiff = cam.x - (p->x + cam.xtar);
+  int ydiff = cam.y - (p->y + cam.ytar);
+  
+  cam.x -= xdiff/100;
+  cam.y -= ydiff/50;
+
+  point_camera(cam.x/PIXUP - 320/2, cam.y/PIXUP - 240/2);
 }
 
 void player_press(int id, int key){
@@ -255,6 +256,12 @@ void player_press(int id, int key){
         ps->jaccel = 2;
       } 
       break;
+    case UP_KEY:
+      ps->uphold = -1;
+      break;
+    case DOWN_KEY:
+      ps->uphold = 1;
+      break;
   }
 }
 
@@ -272,6 +279,12 @@ void player_release(int id, int key){
     case JUMP_KEY:
       ps->state = FALLING;
       break;
+    case UP_KEY:
+      ps->uphold = 0;
+      break;
+    case DOWN_KEY:
+      ps->uphold = 0;
+      break;
   }
 }
 
@@ -282,7 +295,7 @@ void player_init(int id){
 
   p->spr = enable_sprite(SPR_BOX);
 
-  p->box.w = (p->spr->w) * PIXUP;
+  p->box.w = (p->spr->w - 2) * PIXUP;
   p->box.h = (p->spr->h - 2) * PIXUP;
 
   p->x = 50*PIXUP;
@@ -299,13 +312,14 @@ void player_init(int id){
   p->sj = 0;
   p->z = game.zones[0];
 
-  //ps->state = FALLING;
-  ps->state = GROUND;
+  ps->state = FALLING;
+  //ps->state = GROUND;
   ps->lwalk = 0;
   ps->rwalk = 0;
   ps->jaccel = 0;
+  ps->uphold = 0;
 }
-  
+
 
 void player_show(int id){
 }
@@ -360,6 +374,7 @@ intro_joymovey,intro_joypress,intro_joyrelease
 
 void intro_update(){
   player_update(0);
+  camera_update();
   console_printf("%d fps",get_fps());
   console_printf("state: %s",statenames[pstate[0].state]);
 }
