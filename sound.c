@@ -38,7 +38,7 @@ void process_audio(float lout[], float rout[], int len){
 }
 
 int load_sound(char* filename){
-  
+  return 0;
 }
 
 void play_sound(int id){

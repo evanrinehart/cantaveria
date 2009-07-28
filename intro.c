@@ -94,9 +94,6 @@ int shape_lookup(int X, int Y, int si, int sj, zone* z){
   return z->tileset_shapes[scr->tiles[I][J]];
 }
 
-int cx = 0;
-int cy = 0;
-
 void player_update(int id){
   struct pstate* ps = pstate+id;
   mobile* p = &(pstate[id].player);
@@ -197,38 +194,45 @@ void player_update(int id){
 
   update_mobile_motion(p);
 
+  p->si = p->x/PIXUP/16/20 - z->x;
+  p->sj = p->y/PIXUP/16/15 - z->y;
+
+}
+
+void update_camera(){
   //point_camera(p->spr->x-320/2, p->spr->y-240/2);
+
+  struct pstate* ps = pstate+0;
+  mobile* p = &(pstate[0].player);
 
   ps->cto[0] = (p->facing==LEFT ? -100 : 100)*PIXUP;
   ps->cto[1] = 0;
 
-  cx = (cx*29 + (p->x + 320/4*PIXUP*(p->facing==LEFT?-1:1)))/30;
-  cy = (cy*29 + (p->y + 240/4*PIXUP*0))/30;
-
   int xdiff = ps->cam[0] - (p->x + ps->cto[0]);
   int ydiff = ps->cam[1] - (p->y + ps->cto[1]);
   if(abs(xdiff) > 20*PIXUP){
-  if(xdiff > 0){
-    ps->cam[0] -= 1000;
-  }
-  if(xdiff < 0){
-    ps->cam[0] += 1000;
-  }
+  //if(xdiff > 0){
+      if(abs(xdiff/100) < 10){
+        ps->cam[0] -= xdiff/100;
+      }
+      else{
+        ps->cam[0] -= 10;
+      }
+  //}
+  //if(xdiff < 0){
+  //  ps->cam[0] += sqrt(-xdiff)*5;
+  //}
   }
 
   if(abs(ydiff) > 20*PIXUP){
-  if(ydiff > 0){
-    ps->cam[1] -= 1000;
-  }
-  if(ydiff < 0){
-    ps->cam[1] += 1000;
-  }
+  //if(ydiff > 0){
+    ps->cam[1] -= ydiff/100;
+  //}
+  //if(ydiff < 0){
+  //  ps->cam[1] += 2000;
+  //}
   }
   point_camera(ps->cam[0]/PIXUP - 320/2, ps->cam[1]/PIXUP - 240/2);
-
-  p->si = p->x/PIXUP/16/20 - z->x;
-  p->sj = p->y/PIXUP/16/15 - z->y;
-
 }
 
 void player_press(int id, int key){
@@ -311,32 +315,8 @@ void player_hide(int id){
 }
 
 
-double t;
 
-void intro_setup(){
-  set_handler(intro_handler);
-  game.update = intro_update;
-  game.draw = intro_draw;
 
-  load_zone("myzone");
-  game.current_zone = game.zones[0];
-  enable_stage(1);
-
-  load_sprite("box.spr",SPR_BOX);
-  player_init(0);
-
-}
-
-void intro_update(){
-  player_update(0);
-  console_printf("%d fps",get_fps());
-  console_printf("state: %s",statenames[pstate[0].state]);
-}
-
-void intro_draw(){
-  draw_stage();
-  draw_sprites();
-}
 
 
 
@@ -374,4 +354,31 @@ intro_keydown,intro_keyup,intro_joymovex,
 intro_joymovey,intro_joypress,intro_joyrelease
 };
 
+
+
+
+
+void intro_update(){
+  player_update(0);
+  console_printf("%d fps",get_fps());
+  console_printf("state: %s",statenames[pstate[0].state]);
+}
+
+void intro_draw(){
+  draw_stage();
+  draw_sprites();
+}
+
+void intro_setup(){
+  set_handler(intro_handler);
+  game.update = intro_update;
+  game.draw = intro_draw;
+
+  load_zone("myzone");
+  game.current_zone = game.zones[0];
+  enable_stage(1);
+
+  load_sprite("box.spr",SPR_BOX);
+  player_init(0);
+}
 

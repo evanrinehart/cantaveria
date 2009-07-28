@@ -27,10 +27,12 @@
 #include "backend.h"
 #include "graphics.h"
 #include "game.h"
-#include "intro.h"
 #include "loader.h"
-
 #include "text.h"
+
+#include "splash.h"
+
+
 
 void update(){
   fps_update();
@@ -77,7 +79,7 @@ int main(int argc, char* argv[]){
 
   main_init(argc, argv);
 
-  intro_setup();
+  splash_setup();
   main_loop();
 
   main_quit();

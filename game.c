@@ -22,7 +22,7 @@
 
 #include <stdio.h>
 #include <string.h>
-
+#include <stdlib.h>
 
 #include "loader.h"
 #include "util.h"
@@ -85,6 +85,10 @@ void load_zone(char* filename){
 
   char* str = read_string(rd);
   z->tileset_gfx = load_gfx(str);
+  free(str);
+
+  //str = read_string(rd);
+  z->bg_gfx = load_gfx("background.tga");
 
   for(int i=0; i<256; i++){
     z->tileset_shapes[i] = read_byte(rd);

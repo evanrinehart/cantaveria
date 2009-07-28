@@ -18,8 +18,10 @@
    The Free Software Foundation, Inc.
    51 Franklin Street, Fifth Floor
    Boston, MA  02110-1301, USA
+
+   evanrinehart@gmail.com
 */
 
-void intro_setup();
-void intro_update();
-void intro_draw();
+void splash_setup();
+void splash_update();
+void splash_draw();

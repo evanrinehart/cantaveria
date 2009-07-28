@@ -36,6 +36,8 @@ typedef struct {
   char tileset_shapes[256];
   /*background*/
   int x,y,w,h;
+
+  int bg_gfx;
 } zone;
 
 #define ZONE_LOOKUP(Z,I,J) (I >= Z->w || J >= Z->h || I < 0 || J < 0 ? NULL : *(Z->screens + (I) + (J)*Z->w))

@@ -22,5 +22,4 @@
 
 void title_setup();
 void title_update();
-
-extern struct handler title_handler;
+void title_draw();

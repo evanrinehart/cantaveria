@@ -133,7 +133,7 @@ void draw_screen(zone* z, int si, int sj){
         draw_gfx(G, x, y, X, Y, 16, 16);
       }
       else{
-        //draw background
+        //draw_gfx(z->bg_gfx, x, y, x, y, 16, 16);
       }
       x += 16;
     }

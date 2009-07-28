@@ -364,12 +364,14 @@ int load_gfx(char* filename){
   else {
     GLuint texture;
     
-    //SDL_Surface* conv = SDL_CreateRGBSurface(0, src->w, src->h, 32,
-     // 0xff<<16,0xff<<8,0xff<<0,0);
+    //SDL_Surface* conv = SDL_CreateRGBSurface(0, pot(src->w), pot(src->h), 32,
+      //0xff<<16,0xff<<8,0xff<<0,0);
 
+    //SDL_Surface* tmp = SDL_
     SDL_Surface* conv = SDL_DisplayFormatAlpha(src);
     //SDL_SetAlpha(conv, 0, 0);
     //SDL_BlitSurface(src, NULL, conv, NULL);
+
 //printf("bpp = %d\n",conv->format->BitsPerPixel);
     int N = 0;
     int M = 3;
