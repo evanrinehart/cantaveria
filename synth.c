@@ -18,44 +18,74 @@
    The Free Software Foundation, Inc.
    51 Franklin Street, Fifth Floor
    Boston, MA  02110-1301, USA
+
+   evanrinehart@gmail.com
 */
 
+#include <stdio.h>
 #include <stdlib.h>
 
-#include "sound.h"
-#include "util.h"
+#include <math.h>
+
+typedef struct {
+  int tick;
+  unsigned char midi[3];
+} seq[256];
 
 
-struct {
-  int sample_rate;
+static struct {
+/*
+specs for synth
+*/
 
-  float* sounds[64];
-  int sound_c;
+
+  /* synth state */
+
+  /* note ons */
+  int notes_c;
+  struct {
+    char chan;
+    char note;
+  } notes[32];
+
+  /* sequencer */
+  int tick;
+  int seq_c;
+  seq* song;
+
+  int songs_c;
+  seq* songs[64];
+
 } my;
 
-void process_audio(float lout[], float rout[], int len){
-  for(int i=0; i<len; i++){
+
+
+
+void init_synth(){
+  my.notes_c = 0;
+  my.tick = 0;
+
+  my.seq_c = 0;
+  my.song = NULL;
+  my.songs_c = 0;
+}
+
+void synth_update(float lout[], float rout[], int count, int sample_rate){
+  for(int i=0; i<count; i++){
     lout[i] = 0;
     rout[i] = 0;
+
+    for(int j=0; j<my.notes_c; j++){
+      float s = sin(0);
+      lout[i] += s;
+      rout[i] += s;
+
+      /* t += dt; */
+    }
   }
 }
 
-int load_sound(char* filename){
-  return 0;
+int load_song(char* filename){
+  return -1;
 }
-
-void play_sound(int id){
-  
-}
-
-
-
-void init_sound(int rate){
-  my.sample_rate = rate;
-
-  my.sound_c = 0;
-}
-
-
-
 

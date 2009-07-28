@@ -200,19 +200,17 @@ void player_update(int id){
 
 }
 
+
+
+static struct {
+  int x, y;
+  int xtar, ytar;
+} cam;
+
 void camera_update(){
-  //point_camera(p->spr->x-320/2, p->spr->y-240/2);
-
-  static struct {
-    int x, y;
-    int xtar, ytar;
-  } cam;
-
   struct pstate* ps = pstate+0;
   mobile* p = &(pstate[0].player);
 
-  //cam.xtar = (p->facing==LEFT ? -100 : 100)*PIXUP;
-  //cam.xtar = 0;
   if(p->vx > 0){
     cam.xtar += 800; 
     if(cam.xtar > 100*PIXUP) cam.xtar = 100*PIXUP;
@@ -230,7 +228,7 @@ void camera_update(){
   int xdiff = cam.x - (p->x + cam.xtar);
   int ydiff = cam.y - (p->y + cam.ytar);
   
-  cam.x -= xdiff/100;
+  cam.x -= xdiff/50;
   cam.y -= ydiff/50;
 
   point_camera(cam.x/PIXUP - 320/2, cam.y/PIXUP - 240/2);
@@ -302,7 +300,7 @@ void player_init(int id){
   p->y = 50*PIXUP;
   p->vx = 0;
   p->vy = 0;
-  p->xoff = 0;
+  p->xoff = 1;
   p->yoff = 2;
   p->bxoff = 0;
   p->byoff = 0;
@@ -395,5 +393,16 @@ void intro_setup(){
 
   load_sprite("box.spr",SPR_BOX);
   player_init(0);
+
+
+
+  cam.x = 0;
+  cam.y = 0;
+  cam.xtar = 0;
+  cam.ytar = 0;
+
+  camera_update();
+  camera_update();
+  camera_update();
 }
 

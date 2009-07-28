@@ -1,6 +1,6 @@
 PROJECT = cantaveria
 CFLAGS = -std=c99 -Wall -g -O2
-OBJ = util.o backend.o loader.o game.o title.o intro.o sound.o graphics.o text.o splash.o
+OBJ = util.o backend.o loader.o game.o title.o intro.o sound.o graphics.o text.o splash.o synth.o
 CC = gcc
 LIBS = -lSDL -lGL -lzzip
 
@@ -21,7 +21,10 @@ main.o: util.h game.h backend.h intro.h loader.h graphics.h text.h
 editor.o: util.h game.h backend.h loader.h graphics.h text.h
 backend.o: game.h backend.h util.h loader.h sound.h
 loader.o: loader.h util.h
+
 sound.o: sound.h
+synth.o: synth.h
+
 graphics.o: graphics.h backend.h loader.h util.h game.h
 text.o : text.h backend.h loader.h util.h
 
