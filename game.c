@@ -408,6 +408,8 @@ void player_update(int id){
   p->si = p->x/PIXUP/16/20 - z->x;
   p->sj = p->y/PIXUP/16/15 - z->y;
 
+  game.si = p->si;
+  game.sj = p->sj;
 }
 
 
@@ -581,14 +583,6 @@ void game_setup(){
   game.draw = game_draw;
 
   game.rng = pseed(0);
-
-/* watch out */
-  game.player_x = 0;
-  game.player_y = 0;
-  game.si = 0;
-  game.sj = 0;
-  game.current_zone = NULL;
-/* for the above */
 
 
 

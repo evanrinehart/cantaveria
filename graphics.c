@@ -133,7 +133,20 @@ void draw_screen(zone* z, int si, int sj){
         draw_gfx(G, x, y, X, Y, 16, 16);
       }
       else{
-        //draw_gfx(z->bg_gfx, x, y, x, y, 16, 16);
+        int X = x+camera.x/2;
+        const int WW = 512;
+        if((X%WW)+16 >= WW){
+          int W = WW - (X%WW);
+          draw_gfx(z->bg_gfx, x, y, X, y, W, 16);
+          X %= WW;
+          draw_gfx(z->bg_gfx, x+W, y, 0, y, 16-W, 16);
+        }
+        else {
+          X %= WW;
+          draw_gfx(z->bg_gfx, x, y, X, y, 16, 16);
+        }
+
+
       }
       x += 16;
     }
@@ -346,6 +359,6 @@ void console_printf(char* format, ...){
 
 void console_draw(){
   for(int i=0; i<console_ptr; i++){
-    printf_small(1,9*i,"%s",console[i]);
+    printf_small(1,9*i+1,"%s",console[i]);
   }
 }
