@@ -31,11 +31,14 @@
 #include "backend.h"
 
 
-typedef struct {
+struct event {
   int tick;
   unsigned char midi[3];
-} seq[256];
+};
 
+typedef struct {
+  struct event e[256];
+} seq;
 
 static struct {
 /*
@@ -100,7 +103,10 @@ void init_synth(){
 }
 
 void eval_event(int i){
-  unsigned char midi[3] = {0,0,0};
+  unsigned char midi[3];
+  midi[0] = my.song->e[i].midi[0];
+  midi[1] = my.song->e[i].midi[1];
+  midi[2] = my.song->e[i].midi[2];
 
   int type = midi[0]&0xf0;
   int chan = midi[0]&0x0f;
@@ -109,8 +115,10 @@ void eval_event(int i){
 
   switch(type){
     case 0x80: /* note off */
+      printf("note off %x %d %d %d\n",type,chan+1,val1,val2);
       break;
     case 0x90: /* note on */
+      printf("note off %x %d %d %d\n",type,chan+1,val1,val2);
       break;
     case 0xa0: /* aftertouch */
       break;
@@ -121,6 +129,9 @@ void eval_event(int i){
     case 0xd0: /* channel pressure */
       break;
     case 0xe0: /* pitch bend */
+      break;
+    case 0xf0: /* custom non standard events (not sysex) */
+      /* loop point, tempo change, etc */
       break;
   }
 }
@@ -150,12 +161,12 @@ void synth_update(float lout[], float rout[], int count){
       }
 
       /* do next events maybe */
-      //while(my.tick == my.song[my.seq_ptr]->tick){
-      //  eval_event(my.seq_ptr++);
-      //  if(my.seq_ptr==my.seq_c){
-     //     my.seq_en = 0;
-     //   }
-      //}
+      while(my.tick == my.song->e[my.seq_ptr].tick){
+        eval_event(my.seq_ptr++);
+        if(my.seq_ptr==my.seq_c){
+         my.seq_en = 0;
+        }
+      }
 
     }
 
