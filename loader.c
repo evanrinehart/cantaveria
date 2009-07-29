@@ -91,7 +91,6 @@ void loader_close(reader* rd){
 
 
 int loader_read(reader* rd, void* buf, int count){
-  //return zzip_file_read(rd->f, buf, count);
   return zzip_read(rd->f, buf, count);
 }
 

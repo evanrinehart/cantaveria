@@ -24,20 +24,22 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <math.h>
 
 #include "util.h"
 #include "backend.h"
-
-
-struct event {
-  int tick;
-  unsigned char midi[3];
-};
+#include "loader.h"
 
 typedef struct {
-  struct event e[256];
+  int tick;
+  unsigned char midi[3];
+} event;
+
+typedef struct {
+  int len;
+  event e[256];
 } seq;
 
 static struct {
@@ -185,7 +187,162 @@ void synth_update(float lout[], float rout[], int count){
   }
 }
 
+
+
+void seq_append(seq* s, int tick, int type, int chan, int val1, int val2){
+  if(s->len < 256){
+    event* e = &(s->e[s->len++]);
+    e->tick = tick;
+    e->midi[0] = type|chan;
+    e->midi[1] = val1;
+    e->midi[2] = val2;
+  }
+}
+
+int event_cmp(const void* p1, const void* p2){
+  const event* e1 = p1;
+  const event* e2 = p2;
+
+  return e1->tick - e2->tick;
+}
+
+int get_delta(reader* f){
+  int a = read_byte(f);
+  if(a<0x80){return a;}
+
+  int b = read_byte(f);
+  if(b<0x80){return ((a&0x7f)<<7) | b;}
+
+  int c = read_byte(f);
+  if(c<0x80){return ((a&0x7f)<<14) | ((b&0x7f)<<7) | c;}
+
+  int d = read_byte(f);
+  return ((a&0x7f)<<21) | ((b&0x7f)<<14) | ((c&0x7f)<<7) | d;
+}
+
 int load_song(char* filename){
-  return -1;
+
+  reader* f = data_open("music", filename);
+
+  seq* s = xmalloc(sizeof(seq));
+  my.songs[my.songs_c] = s;
+
+  char buf[16];
+  char string[64];
+
+  int uspq;
+  int bpm;
+
+  /*MThd*/
+  loader_read(f,buf,4);
+
+  /*0x00000006*/
+  read_int(f);
+
+  /*format type: 0x0000 0x0001 or 0x0002*/
+  read_short(f);
+
+  /*number of tracks*/
+  short track_count = read_short(f);
+
+  /* time division */
+  loader_read(f,buf,2);
+  //code to figure out time division
+
+  for(int i=0; i<track_count; i++){
+
+    /*MTrk*/
+    loader_read(f,buf,4);
+
+    /* chunk size */
+    int chunk_size = read_int(f);
+    printf("%d\n",chunk_size);
+
+    int tick = 0;
+    int end_of_track = 0;
+    int last_type = 0x80;
+    int last_chan = 0;
+    while(1){
+      int delta = get_delta(f);
+
+      if(delta < 0) return -1;
+      tick += delta;
+
+      //type and channel
+      buf[0] = read_byte(f);
+
+      int type = buf[0] & 0xf0;
+      if(type >= 0x80 && type <= 0xe0){//normal event
+        last_type = type;
+        int chan = buf[0] & 0x0f;
+        last_chan = chan;
+        loader_read(f,buf,2);
+        int val1 = buf[0];
+        int val2 = buf[1];
+        seq_append(s, tick, type, chan, val1, val2);
+      }
+      else if(type < 0x80){//running status
+        int val1 = buf[0];
+        buf[0] = read_byte(f);
+        int val2 = buf[0];
+        seq_append(s, tick,last_type,last_chan,val1,val2);
+      }
+      else if(type == 0xff){//meta event
+        buf[0] = read_byte(f);
+        type = buf[0];
+
+        int len = get_delta(f);
+
+        switch(type){
+          case 0x2f: printf("end of track\n");
+            end_of_track = 1;
+            break;
+          case 0x51:printf("tempo change\n"); /*tempo*/
+            loader_read(f,buf,3);
+            uspq = (buf[0]<<16) | (buf[1]<<8) | buf[2];
+            bpm = 120;/*FIXME*/
+            break;
+          case 0x01: printf("text\n");/*text*/
+            if(len >= 64){/*too big, skip ahead*/
+              loader_read(f, NULL, len);
+            }
+            else{
+              loader_read(f,string,len);
+              string[len] = '\0';
+              if(strncmp(string,"LoopStart",len)==0){
+                seq_append(s, tick, 0xf0, 0, 0, 0);
+              }
+              else if(strncmp(string,"LoopEnd",len)==0){
+                seq_append(s, tick, 0xf0, 0, 1, 0);
+              }
+            }
+            break;
+          default: /*skip*/
+            loader_read(f,NULL,len);
+            break;
+        }
+      }
+      else{ //sysex and such...
+        int len = get_delta(f);
+        loader_read(f, NULL, len);
+      }
+
+      if(end_of_track) break;
+    }
+
+  }
+
+
+  qsort(s->e, s->len, sizeof(event), event_cmp);
+  synth_setbpm(bpm);
+
+  return my.songs_c++;
+}
+
+
+
+int synth_mem(){
+  int a = sizeof(seq)*my.songs_c;
+  return a;
 }
 
