@@ -22,13 +22,12 @@
 
 #include <stdlib.h>
 
+#include "synth.h"
 #include "sound.h"
 #include "util.h"
 
 
 struct {
-  int sample_rate;
-
   float* sounds[64];
   int sound_c;
 } my;
@@ -50,10 +49,10 @@ void play_sound(int id){
 
 
 
-void init_sound(int rate){
-  my.sample_rate = rate;
-
+void init_sound(){
   my.sound_c = 0;
+
+  init_synth();
 }
 
 

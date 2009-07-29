@@ -34,34 +34,37 @@
 
 
 void title_keydown(int key){
-  printf("you pressed key %d\n",key);
   if(key == ESCAPE_KEY){
     end_program();
+  }
+  else{
+    game_setup();
   }
 }
 
 void title_keyup(int key){
-printf("you release key %d\n",key);
+
 }
 
 void title_joymovex(int joy, int x){
-printf("you moved joystick %d x axis to %d\n",joy,x);
+
 }
 
 void title_joymovey(int joy, int y){
-printf("you moved joystick %d y axis to %d\n",joy,y);
 }
 
 void title_joypress(int joy, int button){
-printf("you pressed joystick %d button %d\n",joy,button);
+
 }
 
 void title_joyrelease(int joy, int button){
-printf("you released joystick %d button %d\n",joy,button);
+
 }
 
 void title_update(){
-
+  console_printf("this is the title screen");
+  console_printf("new, load, options, quit?");
+  console_printf("press any key");
 }
 
 void title_draw(){

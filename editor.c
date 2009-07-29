@@ -192,7 +192,7 @@ void main_init(int argc, char* argv[]){
   graphics_init();
   text_init();
 
-  load_game();
+  game_setup();
 
   set_handler(edit_handler);
   game.update = NULL;

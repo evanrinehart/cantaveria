@@ -33,23 +33,6 @@
 
 struct game game;
 
-void load_game(){
-  //game.update = intro_update;
-  //game.handler = intro_handler;
-  //game.draw = intro_draw;
-
-  game.rng = pseed(0);
-
-
-
-  game.player_x = 0;
-  game.player_y = 0;
-  game.si = 0;
-  game.sj = 0;
-  game.current_zone = NULL;
-}
-
-
 
 
 
@@ -227,6 +210,35 @@ zone coords - screen coord of zone start from global top left
 */
 
 
+enum {
+GROUND,
+JUMPING,
+FALLING
+};
+
+char statenames[8][16] = {
+"GROUND",
+"JUMPING",
+"FALLING"
+};
+
+struct pstate {
+  int state;
+  int jaccel;
+  int lwalk;
+  int rwalk;
+  int uphold;
+  int jump;
+  mobile player;
+
+  int cam[2];
+  int cto[2];
+} pstate[6];
+
+mobile players[6];
+
+
+
 int box_collision(struct box* B1, struct box* B2){
   int l1 = B1->x;
   int r1 = B1->x + B1->w;
@@ -255,3 +267,345 @@ void update_mobile_motion(mobile* m){
 
 
 
+
+
+
+
+
+int shape_lookup(int X, int Y, int si, int sj, zone* z){
+  int I = (X/PIXUP)/16 - si*20 - z->x;
+  int J = (Y/PIXUP)/16 - sj*15 - z->y;
+
+  int sioff = 0;
+  int sjoff = 0;
+
+  if(I>=20){
+    sioff=1;
+    I -= 20;
+  }
+  if(I<0){
+    sioff=-1;
+    I += 20;
+  }
+  if(J>=15){
+    sjoff=1;
+    J -= 15;
+  }
+  if(J<0){
+    sjoff=-1;
+    J += 15;
+  }
+
+//printf("%d %d %d %d\n",I,J,sioff,sjoff);
+
+
+  struct screen* scr = ZONE_LOOKUP(z,si+sioff,sj+sjoff);
+  return z->tileset_shapes[scr->tiles[I][J]];
+}
+
+
+
+void player_update(int id){
+  struct pstate* ps = pstate+id;
+  mobile* p = &(pstate[id].player);
+
+  /*collision with stage*/
+
+  //stage_collision(p,game.current_zone,game.si,game.sj);
+
+  struct box* B = &(p->box);
+    
+  //zone* z = game.current_zone;
+  //int si = game.si;
+  //int sj = game.sj;
+
+  zone* z = p->z;
+  int si = p->si;
+  int sj = p->sj;
+
+
+
+  int walk = ps->rwalk - ps->lwalk;
+  if(walk < 0 && p->vx > -120) p->vx += walk*2;
+  else if(walk > 0 && p->vx < 120) p->vx += walk*2;
+  else if(walk == 0 && ps->state == GROUND && p->vx != 0){
+    if(abs(p->vx)<5) p->vx = 0;
+    else if(p->vx > 0) p->vx -= 3;
+    else if(p->vx < 0) p->vx += 3;
+  }
+
+
+
+
+
+  if(p->vx > 0){
+    int X = B->x + B->w + p->vx*dt;
+    int shape1 = shape_lookup(X,B->y,si,sj,z);
+    int shape2 = shape_lookup(X,B->y+B->h-1,si,sj,z);
+    if(shape1||shape2){//tile is solid
+      int P = (16*PIXUP);
+      p->x = X/P*P - B->w;
+      p->vx = 0;
+    }
+  }
+  else if(p->vx < 0){
+    int X = B->x + p->vx*dt;
+    int shape1 = shape_lookup(X,B->y,si,sj,z);
+    int shape2 = shape_lookup(X,B->y+B->h-1,si,sj,z);
+    if(shape1||shape2){//tile is solid
+      int P = (16*PIXUP);
+      p->x = X/P*P + P;
+      p->vx = 0;
+    }
+  }
+
+
+  if(ps->state==JUMPING){//jumping
+    p->vy += ps->jaccel;
+    if(p->vy > 0) ps->state = FALLING;
+  }
+  else if(ps->state == FALLING){
+    if(p->vy < 200){
+      p->vy += 5;
+    }
+  }
+  else if(ps->state == GROUND){
+    p->vy += 1;
+  }
+
+  if(p->vy < 0){
+    int Y = B->y + p->vy*dt;
+    int X = B->x + p->vx*dt;
+    int shape1 = shape_lookup(X,Y,si,sj,z);
+    int shape2 = shape_lookup(X+B->w-1,Y,si,sj,z);
+    if(shape1||shape2){//tile is solid
+      int P = (16*PIXUP);
+      p->y = Y/P*P + P;
+      p->vy = 0;
+    }
+  }
+  else if(p->vy > 0){
+    int Y = B->y + B->h + p->vy*dt;
+    int X = B->x + p->vx*dt;
+    int shape1 = shape_lookup(X,Y,si,sj,z);
+    int shape2 = shape_lookup(X+B->w-1,Y,si,sj,z);
+    if(shape1||shape2){//tile is solid
+      int P = (16*PIXUP);
+      p->y = Y/P*P - B->h;
+      p->vy = 0;
+      ps->state = GROUND;
+    }
+  }
+
+
+  /*falling off cliff*/
+  if(ps->state == GROUND && p->vy > 0){
+    ps->state = FALLING;
+  }
+
+  update_mobile_motion(p);
+
+  p->si = p->x/PIXUP/16/20 - z->x;
+  p->sj = p->y/PIXUP/16/15 - z->y;
+
+}
+
+
+
+static struct {
+  int x, y;
+  int xtar, ytar;
+} cam;
+
+void camera_update(){
+  struct pstate* ps = pstate+0;
+  mobile* p = &(pstate[0].player);
+
+  if(p->vx > 0){
+    cam.xtar += 800; 
+    if(cam.xtar > 100*PIXUP) cam.xtar = 100*PIXUP;
+  }
+  else if(p->vx < 0){
+    cam.xtar -= 800;
+    if(cam.xtar < -100*PIXUP) cam.xtar = -100*PIXUP;
+  }
+  else{
+    //cam.xtar -= cam.xtar/75;
+  }
+
+  cam.ytar = ps->uphold * 100 * PIXUP;
+
+  int xdiff = cam.x - (p->x + cam.xtar);
+  int ydiff = cam.y - (p->y + cam.ytar);
+  
+  cam.x -= xdiff/50;
+  cam.y -= ydiff/50;
+
+  point_camera(cam.x/PIXUP - 320/2, cam.y/PIXUP - 240/2);
+}
+
+void player_press(int id, int key){
+  struct pstate* ps = pstate+id;
+  mobile* p = &(pstate[id].player);
+
+  switch(key){
+    case LEFT_KEY:
+      p->facing = LEFT;
+      ps->lwalk = 1;
+      break;
+    case RIGHT_KEY:
+      p->facing = RIGHT;
+      ps->rwalk = 1;
+      break;
+    case JUMP_KEY:
+      if(ps->state == 0){
+        ps->state = JUMPING;
+        p->vy = -200;
+        ps->jaccel = 2;
+      } 
+      break;
+    case UP_KEY:
+      ps->uphold = -1;
+      break;
+    case DOWN_KEY:
+      ps->uphold = 1;
+      break;
+  }
+}
+
+void player_release(int id, int key){
+  struct pstate* ps = pstate+id;
+  //mobile* p = &(pstate[id].player);
+
+  switch(key){
+    case LEFT_KEY:
+      ps->lwalk = 0;
+      break;
+    case RIGHT_KEY:
+      ps->rwalk = 0;
+      break;
+    case JUMP_KEY:
+      ps->state = FALLING;
+      break;
+    case UP_KEY:
+      ps->uphold = 0;
+      break;
+    case DOWN_KEY:
+      ps->uphold = 0;
+      break;
+  }
+}
+
+void player_init(int id){
+  struct pstate* ps = pstate+id;
+  mobile* p = &(pstate[id].player);
+
+
+  p->spr = enable_sprite(SPR_BOX);
+
+  p->box.w = (p->spr->w - 2) * PIXUP;
+  p->box.h = (p->spr->h - 2) * PIXUP;
+
+  p->x = 50*PIXUP;
+  p->y = 50*PIXUP;
+  p->vx = 0;
+  p->vy = 0;
+  p->xoff = 1;
+  p->yoff = 2;
+  p->bxoff = 0;
+  p->byoff = 0;
+  update_mobile_motion(p);
+
+  p->si = 0;
+  p->sj = 0;
+  p->z = game.zones[0];
+
+  ps->state = FALLING;
+  //ps->state = GROUND;
+  ps->lwalk = 0;
+  ps->rwalk = 0;
+  ps->jaccel = 0;
+  ps->uphold = 0;
+}
+
+
+
+
+void game_keydown(int key){
+  if(key==ESCAPE_KEY){
+    end_program();
+  }
+  player_press(0, key);
+}
+
+void game_keyup(int key){
+  player_release(0, key);
+}
+
+void game_joymovex(int joy, int x){
+
+}
+
+void game_joymovey(int joy, int y){
+
+}
+
+void game_joypress(int joy, int button){
+
+}
+
+void game_joyrelease(int joy, int button){
+
+}
+
+struct handler game_handler = {
+game_keydown,game_keyup,game_joymovex,
+game_joymovey,game_joypress,game_joyrelease
+};
+
+void game_update(){
+  player_update(0);
+  camera_update();
+  console_printf("%d fps",get_fps());
+  console_printf("state: %s",statenames[pstate[0].state]);
+}
+
+void game_draw(){
+  draw_stage();
+  draw_sprites();
+}
+
+void game_setup(){
+  set_handler(game_handler);
+  game.update = game_update;
+  game.draw = game_draw;
+
+  game.rng = pseed(0);
+
+/* watch out */
+  game.player_x = 0;
+  game.player_y = 0;
+  game.si = 0;
+  game.sj = 0;
+  game.current_zone = NULL;
+/* for the above */
+
+
+
+  load_zone("myzone");
+  game.current_zone = game.zones[0];
+  enable_stage(1);
+
+  load_sprite("box.spr",SPR_BOX);
+  player_init(0);
+
+
+  cam.x = 0;
+  cam.y = 0;
+  cam.xtar = 0;
+  cam.ytar = 0;
+
+  camera_update();
+  camera_update();
+  camera_update();
+}

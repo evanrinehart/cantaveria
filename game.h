@@ -108,8 +108,6 @@ SPR_BOX
 };
 
 
-void load_game();
-
 void load_zone(char* filename);
 
 
@@ -118,3 +116,5 @@ int box_collision(struct box* B1, struct box* B2);
 
 void update_mobile_motion(mobile* m);
 
+
+void game_setup();
