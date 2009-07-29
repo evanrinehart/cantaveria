@@ -38,7 +38,7 @@ rng_state pseed(int s);
 int prand(rng_state* x);
 int prandi(rng_state* x, int a, int b);
 double prandr(rng_state* x, double a, double b);
-unsigned gcd(unsigned u, unsigned v);
+int gcd(int u, int v);
 
 int randint(int a, int b);
 

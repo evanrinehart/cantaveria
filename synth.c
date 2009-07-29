@@ -63,6 +63,7 @@ specs for synth
   int N_;
   int R;
   int R_;
+  int F;
 
   int seq_c;
   int seq_ptr;
@@ -83,9 +84,10 @@ void synth_setbpm(int bpm){
   int d = gcd(numer,denom);
   /*N and R exact only if at start of song, good enough though*/
   my.N = 0;
-  my.N_ = numer/denom + 1;
+  my.N_ = numer/denom;
   my.R = 0;
   my.R_ = denom/d;
+  my.F = (numer/d) % (denom/d);
 }
 
 void init_synth(){
@@ -145,18 +147,21 @@ void synth_update(float lout[], float rout[], int count){
 
     if(my.seq_en){
 
-    /* elaborate counter to keep ticks and samples in sync */
-    /* N is a sample count, N/R is samples per tick (usually not divisible)*/
-      my.N++;
-      if(my.N == my.N_){
-        my.R++;
-        if(my.R == my.R_){
-          my.R=0;
-          my.N--;
-        }
-        else{
-          my.tick++;
-          my.N=0;
+      /* elaborate counter to keep ticks and samples in sync */
+      /* N  sample counter */
+      /* N_ integer samples per tick */
+      /* R  fractional sample counter, units 1/R_ samples */
+      /* R_ F/R_ samples is difference between real samples per tick and N_*/
+      /* F  see above */
+      my.N++; /* sample counter advance */
+      if(my.N == my.N_){ /* almost at the next tick boundary */
+        my.tick++; /* next tick comes F/R_ samples early */
+        my.N=0;
+
+        my.R+=my.F; /* add F/R_ */
+        if(my.R >= my.R_){ /* enough fractional samples accumulated */
+          my.R -= my.R_; /* fraction counter wraps */
+          my.N++; /* advance extra sample */
         }
       }
 
