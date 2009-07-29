@@ -27,6 +27,10 @@
 
 #include <math.h>
 
+#include "util.h"
+#include "backend.h"
+
+
 typedef struct {
   int tick;
   unsigned char midi[3];
@@ -50,7 +54,16 @@ specs for synth
 
   /* sequencer */
   int tick;
+  int tpb;
+  int bpm;
+  int N;
+  int N_;
+  int R;
+  int R_;
+
   int seq_c;
+  int seq_ptr;
+  int seq_en;
   seq* song;
 
   int songs_c;
@@ -60,20 +73,91 @@ specs for synth
 
 
 
+void synth_setbpm(int bpm){
+  my.bpm = bpm;
+  int numer = SAMPLE_RATE*60;
+  int denom = my.tpb*bpm;
+  int d = gcd(numer,denom);
+  /*N and R exact only if at start of song, good enough though*/
+  my.N = 0;
+  my.N_ = numer/denom + 1;
+  my.R = 0;
+  my.R_ = denom/d;
+}
 
 void init_synth(){
   my.notes_c = 0;
   my.tick = 0;
 
+
+  my.tpb = 288;
+  synth_setbpm(120);
+
+
   my.seq_c = 0;
-  my.song = NULL;
+  my.seq_ptr = 0;
   my.songs_c = 0;
 }
 
-void synth_update(float lout[], float rout[], int count, int sample_rate){
+void eval_event(int i){
+  unsigned char midi[3] = {0,0,0};
+
+  int type = midi[0]&0xf0;
+  int chan = midi[0]&0x0f;
+  int val1 = midi[1];
+  int val2 = midi[2];
+
+  switch(type){
+    case 0x80: /* note off */
+      break;
+    case 0x90: /* note on */
+      break;
+    case 0xa0: /* aftertouch */
+      break;
+    case 0xb0: /* controller */
+      break;
+    case 0xc0: /* program */
+      break;
+    case 0xd0: /* channel pressure */
+      break;
+    case 0xe0: /* pitch bend */
+      break;
+  }
+}
+
+void synth_update(float lout[], float rout[], int count){
+  
   for(int i=0; i<count; i++){
     lout[i] = 0;
     rout[i] = 0;
+
+
+    if(my.seq_en){
+
+    /* elaborate counter to keep ticks and samples in sync */
+    /* N is a sample count, N/R is samples per tick (usually not divisible)*/
+      my.N++;
+      if(my.N == my.N_){
+        my.R++;
+        if(my.R == my.R_){
+          my.R=0;
+          my.N--;
+        }
+        else{
+          my.tick++;
+          my.N=0;
+        }
+      }
+
+      /* do next events maybe */
+      //while(my.tick == my.song[my.seq_ptr]->tick){
+      //  eval_event(my.seq_ptr++);
+      //  if(my.seq_ptr==my.seq_c){
+     //     my.seq_en = 0;
+     //   }
+      //}
+
+    }
 
     for(int j=0; j<my.notes_c; j++){
       float s = sin(0);

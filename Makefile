@@ -23,7 +23,7 @@ backend.o: game.h backend.h util.h loader.h sound.h
 loader.o: loader.h util.h
 
 sound.o: sound.h
-synth.o: synth.h
+synth.o: synth.h backend.h util.h
 
 graphics.o: graphics.h backend.h loader.h util.h game.h
 text.o : text.h backend.h loader.h util.h

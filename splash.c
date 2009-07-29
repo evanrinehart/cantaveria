@@ -30,6 +30,7 @@
 #include "game.h"
 #include "splash.h"
 #include "intro.h"
+#include "title.h"
 
 static struct {
   int gfx;
@@ -37,11 +38,15 @@ static struct {
   int t1, t2, t3;
 } my;
 
-void splash_keydown(int key){ my.counter = my.t2; }
+void splash_keydown(int key){
+  title_setup();
+}
 void splash_keyup(int key){}
 void splash_joymovex(int joy, int x){}
 void splash_joymovey(int joy, int y){}
-void splash_joypress(int joy, int button){ my.counter = my.t2; }
+void splash_joypress(int joy, int button){
+  title_setup();
+}
 void splash_joyrelease(int joy, int button){}
 
 struct handler splash_handler = {

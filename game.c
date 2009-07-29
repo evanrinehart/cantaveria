@@ -229,6 +229,7 @@ struct pstate {
   int rwalk;
   int uphold;
   int jump;
+
   mobile player;
 
   int cam[2];
@@ -329,9 +330,11 @@ void player_update(int id){
   if(walk < 0 && p->vx > -120) p->vx += walk*2;
   else if(walk > 0 && p->vx < 120) p->vx += walk*2;
   else if(walk == 0 && ps->state == GROUND && p->vx != 0){
-    if(abs(p->vx)<5) p->vx = 0;
-    else if(p->vx > 0) p->vx -= 3;
-    else if(p->vx < 0) p->vx += 3;
+    if(abs(p->vx)<15){
+      p->vx = 0;
+    }
+    else if(p->vx > 0) p->vx -= 5;
+    else if(p->vx < 0) p->vx += 5;
   }
 
 

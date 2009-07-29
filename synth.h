@@ -26,4 +26,4 @@ void init_synth();
 int load_song(char* filename);
 void play_song(int id);
 
-void synth_update(float lout[], float rout[], int count, int sample_rate);
+void synth_update(float lout[], float rout[], int count);
