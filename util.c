@@ -178,6 +178,9 @@ int randint(int a, int b){
   return (rand()%L)+a;
 }
 
+double randf(){
+  return ((double)rand())/RAND_MAX;
+}
 
 #define PRAND_MAX 65537
 

@@ -42,20 +42,105 @@ typedef struct {
   event e[256];
 } seq;
 
-static struct {
-/*
-specs for synth
+
+
+
+/* possible generators (scratch work)
+
+square wave
+saw wave
+triangle wave
+square saw produce a band limited signal
+
+string signal
+this uses a karplus strong algorithm
+noise -> variable delay (linear interpolating) -> first order low pass
+
+voice signal
+formant synthesis
+two or three gaussians (perhaps padded) -> IFFT
+also works for bell
+
+detuned oscillators
+
+samples on ch 10
+just samples
+
+effects
+portamento
+vibrato
+echo
+chorus
+reverb
+appegiator
+adsr envelope
 */
 
 
-  /* synth state */
+typedef struct {
+  float t;
+  float tt;
+} instr_dummy;
 
-  /* note ons */
-  int notes_c;
+
+
+
+
+
+static struct {
+
+  /* synth state */
   struct {
-    char chan;
-    char note;
-  } notes[32];
+    void* prog;
+    int type;
+
+    float vol;
+    float pan;
+
+    float f;
+    
+    struct {
+      int en;
+      float ftar;
+      float speed;
+    } porta;
+
+    struct {
+      int en;
+      int counter;
+      int counter_max;
+      int delay;
+      float depth;
+    } vibra;
+
+    struct {
+      float A, D, S, R;
+      float t;
+      int state;
+    } adsr;
+
+    struct {
+      int en;
+      float* delay;
+      int len;
+      int ptr[8];
+      int predelay;
+      int time;
+    } rev;
+
+    struct {
+      int en;
+      float* delay;
+      int len;
+      int ptr;
+      float decay;
+    } echo;
+    
+  } chan[16];
+
+  /* sample note ons */
+  int sample_c;
+  int sample[32];
 
   /* sequencer */
   int tick;
@@ -93,7 +178,6 @@ void synth_setbpm(int bpm){
 }
 
 void init_synth(){
-  my.notes_c = 0;
   my.tick = 0;
 
 
@@ -177,12 +261,8 @@ void synth_update(float lout[], float rout[], int count){
 
     }
 
-    for(int j=0; j<my.notes_c; j++){
-      float s = sin(0);
-      lout[i] += s;
-      rout[i] += s;
-
-      /* t += dt; */
+    for(int j=0; j<16; j++){
+      //process_chan(j, lout, rout, count);
     }
   }
 }
@@ -341,8 +421,20 @@ int load_song(char* filename){
 
 
 
-int synth_mem(){
-  int a = sizeof(seq)*my.songs_c;
-  return a;
-}
 
+
+
+/* karplus strong algorithm */
+/*
+void karplus_strong(delayline* d, float out[], int count){
+  delay_extract(d, 77.432, out, count);
+  if(0){
+    for(int i=0; i<50; i++){
+      out[i] += randf()-0.5;
+    }
+  }
+  for(int i=1; i<count; i++){
+    out[i] = (out[i]+out[i-1])/2;
+  }
+  delay_write(d, out, count);
+}*/

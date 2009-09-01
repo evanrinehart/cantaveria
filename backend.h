@@ -82,6 +82,9 @@ struct handler {
 #define dt 10
 #define DELAY_AMOUNT 1
 
+#define PI 3.14159265359
+#define PI2 2*PI
+
 #define SCREEN_W 320
 #define SCREEN_H 240
 

@@ -47,6 +47,7 @@ void set_handler(struct handler h){
 void end_program(){
   end = 1;
 }
+
 int ended(){
   return end;
 }

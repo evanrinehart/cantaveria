@@ -41,6 +41,7 @@ double prandr(rng_state* x, double a, double b);
 int gcd(int u, int v);
 
 int randint(int a, int b);
+double randf();
 
 int unicode_getc(char* str, utf32* u);
 
