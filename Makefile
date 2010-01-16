@@ -2,13 +2,17 @@ PROJECT = cantaveria
 CFLAGS = -std=c99 -Wall -g -O2
 OBJ = util.o backend.o loader.o game.o title.o intro.o sound.o graphics.o text.o splash.o synth.o dsp.o
 CC = gcc
-LIBS = -lSDL -lGL -lzzip
+LIBS = -lSDL -lGL -lzzip -lm
 
-$(PROJECT): main.o $(OBJ) levedit
+$(PROJECT): main.o $(OBJ) levedit data.zip
 	$(CC) -o $(PROJECT) $(LIBS) main.o $(OBJ)
 
 levedit: editor.o $(OBJ)
 	$(CC) -o levedit $(LIBS) editor.o $(OBJ)
+
+
+data.zip:
+	wget http://evanr.infinitymotel.net/cantaveria/data.zip
 
 game.o: util.h loader.h game.h intro.h
 

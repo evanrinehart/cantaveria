@@ -46,21 +46,20 @@ void update(){
 }
 
 void main_loop(){
-  since();
-  int T = 0;
-  while(1){
-    T += since();
-    for(int i=0; i<T/dt; i++){
-      input();
-      update();
-    }
-    if(T/dt > 0){
-      draw();
-      T %= dt;
-    }
-    if(ended()){break;}
-    delay(DELAY_AMOUNT);
-  }
+	int T = 0;
+	since();
+	while(!ended()){
+		T += since();
+		for(int i=0; i<T/dt; i++){
+			input();
+			update();
+		}
+		if(T/dt > 0){
+			draw();
+			T %= dt;
+		}
+		delay(DELAY_AMOUNT);
+	}
 }
 
 void main_init(int argc, char* argv[]){
