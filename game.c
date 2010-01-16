@@ -585,8 +585,7 @@ void game_setup(){
   game.update = game_update;
   game.draw = game_draw;
 
-  game.rng = pseed(0);
-
+  rand_reset(0);
 
 
   load_zone("myzone");

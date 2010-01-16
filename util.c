@@ -26,7 +26,9 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
+#include "rng.h"
 #include "util.h"
 
 void report_error(const char* format, ...){
@@ -172,42 +174,32 @@ void* tree_search(struct treenode* root,
 }
 
 
+void rand_reset(unsigned s){
+	zsrand(s);
+}
 
-int randint(int a, int b){
-  int L = b-a+1;
-  return (rand()%L)+a;
+int randi(int a, int b){
+	int L = b-a;
+	int P = 1;
+	int x;
+
+	while(P < L){
+		P <<= 1;
+	}
+
+	do{
+		x = zrand() & (P-1);
+	} while(x > L);
+
+	return x+a;
 }
 
 double randf(){
-  return ((double)rand())/RAND_MAX;
+	double D = UINT_MAX;
+	unsigned x = zrand();
+	return x / D;
 }
 
-#define PRAND_MAX 65537
-
-rng_state pseed(int s){
-  rng_state x = 2;
-  for(int i=0; i<s; i++){
-    prand(&x);
-  }
-  return x;
-}
-
-int prand(rng_state* x){
-  int G = 75;
-  *x = (*x * G) % PRAND_MAX;
-  return *x;
-}
-
-int prandi(rng_state* x, int a, int b){
-  int L = b-a+1;
-  return (prand(x)%L)+a;
-}
-
-double prandr(rng_state* x, double a, double b){
-  double R = prand(x)/((double)PRAND_MAX);
-  double L = b-a;
-  return (R*L)+a;
-}
 
 
 

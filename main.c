@@ -74,6 +74,11 @@ void main_quit(){
   backend_quit();
 }
 
+extern unsigned zrand();
+extern void zreset();
+extern int randi(int a, int b);
+extern double randf();
+
 int main(int argc, char* argv[]){
 
   main_init(argc, argv);

@@ -125,7 +125,7 @@ printf(",");
 
 void randomly_insert(vwchar* C[], int count){
   for(int i=0; i<count-1; i++){
-    int j = randint(0,count-i-1);
+    int j = randi(0, count-i-1);
     tree_insert(chartree, ptrcomp, (void*)C[j]->u, C[j]);
     C[j] = C[count-i-1];
     C[count-i-1] = NULL;

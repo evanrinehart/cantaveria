@@ -33,15 +33,11 @@ void out_of_memory(const char*);
 
 typedef unsigned long utf32;
 
-typedef int rng_state;
-rng_state pseed(int s);
-int prand(rng_state* x);
-int prandi(rng_state* x, int a, int b);
-double prandr(rng_state* x, double a, double b);
-int gcd(int u, int v);
-
-int randint(int a, int b);
+void rand_reset(unsigned s);
+int randi(int a, int b);
 double randf();
+
+int gcd(int u, int v);
 
 int unicode_getc(char* str, utf32* u);
 

@@ -81,8 +81,6 @@ struct game {
   void (*update)();
   void (*draw)();
 
-  rng_state rng;
-
   zone* zones[32];
   int zone_count;
 
