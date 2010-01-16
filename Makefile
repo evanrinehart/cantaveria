@@ -37,4 +37,4 @@ text.o : text.h backend.h loader.h util.h
 backend.h: util.h
 
 clean:
-	rm $(PROJECT) levedit main.o editor.o $(OBJ)
+	$(RM) $(PROJECT) levedit main.o editor.o $(OBJ)
