@@ -1,7 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 /*
 A lag-r complimentary multiply-with-carry random number generator
 
@@ -59,6 +55,11 @@ http://en.wikipedia.org/wiki/Multiply-with-carry
 google multiply with carry generator
 
 */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 #define A 109111ULL
 #define R 1024
