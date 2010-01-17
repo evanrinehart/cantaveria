@@ -195,6 +195,8 @@ void control(int type, int par1, int par2){
 		case JOYRELEASE:
 			handler.joyrelease(par1, par2);
 			break;
+		default:
+			report_error("backend: invalid control %d\n", type);
 	}
 
 }
@@ -474,15 +476,17 @@ int buffer_size;
 
 extern void process_audio(float lout[], float rout[], int len);
 
-void audio_callback(void *userdata, Uint8 *stream, int len){
-	int i;
+void audio_callback(void *userdata, Uint8 *stream, int bytes){
+	int i, j;
 	Sint16* out = (Sint16*)stream;
+	int buflen = bytes / 2;        /* Sint16 = 2 bytes */
+	int samples = buflen / 2;      /* 2 channels */
 
-	process_audio(lout, rout, buffer_size);
+	process_audio(lout, rout, samples);
 
-	for(i=0; i<buffer_size; i++){
-		out[i*2    ] = (Sint16)(lout[i]*32767);
-		out[i*2 + 1] = (Sint16)(rout[i]*32767);
+	for(i=0, j=0; i<samples; i++){
+		out[j] = (Sint16)(lout[i]*32767); j++;
+		out[j] = (Sint16)(rout[i]*32767); j++;
 	}
 
 }
@@ -643,7 +647,7 @@ void setup_video(){
 	if(gl_flag){
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		//SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-		//SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
+		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
 		flags |= SDL_OPENGL;
 	};
 
@@ -658,7 +662,6 @@ void setup_video(){
 		report_error("sdl: %s\n",SDL_GetError());
 		exit(-1);
 	}
-
 
 	if(gl_flag){
 		glEnable(GL_BLEND);

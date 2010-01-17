@@ -68,7 +68,7 @@ struct handler {
 	void (*joymovey)(int joy, int y);
 	void (*joypress)(int joy, int button);
 	void (*joyrelease)(int joy, int button);
-	//void (*keyentry)(utf32 u);
+	/*void (*keyentry)(utf32 u);*/
 };
 
 #define VERSION_MAJOR 0

@@ -476,6 +476,9 @@ void player_press(int id, int key){
 		case DOWN_KEY:
 			ps->uphold = 1;
 			break;
+		default:
+			report_error(
+				"game: player press invalid %d\n", key);
 	}
 }
 
@@ -499,6 +502,9 @@ void player_release(int id, int key){
 		case DOWN_KEY:
 			ps->uphold = 0;
 			break;
+		default:
+			report_error(
+				"game: player release invalid %d\n", key);
 	}
 }
 

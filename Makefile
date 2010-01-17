@@ -1,14 +1,14 @@
 PROJECT = cantaveria
-CFLAGS = -Wall -Wextra -Wno-unused-parameter -g -O2
+CFLAGS = -g -O2 -Wall -Wextra -Wno-unused-parameter
 OBJ = util.o backend.o loader.o game.o title.o intro.o sound.o graphics.o text.o splash.o synth.o dsp.o rng.o
 CC = gcc
 LIBS = -lSDL -lGL -lzzip -lm
 
-$(PROJECT): main.o $(OBJ) levedit data.zip
+$(PROJECT): main.o $(OBJ) data.zip
 	$(CC) -o $(PROJECT) $(LIBS) main.o $(OBJ)
 
-levedit: editor.o $(OBJ)
-	$(CC) -o levedit $(LIBS) editor.o $(OBJ)
+#levedit: editor.o $(OBJ)
+#	$(CC) -o levedit $(LIBS) editor.o $(OBJ)
 
 
 data.zip:
@@ -22,7 +22,7 @@ intro.o: util.h game.h backend.h graphics.h intro.h title.h
 
 util.o: util.h rng.h
 main.o: util.h game.h backend.h intro.h loader.h graphics.h text.h
-editor.o: util.h game.h backend.h loader.h graphics.h text.h
+#editor.o: util.h game.h backend.h loader.h graphics.h text.h
 backend.o: game.h backend.h util.h loader.h sound.h
 loader.o: loader.h util.h
 

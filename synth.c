@@ -33,13 +33,13 @@
 #include "loader.h"
 
 typedef struct {
-  int tick;
-  unsigned char midi[3];
+	int tick;
+	unsigned char midi[4];
 } event;
 
 typedef struct {
-  int len;
-  event e[256];
+	int len;
+	event e[256];
 } seq;
 
 
@@ -78,8 +78,8 @@ adsr envelope
 
 
 typedef struct {
-  float t;
-  float tt;
+	float t;
+	float tt;
 } instr_dummy;
 
 
@@ -89,105 +89,105 @@ typedef struct {
 
 static struct {
 
-  /* synth state */
-  struct {
-    void* prog;
-    int type;
+	/* synth state */
+	struct {
+		void* prog;
+		int type;
 
-    float vol;
-    float pan;
+		float vol;
+		float pan;
 
-    float f;
-    
-    struct {
-      int en;
-      float ftar;
-      float speed;
-    } porta;
+		float f;
 
-    struct {
-      int en;
-      int counter;
-      int counter_max;
-      int delay;
-      float depth;
-    } vibra;
+		struct {
+			int en;
+			float ftar;
+			float speed;
+		} porta;
 
-    struct {
-      float A, D, S, R;
-      float t;
-      int state;
-    } adsr;
+		struct {
+			int en;
+			int counter;
+			int counter_max;
+			int delay;
+			float depth;
+		} vibra;
 
-    struct {
-      int en;
-      float* delay;
-      int len;
-      int ptr[8];
-      int predelay;
-      int time;
-    } rev;
+		struct {
+			float A, D, S, R;
+			float t;
+			int state;
+		} adsr;
 
-    struct {
-      int en;
-      float* delay;
-      int len;
-      int ptr;
-      float decay;
-    } echo;
-    
-  } chan[16];
+		struct {
+			int en;
+			float* delay;
+			int len;
+			int ptr[8];
+			int predelay;
+			int time;
+		} rev;
 
-  /* sample note ons */
-  int sample_c;
-  int sample[32];
+		struct {
+			int en;
+			float* delay;
+			int len;
+			int ptr;
+			float decay;
+		} echo;
 
-  /* sequencer */
-  int tick;
-  int tpb;
-  int bpm;
-  int N;
-  int N_;
-  int R;
-  int R_;
-  int F;
+	} chan[16];
 
-  int seq_c;
-  int seq_ptr;
-  int seq_en;
-  seq* song;
+	/* sample note ons */
+	int sample_c;
+	int sample[32];
 
-  int songs_c;
-  seq* songs[64];
+	/* sequencer */
+	int tick;
+	int tpb;
+	int bpm;
+	int N;
+	int N_;
+	int R;
+	int R_;
+	int F;
+
+	int seq_c;
+	int seq_ptr;
+	int seq_en;
+	seq* song;
+
+	int songs_c;
+	seq* songs[64];
 
 } my;
 
 
 
 void synth_setbpm(int bpm){
-  my.bpm = bpm;
-  int numer = SAMPLE_RATE*60;
-  int denom = my.tpb*bpm;
-  int d = gcd(numer,denom);
-  /*N and R exact only if at start of song, good enough though*/
-  my.N = 0;
-  my.N_ = numer/denom;
-  my.R = 0;
-  my.R_ = denom/d;
-  my.F = (numer/d) % (denom/d);
+	my.bpm = bpm;
+	int numer = SAMPLE_RATE*60;
+	int denom = my.tpb*bpm;
+	int d = gcd(numer,denom);
+	/*N and R exact only if at start of song, good enough though*/
+	my.N = 0;
+	my.N_ = numer/denom;
+	my.R = 0;
+	my.R_ = denom/d;
+	my.F = (numer/d) % (denom/d);
 }
 
 void init_synth(){
-  my.tick = 0;
+	my.tick = 0;
 
 
-  my.tpb = 288;
-  synth_setbpm(120);
+	my.tpb = 288;
+	synth_setbpm(120);
 
 
-  my.seq_c = 0;
-  my.seq_ptr = 0;
-  my.songs_c = 0;
+	my.seq_c = 0;
+	my.seq_ptr = 0;
+	my.songs_c = 0;
 }
 
 void eval_event(int i){
@@ -221,6 +221,9 @@ printf("note off %x %d %d %d\n",type,chan+1,val1,val2);
 		case 0xf0: /* custom non standard events (not sysex) */
 			/* loop point, tempo change, etc */
 			break;
+		default: /* invalid */
+			report_error(
+				"synth: invalid event type %x\n", type);
 	}
 }
 

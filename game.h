@@ -64,7 +64,7 @@ typedef struct {
 
 typedef struct {
 	struct box box;
-	//sprite* spr;
+	/*sprite* spr;*/
 	int params[6];
 	int t;
 } moveplat;

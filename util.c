@@ -31,18 +31,21 @@
 #include "util.h"
 
 /* error reporting */
+void report_verror(const char* format, va_list ap){
+	vprintf(format, ap);
+}
+
 void report_error(const char* format, ...){
 	va_list ap;
 	va_start(ap, format);
-	vprintf(format, ap);
+	report_verror(format, ap);
 	va_end(ap);
 }
 
 void fatal_error(const char* format, ...){
 	va_list ap;
 	va_start(ap, format);
-	//report_error(format, ap);
-	vprintf(format, ap);
+	report_verror(format, ap);
 	va_end(ap);
 	exit(-1);
 }
@@ -83,9 +86,12 @@ void strmcat(char* dst, const char* src, size_t n){
    returns the number of bytes of str consumed.
 */
 int unicode_getc(char* str, utf32* u){
-	unsigned char b[4] = {str[0], str[1], str[2], str[3]};
+	/*unsigned char b[4] = {str[0], str[1], str[2], str[3]};*/
+	unsigned char b[4];
 	unsigned char a[4] = {0,0,0,0};
 	int N;
+
+	memcpy(b, str, 4);
 
 	/* 1111 0xf
 	   1110 0xe
@@ -149,12 +155,13 @@ void tree_insert(
 {
 
 	struct treenode* node = xmalloc(sizeof(struct treenode));
+	struct treenode* ptr;
 	node->key = key;
 	node->value = value;
 	node->l = NULL;
 	node->r = NULL;
 
-	struct treenode* ptr = root;
+	ptr = root;
 	while(1){
 		if( compare(ptr->key, key) < 0 ){
 			if(ptr->l){ptr = ptr->l;}
@@ -180,15 +187,12 @@ void* tree_search(
 		return NULL;
 	}
 	else if(compare(root->key, key)>0){
-		//printf("%p -> go right\n",root->key);
 		return tree_search(root->r, compare, key);
 	}
 	else if(compare(root->key, key)<0){
-		//printf("%p -> go left\n",root->key);
 		return tree_search(root->l, compare, key);
 	}
 	else{
-		//printf("%p -> found\n",key);
 		return root->value;
 	}
 }
