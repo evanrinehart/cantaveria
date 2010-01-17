@@ -24,13 +24,14 @@
 
 #include <stdlib.h>
 
-#include "util.h"
-#include "backend.h"
-#include "graphics.h"
-#include "game.h"
-#include "splash.h"
-#include "intro.h"
-#include "title.h"
+#include <util.h>
+#include <input.h>
+#include <backend.h>
+#include <graphics.h>
+#include <game.h>
+#include <splash.h>
+#include <intro.h>
+#include <title.h>
 
 static struct {
 	int gfx;
@@ -38,33 +39,14 @@ static struct {
 	int t1, t2, t3;
 } my;
 
-void splash_keydown(int key){
+void splash_press(input in){
 	title_setup();
 }
-void splash_keyup(int key){}
-void splash_joymovex(int joy, int x){}
-void splash_joymovey(int joy, int y){}
-void splash_joypress(int joy, int button){
-	title_setup();
+
+void splash_release(input in){
+
 }
-void splash_joyrelease(int joy, int button){}
 
-struct handler splash_handler = {
-	splash_keydown,splash_keyup,splash_joymovex,
-	splash_joymovey,splash_joypress,splash_joyrelease
-};
-
-void splash_setup(){
-	set_handler(splash_handler);
-	game.update = splash_update;
-	game.draw = splash_draw;
-
-	my.counter = 0;
-	my.t1 = 1000/dt;
-	my.t2 = 5000/dt;
-	my.t3 = 6000/dt;
-	my.gfx = load_gfx("splash.tga");
-}
 
 void splash_update(){
 	my.counter++;
@@ -81,3 +63,15 @@ void splash_draw(){
 }
 
 
+void splash_setup(){
+	set_handler(
+		splash_update, splash_draw, 
+		splash_press, splash_release
+	);
+
+	my.counter = 0;
+	my.t1 = 1000/dt;
+	my.t2 = 5000/dt;
+	my.t3 = 6000/dt;
+	my.gfx = load_gfx("splash.tga");
+}

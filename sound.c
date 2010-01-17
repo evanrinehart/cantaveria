@@ -22,9 +22,9 @@
 
 #include <stdlib.h>
 
-#include "synth.h"
-#include "sound.h"
-#include "util.h"
+#include <synth.h>
+#include <sound.h>
+#include <util.h>
 
 
 struct {

@@ -24,17 +24,68 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "loader.h"
-#include "util.h"
-#include "backend.h"
-#include "graphics.h"
-#include "game.h"
-#include "intro.h"
+#include <loader.h>
+#include <util.h>
+#include <input.h>
+#include <backend.h>
+#include <graphics.h>
+#include <game.h>
+#include <intro.h>
 
 struct game game;
 
 
+static struct {
+	void (*update)();
+	void (*draw)();
+	void (*press)(input in);
+	void (*release)(input in);
+} handler;
 
+
+
+
+
+void set_handler(
+	void (*update)(),
+	void (*draw)(),
+	void (*press)(input in),
+	void (*release)(input in)
+){
+	handler.update = update;
+	handler.draw = draw;
+	handler.press = press;
+	handler.release = release;
+}
+
+void dispatch_input(){
+	input in = get_input();
+	while(in.type != NO_INPUT){
+		if(in.type == BUTTON_PRESS){
+			handler.press(in);
+		}
+		else if(in.type == BUTTON_RELEASE){
+			handler.release(in);
+		}
+		else if(in.type == END_OF_PROGRAM){
+			end_program();
+		}
+		in = get_input();
+	}
+}
+
+void update(){
+	dispatch_input();
+	fps_update();
+	console_clear();
+	animate_sprites();
+	handler.update();
+}
+
+void draw(){
+	handler.draw();
+	draw_final();
+}
 
 /*
 zones binary file format
@@ -455,25 +506,25 @@ void player_press(int id, int key){
 	mobile* p = &(pstate[id].player);
 
 	switch(key){
-		case LEFT_KEY:
+		case LEFT_BUTTON:
 			p->facing = LEFT;
 			ps->lwalk = 1;
 			break;
-		case RIGHT_KEY:
+		case RIGHT_BUTTON:
 			p->facing = RIGHT;
 			ps->rwalk = 1;
 			break;
-		case JUMP_KEY:
+		case JUMP_BUTTON:
 			if(ps->state == 0){
 				ps->state = JUMPING;
 				p->vy = -200;
 				ps->jaccel = 2;
 			}
 			break;
-		case UP_KEY:
+		case UP_BUTTON:
 			ps->uphold = -1;
 			break;
-		case DOWN_KEY:
+		case DOWN_BUTTON:
 			ps->uphold = 1;
 			break;
 		default:
@@ -487,19 +538,19 @@ void player_release(int id, int key){
 	//mobile* p = &(pstate[id].player);
 
 	switch(key){
-		case LEFT_KEY:
+		case LEFT_BUTTON:
 			ps->lwalk = 0;
 			break;
-		case RIGHT_KEY:
+		case RIGHT_BUTTON:
 			ps->rwalk = 0;
 			break;
-		case JUMP_KEY:
+		case JUMP_BUTTON:
 			ps->state = FALLING;
 			break;
-		case UP_KEY:
+		case UP_BUTTON:
 			ps->uphold = 0;
 			break;
-		case DOWN_KEY:
+		case DOWN_BUTTON:
 			ps->uphold = 0;
 			break;
 		default:
@@ -542,38 +593,16 @@ void player_init(int id){
 
 
 
-
-void game_keydown(int key){
-	if(key==ESCAPE_KEY){
+void game_press(input in){
+	if(in.button==ESCAPE_KEY){
 		end_program();
 	}
-	player_press(0, key);
+	player_press(0, in.button);
 }
 
-void game_keyup(int key){
-	player_release(0, key);
+void game_release(input in){
+	player_release(0, in.button);
 }
-
-void game_joymovex(int joy, int x){
-
-}
-
-void game_joymovey(int joy, int y){
-
-}
-
-void game_joypress(int joy, int button){
-
-}
-
-void game_joyrelease(int joy, int button){
-
-}
-
-struct handler game_handler = {
-	game_keydown,game_keyup,game_joymovex,
-	game_joymovey,game_joypress,game_joyrelease
-};
 
 void game_update(){
 	player_update(0);
@@ -588,9 +617,7 @@ void game_draw(){
 }
 
 void game_setup(){
-	set_handler(game_handler);
-	game.update = game_update;
-	game.draw = game_draw;
+	set_handler(game_update, game_draw, game_press, game_release);
 
 	rand_reset(0);
 

@@ -3,10 +3,14 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "util.h"
-#include "backend.h"
+#include <dsp.h>
 
-#include "dsp.h"
+
+#define PI2 2*3.14159265358
+
+int sample_rate = 0;
+
+
 
 
 void setup_lowpass(lowpass* lp, float f0, float srate){
@@ -316,7 +320,7 @@ typedef struct {
 } pulse;
 
 void set_pulse_freq(pulse* s, float f){
-	s->dy = 2*f/(SAMPLE_RATE*16);
+	s->dy = 2*f/(sample_rate*16);
 }
 
 void generate_pulse(pulse* s, float step[], float out[], int count, int type){
@@ -324,7 +328,7 @@ void generate_pulse(pulse* s, float step[], float out[], int count, int type){
 	float buf[N];
 	int i;
 
-	const float T = (1.0f/(SAMPLE_RATE*16));
+	const float T = (1.0f/(sample_rate*16));
 	const float A = T/(1.0f/(PI2*10000) + T);
 
 	/* generate */
@@ -365,10 +369,10 @@ void generate_pulse(pulse* s, float step[], float out[], int count, int type){
 /* PAD synth algorithm */
 void pad_synth(float amp[], float out[], int size){
 	int i;
-	float (*in)[][2] = xmalloc(size*sizeof(float[2]));
+	float (*in)[][2] = malloc(size*sizeof(float[2]));
 	for(i=0; i<size; i++){
 		float A = amp[i];
-		float p = randf()*PI2;
+		float p = (rand()*PI2)/RAND_MAX;
 		(*in)[i][0] = A*cos(p);
 		(*in)[i][1] = A*sin(p);
 	}

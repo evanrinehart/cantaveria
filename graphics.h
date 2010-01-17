@@ -28,7 +28,7 @@ typedef struct {
 
 void graphics_init();
 
-void draw();
+void draw_final();
 void draw_sprites();
 void draw_stage();
 

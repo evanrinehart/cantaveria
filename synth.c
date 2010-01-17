@@ -28,9 +28,9 @@
 
 #include <math.h>
 
-#include "util.h"
-#include "backend.h"
-#include "loader.h"
+#include <util.h>
+#include <backend.h>
+#include <loader.h>
 
 typedef struct {
 	int tick;

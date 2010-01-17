@@ -24,20 +24,20 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "util.h"
-#include "backend.h"
-#include "graphics.h"
-#include "game.h"
-#include "loader.h"
+#include <util.h>
+#include <input.h>
+#include <backend.h>
+#include <graphics.h>
+#include <game.h>
+#include <loader.h>
 
-#include "title.h"
-#include "intro.h"
+#include <title.h>
+#include <intro.h>
 
 
 
-
-void intro_keydown(int key){
-	if(key == ESCAPE_KEY){
+void intro_press(input in){
+	if(in.button == ESCAPE_KEY){
 		end_program();
 	}
 	else{
@@ -45,30 +45,9 @@ void intro_keydown(int key){
 	}
 }
 
-void intro_keyup(int key){
+void intro_release(input in){
 
 }
-
-void intro_joymovex(int joy, int x){
-
-}
-
-void intro_joymovey(int joy, int y){
-
-}
-
-void intro_joypress(int joy, int button){
-
-}
-
-void intro_joyrelease(int joy, int button){
-
-}
-
-struct handler intro_handler = {
-	intro_keydown,intro_keyup,intro_joymovex,
-	intro_joymovey,intro_joypress,intro_joyrelease
-};
 
 
 
@@ -84,8 +63,9 @@ void intro_draw(){
 }
 
 void intro_setup(){
-	set_handler(intro_handler);
-	game.update = intro_update;
-	game.draw = intro_draw;
+	set_handler(
+		intro_update, intro_draw,
+		intro_press, intro_release
+	);
 }
 

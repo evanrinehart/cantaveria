@@ -9,12 +9,13 @@ drawing commands. */
 #include <stdarg.h>
 #include <math.h>
 
-#include "util.h"
-#include "backend.h"
-#include "graphics.h"
-#include "loader.h"
+#include <util.h>
+#include <input.h>
+#include <backend.h>
+#include <graphics.h>
+#include <loader.h>
 
-#include "game.h"
+#include <game.h>
 
 
 /* graphics data */
@@ -200,15 +201,9 @@ void draw_sprites(){
 	}
 }
 
-void draw(){
+void draw_final(){
 	fps_draw();
-
-	if(game.draw){
-		game.draw();
-	}
-
 	console_draw();
-
 	update_video();
 	clear_video();
 }

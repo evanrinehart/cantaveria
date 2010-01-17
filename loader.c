@@ -29,8 +29,8 @@
 
 
 
-#include "loader.h"
-#include "util.h"
+#include <loader.h>
+#include <util.h>
 
 struct reader {
 	ZZIP_FILE* f;

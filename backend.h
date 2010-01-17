@@ -20,62 +20,9 @@
    Boston, MA  02110-1301, USA
 */
 
-enum {
-ESCAPE_KEY,
-PAUSE_KEY,
-
-LEFT_KEY,
-RIGHT_KEY,
-UP_KEY,
-DOWN_KEY,
-
-FIRE_KEY,
-JUMP_KEY,
-INVENTORY_KEY,
-SPECIAL_KEY,
-
-L_KEY,
-R_KEY,
-START_KEY,
-SELECT_KEY
-};
-
-enum{
-FIRE_BUTTON,
-JUMP_BUTTON,
-INVENTORY_BUTTON,
-SPECIAL_BUTTON,
-
-L_BUTTON,
-R_BUTTON,
-START_BUTTON,
-SELECT_BUTTON
-};
-
-enum{
-KEYUP,
-KEYDOWN,
-JOYMOVEX,
-JOYMOVEY,
-JOYPRESS,
-JOYRELEASE
-};
-
-struct handler {
-	void (*keydown)(int key);
-	void (*keyup)(int key);
-	void (*joymovex)(int joy, int x);
-	void (*joymovey)(int joy, int y);
-	void (*joypress)(int joy, int button);
-	void (*joyrelease)(int joy, int button);
-	/*void (*keyentry)(utf32 u);*/
-};
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 0
-
-#define JOY_MAX 32767
-#define JOY_MIN -32768
 
 #define MAX_PLAYERS 6
 
@@ -102,23 +49,14 @@ struct handler {
 void backend_init(int argc, char* argv[]);
 void backend_quit();
 
-void input(); /* pump event system */
-void draw();  /* draw all active graphics */
-
 int since(); /* ms since last time since() was called */
 void delay(int ms); /* wait ms ms */
 void end_program();
 int ended();
 
+
 void update_video();
 void clear_video();
-
-/* input */
-int keynum(int name); /* get key number for key name */
-int butnum(int joy, int name); /* get button number for button name */
-void control(int type, int par1, int par2); /* automatic control */
-void enable_alphanum(int yn);
-void set_handler(struct handler h);
 
 /* gfx control */
 int load_gfx(char* filename);

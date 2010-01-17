@@ -25,11 +25,12 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 
-#include "util.h"
-#include "backend.h"
-//#include "game.h"
-#include "loader.h"
-#include "sound.h"
+#include <util.h>
+#include <input.h>
+#include <backend.h>
+//#include <game.h>
+#include <loader.h>
+#include <sound.h>
 
 SDL_Surface* video;
 int gl_flag = 0;
@@ -37,12 +38,7 @@ int fullscreen = 0;
 int W, H;
 int end = 0;
 
-struct handler handler;
 
-
-void set_handler(struct handler h){
-	handler = h;
-}
 
 void end_program(){
 	end = 1;
@@ -52,11 +48,12 @@ int ended(){
 	return end;
 }
 
+
+static int time_last; /* initialized by backend_init */
 int since(){
-	static int last = 0;
-	int now = SDL_GetTicks();
-	int diff = now - last;
-	last = now;
+	int time_now = SDL_GetTicks();
+	int diff = time_now - time_last;
+	time_last = time_now;
 	return diff;
 }
 
@@ -65,141 +62,11 @@ void delay(int ms){
 }
 
 
-int keymap[32];
-int butmap[MAX_PLAYERS][8];
-int joymap[MAX_PLAYERS];
-int alphanum_enable = 0;
-
-int keynum(int name){
-	return keymap[name];
-}
-
-int butnum(int joy, int name){
-	return butmap[joy][name];
-}
-
-
-
-int joy2player(int joy){
-	int i;
-	for(i=0; i<MAX_PLAYERS; i++){
-		if(joymap[i] == joy) return i;
-	}
-	return -1;
-}
-
-int key2name(int sym){
-	int i;
-	for(i=0; i<14; i++){
-		if(keymap[i] == sym) return i;
-	}
-	return -1;
-}
-
-int button2name(int player, int but){
-	int i;
-	if(player < 0) return -1;
-	for(i=0; i<8; i++){
-		if(butmap[i][player] == but) return i;
-	}
-	return -1;
-}
-
-
-
-
-void backend_quit(){
-	printf("sdl: quit\n");
-	SDL_LockAudio();
-	SDL_CloseAudio();
-	SDL_Quit();
-}
 
 
 
 
 
-void enable_alphanum(int yn){
-	SDL_EnableUNICODE(yn);
-	alphanum_enable = yn;
-}
-
-void input(){
-
-	SDL_Event e;
-	int name;
-	int player;
-	Uint16 uni16;
-
-	while(SDL_PollEvent(&e) != 0){
-		switch(e.type){
-			case SDL_KEYDOWN:
-				uni16 = e.key.keysym.unicode;
-				if(uni16 != 0 && alphanum_enable){
-					//handle uni16
-				}
-				else{
-					name = key2name(e.key.keysym.sym);
-					if(name > -1) handler.keydown(name);
-				}
-				break;
-			case SDL_KEYUP:
-				name = key2name(e.key.keysym.sym);
-				if(name > -1) handler.keyup(name);
-				break;
-			case SDL_JOYBUTTONDOWN:
-				player = joy2player(e.jbutton.which);
-				name = button2name(player, e.jbutton.button);
-				if(name > -1) handler.joypress(player, name);
-				break;
-			case SDL_JOYBUTTONUP:
-				player = joy2player(e.jbutton.which);
-				name = button2name(player, e.jbutton.button);
-				if(name > -1) handler.joyrelease(e.jbutton.which, name);
-				break;
-			case SDL_JOYAXISMOTION:
-				player = joy2player(e.jaxis.which);
-				if(player < 0) break;
-				if(e.jaxis.axis == 0){
-					handler.joymovex(player, e.jaxis.value);
-				}
-				else if(e.jaxis.axis == 1){
-					handler.joymovey(player, e.jaxis.value);
-				}
-				break;
-			case SDL_QUIT:
-				end_program();
-				break;
-		}
-	}
-}
-
-void control(int type, int par1, int par2){
-
-	switch(type){
-		case KEYDOWN:
-			handler.keydown(par1);
-			break;
-		case KEYUP:
-			handler.keyup(par1);
-			break;
-		case JOYMOVEX:
-			handler.joymovex(par1, par2);
-			break;
-		case JOYMOVEY:
-			handler.joymovey(par1, par2);
-			break;
-		case JOYPRESS:
-			handler.joypress(par1, par2);
-			break;
-		case JOYRELEASE:
-			handler.joyrelease(par1, par2);
-			break;
-		default:
-			report_error("backend: invalid control %d\n", type);
-	}
-
-}
 
 struct {
 	char* filename;
@@ -556,45 +423,6 @@ void parse_options(int argc, char* argv[], int* fullscreen, int* gl_flag){
 	}
 }
 
-void load_keymap(){
-	/*
-	   keymap[ESCAPE_KEY] = SDLK_ESCAPE;
-	   keymap[PAUSE_KEY] = SDLK_PAUSE;
-
-	   keymap[LEFT_KEY] = SDLK_LEFT;
-	   keymap[RIGHT_KEY] = SDLK_RIGHT;
-	   keymap[UP_KEY] = SDLK_UP;
-	   keymap[DOWN_KEY] = SDLK_DOWN;
-
-	   keymap[FIRE_KEY] = SDLK_z;
-	   keymap[JUMP_KEY] = SDLK_x;
-	   keymap[INVENTORY_KEY] = SDLK_a;
-	   keymap[SPECIAL_KEY] = SDLK_s;
-
-	   keymap[L_KEY] = SDLK_q;
-	   keymap[R_KEY] = SDLK_w;
-	   keymap[START_KEY] = SDLK_RETURN;
-	   keymap[SELECT_KEY] = SDLK_TAB;
-	 */
-
-	keymap[ESCAPE_KEY] = SDLK_ESCAPE;
-	keymap[PAUSE_KEY] = SDLK_PAUSE;
-
-	keymap[LEFT_KEY] = SDLK_a;
-	keymap[RIGHT_KEY] = SDLK_d;
-	keymap[UP_KEY] = SDLK_w;
-	keymap[DOWN_KEY] = SDLK_s;
-
-	keymap[FIRE_KEY] = SDLK_j;
-	keymap[JUMP_KEY] = SDLK_k;
-	keymap[INVENTORY_KEY] = SDLK_i;
-	keymap[SPECIAL_KEY] = SDLK_l;
-
-	keymap[L_KEY] = SDLK_q;
-	keymap[R_KEY] = SDLK_e;
-	keymap[START_KEY] = SDLK_u;
-	keymap[SELECT_KEY] = SDLK_o;
-}
 
 void setup_joysticks(){
 	int N = SDL_NumJoysticks();
@@ -753,18 +581,28 @@ void setup_audio(){
 }
 
 
+
+
 void backend_init(int argc, char* argv[]){
 
 	sdl_init();
+	input_init("foobar");
 	parse_options(argc, argv, &fullscreen, &gl_flag);
-	load_keymap();
 	setup_joysticks();
 	setup_video();
 	setup_audio();
-	srand(RANDOM_SEED);
+	rand_reset(RANDOM_SEED);
+	time_last = SDL_GetTicks();
 
 }
 
+void backend_quit(){
+	printf("sdl: quit\n");
+	SDL_CloseAudio();
+	free(lout);
+	free(rout);
+	SDL_Quit();
+}
 
 
 /* fps */

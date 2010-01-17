@@ -21,36 +21,32 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 
-#include "util.h"
+#include <util.h>
+#include <input.h>
+#include <backend.h>
+#include <graphics.h>
+#include <game.h>
+#include <loader.h>
+#include <text.h>
 
-#include "backend.h"
-#include "graphics.h"
-#include "game.h"
-#include "loader.h"
-#include "text.h"
-
-#include "splash.h"
-
-
-
-void update(){
-	fps_update();
-	console_clear();
+#include <splash.h>
 
 
-	animate_sprites();
-	game.update();
-}
+
+
+void terminate(){
+	loader_quit();
+	backend_quit();
+};
 
 void main_loop(){
 	int T = 0;
-	int i;
-	since();
 	while(!ended()){
+		int i;
 		T += since();
 		for(i=0; i<T/dt; i++){
-			input();
 			update();
 		}
 		if(T/dt > 0){
@@ -61,29 +57,19 @@ void main_loop(){
 	}
 }
 
-void main_init(int argc, char* argv[]){
+int main(int argc, char* argv[]){
+
 	backend_init(argc, argv);
 	loader_init();
 	graphics_init();
 	text_init();
-}
 
-void main_quit(){
-	loader_quit();
-	backend_quit();
-}
-
-
-int main(int argc, char* argv[]){
-
-	main_init(argc, argv);
+	atexit(terminate);
 
 	splash_setup();
+
 	main_loop();
 
-	main_quit();
-
 	return 0;
-
 }
 

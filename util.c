@@ -27,8 +27,8 @@
 #include <string.h>
 #include <limits.h>
 
-#include "rng.h"
-#include "util.h"
+#include <rng.h>
+#include <util.h>
 
 /* error reporting */
 void report_verror(const char* format, va_list ap){

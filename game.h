@@ -20,7 +20,6 @@
    Boston, MA  02110-1301, USA
 */
 
-
 #define PIXUP 1024
 
 struct screen {
@@ -78,9 +77,6 @@ struct player_motion {
 
 
 struct game {
-	void (*update)();
-	void (*draw)();
-
 	zone* zones[32];
 	int zone_count;
 
@@ -104,6 +100,18 @@ enum {
 	SPRITE_FOUR,
 	SPR_BOX
 };
+
+
+void update(); /* pump input and do dt ms of game time */
+void draw();
+void set_handler(
+	void (*update)(),
+	void (*draw)(),
+	void (*press)(input in),
+	void (*release)(input in)
+);
+
+/* what is the stuff below doing here */
 
 
 void load_zone(char* filename);
