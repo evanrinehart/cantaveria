@@ -34,12 +34,12 @@
 
 
 void title_keydown(int key){
-  if(key == ESCAPE_KEY){
-    end_program();
-  }
-  else{
-    game_setup();
-  }
+	if(key == ESCAPE_KEY){
+		end_program();
+	}
+	else{
+		game_setup();
+	}
 }
 
 void title_keyup(int key){
@@ -62,9 +62,9 @@ void title_joyrelease(int joy, int button){
 }
 
 void title_update(){
-  console_printf("this is the title screen");
-  console_printf("new, load, options, quit?");
-  console_printf("press any key");
+	console_printf("this is the title screen");
+	console_printf("new, load, options, quit?");
+	console_printf("press any key");
 }
 
 void title_draw(){
@@ -72,18 +72,18 @@ void title_draw(){
 }
 
 struct handler title_handler = {
-title_keydown,title_keyup,title_joymovex,
-title_joymovey,title_joypress,title_joyrelease
+	title_keydown,title_keyup,title_joymovex,
+	title_joymovey,title_joypress,title_joyrelease
 };
 
 
 void title_setup(){
-  //load some graphics
-  //place the graphics
-  //if any, setup sprite update callbacks
-  set_handler(title_handler);
-  game.update = title_update;
-  game.draw = title_draw;
+	//load some graphics
+	//place the graphics
+	//if any, setup sprite update callbacks
+	set_handler(title_handler);
+	game.update = title_update;
+	game.draw = title_draw;
 
-  printf("you just entered the title screen\n");
+	printf("you just entered the title screen\n");
 }

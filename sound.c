@@ -28,31 +28,32 @@
 
 
 struct {
-  float* sounds[64];
-  int sound_c;
+	float* sounds[64];
+	int sound_c;
 } my;
 
 void process_audio(float lout[], float rout[], int len){
-  for(int i=0; i<len; i++){
-    lout[i] = 0;
-    rout[i] = 0;
-  }
+	int i;
+	for(i=0; i<len; i++){
+		lout[i] = 0;
+		rout[i] = 0;
+	}
 }
 
 int load_sound(char* filename){
-  return 0;
+	return 0;
 }
 
 void play_sound(int id){
-  
+
 }
 
 
 
 void init_sound(){
-  my.sound_c = 0;
+	my.sound_c = 0;
 
-  init_synth();
+	init_synth();
 }
 
 

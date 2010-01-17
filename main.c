@@ -35,22 +35,21 @@
 
 
 void update(){
-  fps_update();
-  console_clear();
+	fps_update();
+	console_clear();
 
 
-  animate_sprites();
-  game.update();
-
-
+	animate_sprites();
+	game.update();
 }
 
 void main_loop(){
 	int T = 0;
+	int i;
 	since();
 	while(!ended()){
 		T += since();
-		for(int i=0; i<T/dt; i++){
+		for(i=0; i<T/dt; i++){
 			input();
 			update();
 		}
@@ -63,32 +62,28 @@ void main_loop(){
 }
 
 void main_init(int argc, char* argv[]){
-  backend_init(argc, argv);
-  loader_init();
-  graphics_init();
-  text_init();
+	backend_init(argc, argv);
+	loader_init();
+	graphics_init();
+	text_init();
 }
 
 void main_quit(){
-  loader_quit();
-  backend_quit();
+	loader_quit();
+	backend_quit();
 }
 
-extern unsigned zrand();
-extern void zreset();
-extern int randi(int a, int b);
-extern double randf();
 
 int main(int argc, char* argv[]){
 
-  main_init(argc, argv);
+	main_init(argc, argv);
 
-  splash_setup();
-  main_loop();
+	splash_setup();
+	main_loop();
 
-  main_quit();
+	main_quit();
 
-  return 0;
+	return 0;
 
 }
 

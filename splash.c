@@ -33,51 +33,51 @@
 #include "title.h"
 
 static struct {
-  int gfx;
-  int counter;
-  int t1, t2, t3;
+	int gfx;
+	int counter;
+	int t1, t2, t3;
 } my;
 
 void splash_keydown(int key){
-  title_setup();
+	title_setup();
 }
 void splash_keyup(int key){}
 void splash_joymovex(int joy, int x){}
 void splash_joymovey(int joy, int y){}
 void splash_joypress(int joy, int button){
-  title_setup();
+	title_setup();
 }
 void splash_joyrelease(int joy, int button){}
 
 struct handler splash_handler = {
-splash_keydown,splash_keyup,splash_joymovex,
-splash_joymovey,splash_joypress,splash_joyrelease
+	splash_keydown,splash_keyup,splash_joymovex,
+	splash_joymovey,splash_joypress,splash_joyrelease
 };
 
 void splash_setup(){
-  set_handler(splash_handler);
-  game.update = splash_update;
-  game.draw = splash_draw;
+	set_handler(splash_handler);
+	game.update = splash_update;
+	game.draw = splash_draw;
 
-  my.counter = 0;
-  my.t1 = 1000/dt;
-  my.t2 = 5000/dt;
-  my.t3 = 6000/dt;
-  my.gfx = load_gfx("splash.tga");
+	my.counter = 0;
+	my.t1 = 1000/dt;
+	my.t2 = 5000/dt;
+	my.t3 = 6000/dt;
+	my.gfx = load_gfx("splash.tga");
 }
 
 void splash_update(){
-  my.counter++;
+	my.counter++;
 
-  if(my.counter > my.t3){
-    intro_setup();
-  }
+	if(my.counter > my.t3){
+		intro_setup();
+	}
 }
 
 void splash_draw(){
-  if(my.counter > my.t1 && my.counter < my.t2){
-    draw_gfx(my.gfx,(320-256)/2,0,0,0,256,256);
-  }
+	if(my.counter > my.t1 && my.counter < my.t2){
+		draw_gfx(my.gfx,(320-256)/2,0,0,0,256,256);
+	}
 }
 
 

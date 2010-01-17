@@ -33,55 +33,56 @@ int stage_enabled = 0;
 
 
 struct {
-  int x, y;
+	int x, y;
 } camera;
 
 
 void graphics_init(){
-  minifont_gfx = load_gfx("smallfont.tga");
-  for(int i=0; i<MAX_ANIMATIONS; i++){
-    animations[i] = NULL;
-  }
+	int i;
+	minifont_gfx = load_gfx("smallfont.tga");
+	for(i=0; i<MAX_ANIMATIONS; i++){
+		animations[i] = NULL;
+	}
 }
 
 
 /* drawing */
 
 void draw_sprite(sprite* spr){
-  int x = spr->x - camera.x;
-  int y = spr->y - camera.y;
-  int W = spr->w;
-  int H = spr->h;
-  int X = spr->frame.x;
-  int Y = spr->frame.y;
-  int g = spr->gfxid;
-  draw_gfx(g, x, y, X, Y, W, H);
+	int x = spr->x - camera.x;
+	int y = spr->y - camera.y;
+	int W = spr->w;
+	int H = spr->h;
+	int X = spr->frame.x;
+	int Y = spr->frame.y;
+	int g = spr->gfxid;
+	draw_gfx(g, x, y, X, Y, W, H);
 }
 
 /*
-void draw_screen(zone* z, int si, int sj){
-  struct screen* scr = z->screens+si+z->w*sj;
-  int G = z->tileset;
-  int x = si*20*16 - camera.x;
-  int y = sj*15*16 - camera.y;
+   void draw_screen(zone* z, int si, int sj){
+   struct screen* scr = z->screens+si+z->w*sj;
+   int G = z->tileset;
+   int x = si*20*16 - camera.x;
+   int y = sj*15*16 - camera.y;
 
-  for(int j=0; j < 15; j++){
-    for(int i=0; i < 20; i++){
-      if(x > 320 || y > 240 || x < -16 || y < -16) continue;
-      int id = scr->tiles[i][j].id;
-      if(id != 0){
-        int X = id&7;
-        int Y = id>>3;
-        draw_gfx(G, x, y, X, Y, 16, 16);
-      }
-      else{
-        //draw background
-      }
-      x += 16;
-    }
-    x -= 320;
-    y += 16;
-  }
+   for(int j=0; j < 15; j++){
+   for(int i=0; i < 20; i++){
+   if(x > 320 || y > 240 || x < -16 || y < -16) continue;
+   int id = scr->tiles[i][j].id;
+   if(id != 0){
+   int X = id&7;
+   int Y = id>>3;
+   draw_gfx(G, x, y, X, Y, 16, 16);
+   }
+   else{
+//draw background
+}
+x += 16;
+}
+x -= 320;
+y += 16;
+}
 }*/
 
 
@@ -93,24 +94,25 @@ void draw_screen(zone* z, int si, int sj){
 
 
 void draw_small_text(char* str, int x, int y){
-  for(char* c=str; *c; c++){
-    int X = *c & 0x0f;
-    int Y = *c >> 4;
-    draw_gfx_raw(minifont_gfx, x, y, X*4, Y*9, 3, 8);
-    x+=4;
-  }
+	char* c;
+	for(c=str; *c; c++){
+		int X = *c & 0x0f;
+		int Y = *c >> 4;
+		draw_gfx_raw(minifont_gfx, x, y, X*4, Y*9, 3, 8);
+		x+=4;
+	}
 }
 
 
 
 void printf_small(int x, int y, char* format, ...){
-  char str[128];
-  va_list ap;
-  va_start(ap, format);
-  vsnprintf(str, 128, format, ap);
-  va_end(ap);
-  str[127]='\0';
-  draw_small_text(str, x, y);
+	char str[128];
+	va_list ap;
+	va_start(ap, format);
+	vsnprintf(str, 128, format, ap);
+	va_end(ap);
+	str[127]='\0';
+	draw_small_text(str, x, y);
 }
 
 
@@ -118,165 +120,193 @@ void printf_small(int x, int y, char* format, ...){
 
 void draw_screen(zone* z, int si, int sj){
 
-  struct screen* scr = ZONE_LOOKUP(z,si,sj);
-  if(!scr) return;
-  int G = z->tileset_gfx;
-  int x = si*20*16 - camera.x;
-  int y = sj*15*16 - camera.y;
+	struct screen* scr = ZONE_LOOKUP(z,si,sj);
+	if(!scr) return;
+	int G = z->tileset_gfx;
+	int x = si*20*16 - camera.x;
+	int y = sj*15*16 - camera.y;
+	int i,j;
 
-  for(int j=0; j < 15; j++){
-    for(int i=0; i < 20; i++){
-      int id = scr->tiles[i][j];
-      if(id != 0){
-        int X = (id&0xf)<<4;
-        int Y = (id>>4)<<4;
-        draw_gfx(G, x, y, X, Y, 16, 16);
-      }
-      else{
-        int X = x+camera.x/2;
-        const int WW = 512;
-        if((X%WW)+16 >= WW){
-          int W = WW - (X%WW);
-          draw_gfx(z->bg_gfx, x, y, X, y, W, 16);
-          X %= WW;
-          draw_gfx(z->bg_gfx, x+W, y, 0, y, 16-W, 16);
-        }
-        else {
-          X %= WW;
-          draw_gfx(z->bg_gfx, x, y, X, y, 16, 16);
-        }
+	for(j=0; j < 15; j++){
+		for(i=0; i < 20; i++){
+			int id = scr->tiles[i][j];
+			if(id != 0){
+				int X = (id&0xf)<<4;
+				int Y = (id>>4)<<4;
+				draw_gfx(G, x, y, X, Y, 16, 16);
+			}
+			else{
+				int X = x+camera.x/2;
+				const int WW = 512;
+				if((X%WW)+16 >= WW){
+					int W = WW - (X%WW);
+
+					draw_gfx(
+							z->bg_gfx,
+							x, y,
+							X, y,
+							W, 16
+						);
+
+					X %= WW;
+					draw_gfx(
+							z->bg_gfx,
+							x+W, y,
+							0, y,
+							16-W, 16
+						);
+				}
+				else {
+					X %= WW;
+					draw_gfx(
+							z->bg_gfx,
+							x, y,
+							X, y,
+							16, 16
+						);
+				}
 
 
-      }
-      x += 16;
-    }
-    x -= 320;
-    y += 16;
-  }
+			}
+			x += 16;
+		}
+		x -= 320;
+		y += 16;
+	}
 
 }
 
 void draw_stage(){
-  zone* z = game.current_zone;
-  int si = game.si;
-  int sj = game.sj;
+	int i;
+	zone* z = game.current_zone;
+	int si = game.si;
+	int sj = game.sj;
 
-  int table[8][2] = {{ 1,0},{ 1, 1},{0, 1},{-1, 1},
-                     {-1,0},{-1,-1},{0,-1},{ 1,-1}};
+	int table[8][2] = {
+		{ 1,0},{ 1, 1},{0, 1},{-1, 1},
+		{-1,0},{-1,-1},{0,-1},{ 1,-1}
+	};
 
-  draw_screen(z, si, sj);
-  for(int i=0; i<8; i++){
-    draw_screen(z, si+table[i][0], sj+table[i][1]);
-  }
+	draw_screen(z, si, sj);
+	for(i=0; i<8; i++){
+		draw_screen(z, si+table[i][0], sj+table[i][1]);
+	}
 }
 
 void draw_sprites(){
-  for(int i=0; i<sprite_count; i++){
-    draw_sprite(sprites[i]);
-  }
+	int i;
+	for(i=0; i<sprite_count; i++){
+		draw_sprite(sprites[i]);
+	}
 }
 
 void draw(){
-  fps_draw();
+	fps_draw();
 
-  if(game.draw){
-    game.draw();
-  }
+	if(game.draw){
+		game.draw();
+	}
 
-  console_draw();
+	console_draw();
 
-  update_video();
-  clear_video();
+	update_video();
+	clear_video();
 }
 
 
 
 
 void point_camera(int x, int y){
-  camera.x = x;
-  camera.y = y;
+	camera.x = x;
+	camera.y = y;
 }
 
 
 
+void animate_sprite(int i){
+	sprite* spr = sprites[i];
+
+	spr->frame_counter += dt;
+	animation* ani = animations[spr->anim];
+
+
+	while(spr->frame_counter > ani->frame_lens[spr->current_frame]){
+		spr->frame_counter -= ani->frame_lens[spr->current_frame];
+		spr->current_frame++;
+		if(spr->current_frame == ani->frame_count){
+			spr->current_frame = 0;
+		}
+		spr->frame = ani->frames[spr->current_frame];
+	}
+
+	//if(spr->update) spr->update(spr, spr->userdata);
+}
+
 void animate_sprites(){
-  for(int i=0; i<sprite_count; i++){
-    sprite* spr = sprites[i];
-
-    spr->frame_counter += dt;
-    animation* ani = animations[spr->anim];
-
-
-    while(spr->frame_counter > ani->frame_lens[spr->current_frame]){
-      spr->frame_counter -= ani->frame_lens[spr->current_frame];
-      spr->current_frame++;
-      if(spr->current_frame == ani->frame_count){
-        spr->current_frame = 0;
-      }
-      spr->frame = ani->frames[spr->current_frame];
-    }
-
-    //if(spr->update) spr->update(spr, spr->userdata);
-
-  }
+	int i;
+	for(i=0; i<sprite_count; i++){
+		animate_sprite(i);
+	}
 }
 
 
 
 
 int load_sprite(char* filename, int id){
-  printf("loading %s\n",filename);
+	int i;
 
-  char path[1024] = "sprites/";
-  strncat(path, filename, 1023 - strlen(filename));
+	printf("loading %s\n",filename);
 
-  reader* rd = loader_open(path);
-  if(!rd){
-    return -1;
-  }
+	char path[1024] = "sprites/";
+	strncat(path, filename, 1023 - strlen(filename));
 
-  animation* ani = xmalloc(sizeof(animation));
+	reader* rd = loader_open(path);
+	if(!rd){
+		return -1;
+	}
 
-  char str[256];
-  int w, h;
-  int frame_count;
-  int loop_mode;
-  
-  loader_scanline(rd,"%256s",str);
-  loader_scanline(rd,"%d %d %d %d",&w,&h,&loop_mode,&frame_count);
+	animation* ani = xmalloc(sizeof(animation));
 
-  ani->frame_lens = xmalloc(frame_count*sizeof(short));
-  ani->frames = xmalloc(frame_count*sizeof(struct frame));
-  ani->frame_count = frame_count;
+	char str[256];
+	int w, h;
+	int frame_count;
+	int loop_mode;
 
-  int g = load_gfx(str);
-  if(g < 0)
-    return -1;
+	loader_scanline(rd,"%256s",str);
+	loader_scanline(rd,"%d %d %d %d",&w,&h,&loop_mode,&frame_count);
 
-  ani->gfxid = g;
+	ani->frame_lens = xmalloc(frame_count*sizeof(short));
+	ani->frames = xmalloc(frame_count*sizeof(struct frame));
+	ani->frame_count = frame_count;
 
-  //int W = gfx[g].w;
-  //int H = gfx[g].h;
-  int W = gfx_width(g);
-  int H = gfx_height(g);
-  ani->w = w;
-  ani->h = h;
+	int g = load_gfx(str);
+	if(g < 0)
+		return -1;
 
-  for(int i=0; i < frame_count; i++){
-    int l, x, y;
-    loader_scanline(rd, "%d %d %d", &l, &x, &y);
-    ani->frame_lens[i] = l;
-    ani->frames[i].x = x;
-    ani->frames[i].y = y;
-    ani->frames[i].x0 = ((double)x)/W;
-    ani->frames[i].y0 = ((double)y)/H;
-    ani->frames[i].x1 = ((double)(x+w))/W;
-    ani->frames[i].y1 = ((double)(y+h))/W;
-  }
+	ani->gfxid = g;
 
-  loader_close(rd);
-  animations[id] = ani;  
-  return 0;
+	//int W = gfx[g].w;
+	//int H = gfx[g].h;
+	int W = gfx_width(g);
+	int H = gfx_height(g);
+	ani->w = w;
+	ani->h = h;
+
+	for(i=0; i < frame_count; i++){
+		int l, x, y;
+		loader_scanline(rd, "%d %d %d", &l, &x, &y);
+		ani->frame_lens[i] = l;
+		ani->frames[i].x = x;
+		ani->frames[i].y = y;
+		ani->frames[i].x0 = ((double)x)/W;
+		ani->frames[i].y0 = ((double)y)/H;
+		ani->frames[i].x1 = ((double)(x+w))/W;
+		ani->frames[i].y1 = ((double)(y+h))/W;
+	}
+
+	loader_close(rd);
+	animations[id] = ani;
+	return 0;
 }
 
 
@@ -287,56 +317,56 @@ int load_sprite(char* filename, int id){
 /********************/
 
 sprite* enable_sprite(int sprnum){
-  if(!animations[sprnum]){
-    fatal_error("enable_sprite: you just tried to enable sprite with type %d, which does not exist\n",sprnum);
-  }
-  if(sprite_count == MAX_SPRITES){
-    /* need a priority based way to create important sprites if full */
-    return NULL;
-  }
-  sprite* spr = xmalloc(sizeof(sprite));
-  animation* ani = animations[sprnum];
+	if(!animations[sprnum]){
+		fatal_error("enable_sprite: you just tried to enable sprite with type %d, which does not exist\n",sprnum);
+	}
+	if(sprite_count == MAX_SPRITES){
+		/* need a priority based way to create important sprites if full */
+		return NULL;
+	}
+	sprite* spr = xmalloc(sizeof(sprite));
+	animation* ani = animations[sprnum];
 
-  spr->number = sprite_count;
-  spr->frame_counter = 0;
-  spr->current_frame = 0;
-  spr->frame = ani->frames[0];
-  spr->gfxid = ani->gfxid;
-  spr->anim = sprnum;
-  spr->x = 0;
-  spr->y = 0;
-  spr->w = ani->w;
-  spr->h = ani->h;
-  //spr->vx = 0;
-  //spr->vy = 0;
-  //spr->update = NULL;
-  //spr->userdata = NULL;
+	spr->number = sprite_count;
+	spr->frame_counter = 0;
+	spr->current_frame = 0;
+	spr->frame = ani->frames[0];
+	spr->gfxid = ani->gfxid;
+	spr->anim = sprnum;
+	spr->x = 0;
+	spr->y = 0;
+	spr->w = ani->w;
+	spr->h = ani->h;
+	//spr->vx = 0;
+	//spr->vy = 0;
+	//spr->update = NULL;
+	//spr->userdata = NULL;
 
-  sprites[sprite_count++] = spr;
-  return spr;
+	sprites[sprite_count++] = spr;
+	return spr;
 }
 
 void disable_sprite(sprite* spr){
-  sprite* tmp = sprites[spr->number];
-  sprites[spr->number] = sprites[sprite_count--];
-  free(tmp);
+	sprite* tmp = sprites[spr->number];
+	sprites[spr->number] = sprites[sprite_count--];
+	free(tmp);
 }
 
 sprite* copy_sprite(sprite* spr){
-  if(sprite_count == MAX_SPRITES){
-    /* need way to make important sprites when full */
-    return NULL;
-  }
-  sprite* copy = xmalloc(sizeof(sprite));
-  *copy = *spr;
-  sprites[sprite_count++] = copy;
-  return copy;
+	if(sprite_count == MAX_SPRITES){
+		/* need way to make important sprites when full */
+		return NULL;
+	}
+	sprite* copy = xmalloc(sizeof(sprite));
+	*copy = *spr;
+	sprites[sprite_count++] = copy;
+	return copy;
 }
 
 
 
 void enable_stage(int yn){
-  stage_enabled = yn;
+	stage_enabled = yn;
 }
 
 /* console */
@@ -344,21 +374,22 @@ char console[25][80];
 int console_ptr = 0;
 
 void console_clear(){
-  console_ptr = 0;
+	console_ptr = 0;
 }
 
 void console_printf(char* format, ...){
-  if(console_ptr==25) return;
-  va_list ap;
-  va_start(ap, format);
-  vsnprintf(console[console_ptr], 80, format, ap);
-  console[console_ptr][79] = '\0';
-  console_ptr++;
-  va_end(ap);
+	if(console_ptr==25) return;
+	va_list ap;
+	va_start(ap, format);
+	vsnprintf(console[console_ptr], 80, format, ap);
+	console[console_ptr][79] = '\0';
+	console_ptr++;
+	va_end(ap);
 }
 
 void console_draw(){
-  for(int i=0; i<console_ptr; i++){
-    printf_small(1,9*i+1,"%s",console[i]);
-  }
+	int i;
+	for(i=0; i<console_ptr; i++){
+		printf_small(1,9*i+1,"%s",console[i]);
+	}
 }

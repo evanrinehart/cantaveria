@@ -62,13 +62,13 @@ JOYRELEASE
 };
 
 struct handler {
-  void (*keydown)(int key);
-  void (*keyup)(int key);
-  void (*joymovex)(int joy, int x);
-  void (*joymovey)(int joy, int y);
-  void (*joypress)(int joy, int button);
-  void (*joyrelease)(int joy, int button);
-  //void (*keyentry)(utf32 u);
+	void (*keydown)(int key);
+	void (*keyup)(int key);
+	void (*joymovex)(int joy, int x);
+	void (*joymovey)(int joy, int y);
+	void (*joypress)(int joy, int button);
+	void (*joyrelease)(int joy, int button);
+	//void (*keyentry)(utf32 u);
 };
 
 #define VERSION_MAJOR 0

@@ -1,5 +1,5 @@
 PROJECT = cantaveria
-CFLAGS = -std=c99 -Wall -g -O2
+CFLAGS = -Wall -Wextra -Wno-unused-parameter -g -O2
 OBJ = util.o backend.o loader.o game.o title.o intro.o sound.o graphics.o text.o splash.o synth.o dsp.o rng.o
 CC = gcc
 LIBS = -lSDL -lGL -lzzip -lm

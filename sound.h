@@ -28,7 +28,6 @@ int load_sound(char* filename);
 void play_sound(int id);
 
 
-
 enum {
 SOUND_TEXTPOP,
 SOUND_TEXTEND,

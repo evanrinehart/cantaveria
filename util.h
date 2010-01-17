@@ -20,18 +20,17 @@
    Boston, MA  02110-1301, USA
 */
 
+typedef unsigned long utf32;
+
 void report_error(const char* format, ...);
 void fatal_error(const char* format, ...);
+void out_of_memory(const char*);
+
 void* xmalloc(size_t size);
 char* strxcpy(const char* str);
 void strmcat(char* dst, const char* src, size_t n);
-void out_of_memory(const char*);
 
-
-
-
-
-typedef unsigned long utf32;
+int unicode_getc(char* str, utf32* u);
 
 void rand_reset(unsigned s);
 int randi(int a, int b);
@@ -39,23 +38,25 @@ double randf();
 
 int gcd(int u, int v);
 
-int unicode_getc(char* str, utf32* u);
-
-
 typedef struct treenode treenode;
 struct treenode {
-  treenode* l;
-  treenode* r;
-  void* key;
-  void* value;
+	treenode* l;
+	treenode* r;
+	void* key;
+	void* value;
 };
 
-void tree_insert(treenode* root, 
-                 int (*compare)(void* k1, void* k2), 
-                 void* key, void* value);
+void tree_insert(
+		treenode* root,
+		int (*compare)(void* k1, void* k2),
+		void* key,
+		void* value
+);
 
-void* tree_search(treenode* root,
-                  int (*compare)(void* k1, void* k2),
-                  void* key);
+void* tree_search(
+	treenode* root,
+	int (*compare)(void* k1, void* k2),
+	void* key
+);
 
 

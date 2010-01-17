@@ -24,20 +24,20 @@
 #define PIXUP 1024
 
 struct screen {
-  unsigned char tiles[20][15];
-  int flags;
-  int exits[4];
+	unsigned char tiles[20][15];
+	int flags;
+	int exits[4];
 };
 
 typedef struct {
-  char* name;
-  struct screen** screens;
-  int tileset_gfx;
-  char tileset_shapes[256];
-  /*background*/
-  int x,y,w,h;
+	char* name;
+	struct screen** screens;
+	int tileset_gfx;
+	char tileset_shapes[256];
+	/*background*/
+	int x,y,w,h;
 
-  int bg_gfx;
+	int bg_gfx;
 } zone;
 
 #define ZONE_LOOKUP(Z,I,J) (I >= Z->w || J >= Z->h || I < 0 || J < 0 ? NULL : *(Z->screens + (I) + (J)*Z->w))
@@ -45,64 +45,64 @@ typedef struct {
 struct box{int x,y,w,h;};
 
 typedef struct {
-  struct box box; /*absolute coords*/
-  int x, y; /*absolute coords*/
-  int vx, vy; /* pixels per ms / 256 */
-  int xoff, yoff; /* pixel coords*/
-  int bxoff, byoff; /* absolute coords */
-  enum {LEFT, RIGHT} facing;
-  sprite* spr; /*pixel coords*/
-  zone* z;
-  int si, sj;
-  int flags;
+	struct box box; /*absolute coords*/
+	int x, y; /*absolute coords*/
+	int vx, vy; /* pixels per ms / 256 */
+	int xoff, yoff; /* pixel coords*/
+	int bxoff, byoff; /* absolute coords */
+	enum {LEFT, RIGHT} facing;
+	sprite* spr; /*pixel coords*/
+	zone* z;
+	int si, sj;
+	int flags;
 } mobile;
 
 typedef struct {
-  struct box box;
-  int type;
+	struct box box;
+	int type;
 } bullet;
 
 typedef struct {
-  struct box box;
-  //sprite* spr;
-  int params[6];
-  int t;
+	struct box box;
+	//sprite* spr;
+	int params[6];
+	int t;
 } moveplat;
 
 
 struct player_motion {
-  int state;
-  int timer;
-  
+	int state;
+	int timer;
+
 };
 
 
 struct game {
-  void (*update)();
-  void (*draw)();
+	void (*update)();
+	void (*draw)();
 
-  zone* zones[32];
-  int zone_count;
+	zone* zones[32];
+	int zone_count;
 
-  /*these track the location of the player*/
-  int player_x;
-  int player_y;
-  zone* current_zone;
-  int si, sj;
+	/*these track the location of the player*/
+	int player_x;
+	int player_y;
+	zone* current_zone;
+	int si, sj;
 
 
-  /* entities */
-  
+	/* entities */
+
 };
 
 extern struct game game;
 
 enum {
-SPRITE_ONE,
-SPRITE_TWO,
-SPRITE_THREE,
-SPRITE_FOUR,
-SPR_BOX
+	SPRITE_ONE,
+	SPRITE_TWO,
+	SPRITE_THREE,
+	SPRITE_FOUR,
+	SPR_BOX
 };
 
 

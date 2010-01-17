@@ -191,92 +191,92 @@ void init_synth(){
 }
 
 void eval_event(int i){
-  unsigned char midi[3];
-  midi[0] = my.song->e[i].midi[0];
-  midi[1] = my.song->e[i].midi[1];
-  midi[2] = my.song->e[i].midi[2];
+	unsigned char midi[3];
+	midi[0] = my.song->e[i].midi[0];
+	midi[1] = my.song->e[i].midi[1];
+	midi[2] = my.song->e[i].midi[2];
 
-  int type = midi[0]&0xf0;
-  int chan = midi[0]&0x0f;
-  int val1 = midi[1];
-  int val2 = midi[2];
+	int type = midi[0]&0xf0;
+	int chan = midi[0]&0x0f;
+	int val1 = midi[1];
+	int val2 = midi[2];
 
-  switch(type){
-    case 0x80: /* note off */
-      printf("note off %x %d %d %d\n",type,chan+1,val1,val2);
-      break;
-    case 0x90: /* note on */
-      printf("note off %x %d %d %d\n",type,chan+1,val1,val2);
-      break;
-    case 0xa0: /* aftertouch */
-      break;
-    case 0xb0: /* controller */
-      break;
-    case 0xc0: /* program */
-      break;
-    case 0xd0: /* channel pressure */
-      break;
-    case 0xe0: /* pitch bend */
-      break;
-    case 0xf0: /* custom non standard events (not sysex) */
-      /* loop point, tempo change, etc */
-      break;
-  }
+	switch(type){
+		case 0x80: /* note off */
+printf(	"note off %x %d %d %d\n",type,chan+1,val1,val2);
+			break;
+		case 0x90: /* note on */
+printf("note off %x %d %d %d\n",type,chan+1,val1,val2);
+			break;
+		case 0xa0: /* aftertouch */
+			break;
+		case 0xb0: /* controller */
+			break;
+		case 0xc0: /* program */
+			break;
+		case 0xd0: /* channel pressure */
+			break;
+		case 0xe0: /* pitch bend */
+			break;
+		case 0xf0: /* custom non standard events (not sysex) */
+			/* loop point, tempo change, etc */
+			break;
+	}
 }
 
 void synth_update(float lout[], float rout[], int count){
-  
-  for(int i=0; i<count; i++){
-    lout[i] = 0;
-    rout[i] = 0;
+	int i, j;
+	for(i=0; i<count; i++){
+		lout[i] = 0;
+		rout[i] = 0;
 
 
-    if(my.seq_en){
+		if(my.seq_en){
 
-      /* elaborate counter to keep ticks and samples in sync */
-      /* N  sample counter */
-      /* N_ integer samples per tick */
-      /* R  fractional sample counter, units 1/R_ samples */
-      /* R_ F/R_ samples is difference between real samples per tick and N_*/
-      /* F  see above */
-      my.N++; /* sample counter advance */
-      if(my.N == my.N_){ /* almost at the next tick boundary */
-        my.tick++; /* next tick comes F/R_ samples early */
-        my.N=0;
+			/* elaborate counter to keep ticks and samples in sync */
+			/* N  sample counter */
+			/* N_ integer samples per tick */
+			/* R  fractional sample counter, units 1/R_ samples */
+			/* R_ F/R_ samples is difference between real samples per tick and N_*/
+			/* F  see above */
+			my.N++; /* sample counter advance */
+			if(my.N == my.N_){ /* almost at the next tick boundary */
+				my.tick++; /* next tick comes F/R_ samples early */
+				my.N=0;
 
-        my.R+=my.F; /* add F/R_ */
-        if(my.R >= my.R_){ /* enough fractional samples accumulated */
-          my.R -= my.R_; /* fraction counter wraps */
-          my.N++; /* advance extra sample */
-        }
-      }
+				my.R+=my.F; /* add F/R_ */
+				if(my.R >= my.R_){ /* enough fractional samples accumulated */
+					my.R -= my.R_; /* fraction counter wraps */
+					my.N++; /* advance extra sample */
+				}
+			}
 
-      /* do next events maybe */
-      while(my.tick == my.song->e[my.seq_ptr].tick){
-        eval_event(my.seq_ptr++);
-        if(my.seq_ptr==my.seq_c){
-         my.seq_en = 0;
-        }
-      }
+			/* do next events maybe */
+			while(my.tick == my.song->e[my.seq_ptr].tick){
+				eval_event(my.seq_ptr++);
+				if(my.seq_ptr==my.seq_c){
+					my.seq_en = 0;
+				}
+			}
 
-    }
+		}
 
-    for(int j=0; j<16; j++){
-      //process_chan(j, lout, rout, count);
-    }
-  }
+		for(j=0; j<16; j++){
+			//process_chan(j, lout, rout, count);
+		}
+	}
 }
 
 
 
 void seq_append(seq* s, int tick, int type, int chan, int val1, int val2){
-  if(s->len < 256){
-    event* e = &(s->e[s->len++]);
-    e->tick = tick;
-    e->midi[0] = type|chan;
-    e->midi[1] = val1;
-    e->midi[2] = val2;
-  }
+	if(s->len < 256){
+		event* e = &(s->e[s->len++]);
+		e->tick = tick;
+		e->midi[0] = type|chan;
+		e->midi[1] = val1;
+		e->midi[2] = val2;
+	}
 }
 
 int event_cmp(const void* p1, const void* p2){
@@ -301,122 +301,122 @@ int get_delta(reader* f){
 }
 
 int load_song(char* filename){
+	int i;
+	reader* f = data_open("music", filename);
 
-  reader* f = data_open("music", filename);
+	seq* s = xmalloc(sizeof(seq));
+	my.songs[my.songs_c] = s;
 
-  seq* s = xmalloc(sizeof(seq));
-  my.songs[my.songs_c] = s;
+	char buf[16];
+	char string[64];
 
-  char buf[16];
-  char string[64];
+	int uspq;
+	int bpm;
 
-  int uspq;
-  int bpm;
+	/*MThd*/
+	loader_read(f,buf,4);
 
-  /*MThd*/
-  loader_read(f,buf,4);
+	/*0x00000006*/
+	read_int(f);
 
-  /*0x00000006*/
-  read_int(f);
+	/*format type: 0x0000 0x0001 or 0x0002*/
+	read_short(f);
 
-  /*format type: 0x0000 0x0001 or 0x0002*/
-  read_short(f);
+	/*number of tracks*/
+	short track_count = read_short(f);
 
-  /*number of tracks*/
-  short track_count = read_short(f);
+	/* time division */
+	loader_read(f,buf,2);
+	//code to figure out time division
 
-  /* time division */
-  loader_read(f,buf,2);
-  //code to figure out time division
+	for(i=0; i<track_count; i++){
 
-  for(int i=0; i<track_count; i++){
+		/*MTrk*/
+		loader_read(f,buf,4);
 
-    /*MTrk*/
-    loader_read(f,buf,4);
+		/* chunk size */
+		int chunk_size = read_int(f);
+		printf("%d\n",chunk_size);
 
-    /* chunk size */
-    int chunk_size = read_int(f);
-    printf("%d\n",chunk_size);
+		int tick = 0;
+		int end_of_track = 0;
+		int last_type = 0x80;
+		int last_chan = 0;
+		while(1){
+			int delta = get_delta(f);
 
-    int tick = 0;
-    int end_of_track = 0;
-    int last_type = 0x80;
-    int last_chan = 0;
-    while(1){
-      int delta = get_delta(f);
+			if(delta < 0) return -1;
+			tick += delta;
 
-      if(delta < 0) return -1;
-      tick += delta;
+			//type and channel
+			buf[0] = read_byte(f);
 
-      //type and channel
-      buf[0] = read_byte(f);
+			int type = buf[0] & 0xf0;
+			if(type >= 0x80 && type <= 0xe0){//normal event
+				last_type = type;
+				int chan = buf[0] & 0x0f;
+				last_chan = chan;
+				loader_read(f,buf,2);
+				int val1 = buf[0];
+				int val2 = buf[1];
+				seq_append(s, tick, type, chan, val1, val2);
+			}
+			else if(type < 0x80){//running status
+				int val1 = buf[0];
+				buf[0] = read_byte(f);
+				int val2 = buf[0];
+				seq_append(s, tick,last_type,last_chan,val1,val2);
+			}
+			else if(type == 0xff){//meta event
+				buf[0] = read_byte(f);
+				type = buf[0];
 
-      int type = buf[0] & 0xf0;
-      if(type >= 0x80 && type <= 0xe0){//normal event
-        last_type = type;
-        int chan = buf[0] & 0x0f;
-        last_chan = chan;
-        loader_read(f,buf,2);
-        int val1 = buf[0];
-        int val2 = buf[1];
-        seq_append(s, tick, type, chan, val1, val2);
-      }
-      else if(type < 0x80){//running status
-        int val1 = buf[0];
-        buf[0] = read_byte(f);
-        int val2 = buf[0];
-        seq_append(s, tick,last_type,last_chan,val1,val2);
-      }
-      else if(type == 0xff){//meta event
-        buf[0] = read_byte(f);
-        type = buf[0];
+				int len = get_delta(f);
 
-        int len = get_delta(f);
+				switch(type){
+					case 0x2f: printf("end of track\n");
+						   end_of_track = 1;
+						   break;
+					case 0x51:printf("tempo change\n"); /*tempo*/
+						  loader_read(f,buf,3);
+						  uspq = (buf[0]<<16) | (buf[1]<<8) | buf[2];
+						  bpm = 120;/*FIXME*/
+						  break;
+					case 0x01: printf("text\n");/*text*/
+						   if(len >= 64){/*too big, skip ahead*/
+							   loader_read(f, NULL, len);
+						   }
+						   else{
+							   loader_read(f,string,len);
+							   string[len] = '\0';
+							   if(strncmp(string,"LoopStart",len)==0){
+								   seq_append(s, tick, 0xf0, 0, 0, 0);
+							   }
+							   else if(strncmp(string,"LoopEnd",len)==0){
+								   seq_append(s, tick, 0xf0, 0, 1, 0);
+							   }
+						   }
+						   break;
+					default: /*skip*/
+						   loader_read(f,NULL,len);
+						   break;
+				}
+			}
+			else{ //sysex and such...
+				int len = get_delta(f);
+				loader_read(f, NULL, len);
+			}
 
-        switch(type){
-          case 0x2f: printf("end of track\n");
-            end_of_track = 1;
-            break;
-          case 0x51:printf("tempo change\n"); /*tempo*/
-            loader_read(f,buf,3);
-            uspq = (buf[0]<<16) | (buf[1]<<8) | buf[2];
-            bpm = 120;/*FIXME*/
-            break;
-          case 0x01: printf("text\n");/*text*/
-            if(len >= 64){/*too big, skip ahead*/
-              loader_read(f, NULL, len);
-            }
-            else{
-              loader_read(f,string,len);
-              string[len] = '\0';
-              if(strncmp(string,"LoopStart",len)==0){
-                seq_append(s, tick, 0xf0, 0, 0, 0);
-              }
-              else if(strncmp(string,"LoopEnd",len)==0){
-                seq_append(s, tick, 0xf0, 0, 1, 0);
-              }
-            }
-            break;
-          default: /*skip*/
-            loader_read(f,NULL,len);
-            break;
-        }
-      }
-      else{ //sysex and such...
-        int len = get_delta(f);
-        loader_read(f, NULL, len);
-      }
+			if(end_of_track) break;
+		}
 
-      if(end_of_track) break;
-    }
-
-  }
+	}
 
 
-  qsort(s->e, s->len, sizeof(event), event_cmp);
-  synth_setbpm(bpm);
+	qsort(s->e, s->len, sizeof(event), event_cmp);
+	synth_setbpm(bpm);
 
-  return my.songs_c++;
+	return my.songs_c++;
 }
 
 

@@ -37,12 +37,12 @@
 
 
 void intro_keydown(int key){
-  if(key == ESCAPE_KEY){
-    end_program();
-  }
-  else{
-    title_setup();
-  }
+	if(key == ESCAPE_KEY){
+		end_program();
+	}
+	else{
+		title_setup();
+	}
 }
 
 void intro_keyup(int key){
@@ -66,8 +66,8 @@ void intro_joyrelease(int joy, int button){
 }
 
 struct handler intro_handler = {
-intro_keydown,intro_keyup,intro_joymovex,
-intro_joymovey,intro_joypress,intro_joyrelease
+	intro_keydown,intro_keyup,intro_joymovex,
+	intro_joymovey,intro_joypress,intro_joyrelease
 };
 
 
@@ -75,8 +75,8 @@ intro_joymovey,intro_joypress,intro_joyrelease
 
 
 void intro_update(){
-  console_printf("this is the intro");
-  console_printf("press any key");
+	console_printf("this is the intro");
+	console_printf("press any key");
 }
 
 void intro_draw(){
@@ -84,8 +84,8 @@ void intro_draw(){
 }
 
 void intro_setup(){
-  set_handler(intro_handler);
-  game.update = intro_update;
-  game.draw = intro_draw;
+	set_handler(intro_handler);
+	game.update = intro_update;
+	game.draw = intro_draw;
 }
 
