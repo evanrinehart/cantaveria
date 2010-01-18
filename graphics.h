@@ -35,6 +35,10 @@ void draw_stage();
 
 int load_sprite(char* filename, int id);
 int load_font(char* filename);
+
+int load_bitmap(char* filename);
+void draw_bitmap(int id, int x, int y);
+
 sprite* enable_sprite(int sprnum);
 void disable_sprite(sprite* spr);
 sprite* copy_sprite(sprite* spr);

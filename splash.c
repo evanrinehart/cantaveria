@@ -57,7 +57,7 @@ void splash_update(){
 
 void splash_draw(){
 	if(my.counter > my.t1 && my.counter < my.t2){
-		draw_gfx(my.gfx,(320-256)/2,0,0,0,256,256);
+		draw_bitmap(my.gfx, (320-256)/2, 0);
 	}
 }
 
@@ -72,5 +72,5 @@ void splash_setup(){
 	my.t1 = 1000/dt;
 	my.t2 = 5000/dt;
 	my.t3 = 6000/dt;
-	my.gfx = load_gfx("splash.tga");
+	my.gfx = load_bitmap("splash.tga");
 }

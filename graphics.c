@@ -389,3 +389,18 @@ void console_draw(){
 		printf_small(1,9*i+1,"%s",console[i]);
 	}
 }
+
+
+
+
+
+int load_bitmap(char* filename){
+	int g = load_gfx(filename);
+	return g;
+}
+
+void draw_bitmap(int id, int x, int y){
+	int W = gfx_width(id);
+	int H = gfx_height(id);
+	draw_gfx(id, x, y, 0, 0, W, H);
+}
