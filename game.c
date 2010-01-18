@@ -30,7 +30,6 @@
 #include <video.h>
 #include <graphics.h>
 #include <game.h>
-#include <intro.h>
 #include <kernel.h>
 
 struct game game;
