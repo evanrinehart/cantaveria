@@ -1,5 +1,6 @@
 /*
 A lag-r complimentary multiply-with-carry random number generator
+Copyright 2010 Evan Rinehart
 
 This algorithm performs the following operation
 	ax + c

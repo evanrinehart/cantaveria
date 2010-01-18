@@ -1,6 +1,6 @@
 /*
    Cantaveria - action adventure platform game
-   Copyright (C) 2009  Evan Rinehart
+   Copyright (C) 2009 2010 Evan Rinehart
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -56,6 +56,7 @@ void set_bpm(int x){ bpm = x; }
 
 void synth_init(int sample_rate){
 	srate = sample_rate;
+	seq_init();
 }
 
 void generate(int samples, float left[], float right[]){
