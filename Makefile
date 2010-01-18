@@ -3,7 +3,7 @@ CFLAGS = -I. -g -O2 -Wall -Wextra -Wno-unused-parameter
 OBJ = video.o audio.o input.o kernel.o \
       loader.o graphics.o text.o \
       intro.o title.o splash.o game.o \
-      synth.o dsp.o \
+      synth.o seq.o dsp.o \
       rng.o util.o
 
 CC = gcc
