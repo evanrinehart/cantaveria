@@ -29,8 +29,10 @@
 #include <math.h>
 
 #include <util.h>
-#include <video.h>
+#include <audio.h>
+//#include <video.h>
 #include <loader.h>
+
 
 typedef struct {
 	int tick;
@@ -227,8 +229,16 @@ printf("note off %x %d %d %d\n",type,chan+1,val1,val2);
 	}
 }
 
-void synth_update(float lout[], float rout[], int count){
+void synth_generate(float lout[], float rout[], int count){
 	int i, j;
+
+	for(i=0; i<count; i++){
+		lout[i] = 0;
+		rout[i] = 0;
+	}
+
+	return;
+
 	for(i=0; i<count; i++){
 		lout[i] = 0;
 		rout[i] = 0;

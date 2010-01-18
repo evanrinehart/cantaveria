@@ -27,26 +27,14 @@
 
 #include <util.h>
 #include <input.h>
+#include <kernel.h>
 #include <video.h>
-//#include <game.h>
 #include <loader.h>
-#include <sound.h>
 
 SDL_Surface* video;
 int gl_flag = 0;
 int fullscreen = 0;
 int W, H;
-int end = 0;
-
-
-
-void end_program(){
-	end = 1;
-}
-
-int ended(){
-	return end;
-}
 
 
 static int time_last; /* initialized by backend_init */
@@ -337,26 +325,6 @@ int gfx_height(int gfxid){
 
 
 
-float* lout;
-float* rout;
-int buffer_size;
-
-extern void process_audio(float lout[], float rout[], int len);
-
-void audio_callback(void *userdata, Uint8 *stream, int bytes){
-	int i, j;
-	Sint16* out = (Sint16*)stream;
-	int buflen = bytes / 2;        /* Sint16 = 2 bytes */
-	int samples = buflen / 2;      /* 2 channels */
-
-	process_audio(lout, rout, samples);
-
-	for(i=0, j=0; i<samples; i++){
-		out[j] = (Sint16)(lout[i]*32767); j++;
-		out[j] = (Sint16)(rout[i]*32767); j++;
-	}
-
-}
 
 
 
@@ -545,62 +513,23 @@ void setup_video(){
 
 }
 
-void setup_audio(){
 
-	SDL_AudioSpec audio;
-	audio.freq = SAMPLE_RATE;
-	audio.format = AUDIO_S16;
-	audio.channels = 2;
-	audio.samples = BUFFER_SIZE;
-	audio.callback = audio_callback;
 
-	SDL_AudioSpec gotten;
-
-	if(SDL_OpenAudio(&audio, &gotten)<0){
-		report_error("sdl: cannot open audio (%s)\n", SDL_GetError());
-		exit(-1);
-	}
-
-	printf("audio:\n");
-	printf(" sample rate = %d\n",gotten.freq);
-	printf(" channels = %d\n",gotten.channels);
-	printf(" samples = %d\n",gotten.samples);
-	printf(" format = %d\n",gotten.format);
-
-	if(gotten.format != AUDIO_S16){
-		printf("    WARNING: audio format not AUDIO_S16 :(\n");
-	}
-
-	lout = xmalloc(gotten.samples*sizeof(float));
-	rout = xmalloc(gotten.samples*sizeof(float));
-	buffer_size = gotten.samples;
-
-	printf(" sound on\n");
-	SDL_PauseAudio(0);
-
-}
 
 
 
 
 void video_init(int argc, char* argv[]){
-
 	sdl_init();
-	input_init("foobar");
 	parse_options(argc, argv, &fullscreen, &gl_flag);
 	setup_joysticks();
 	setup_video();
-	setup_audio();
-	rand_reset(RANDOM_SEED);
 	time_last = SDL_GetTicks();
 
 }
 
 void video_quit(){
 	printf("sdl: quit\n");
-	SDL_CloseAudio();
-	free(lout);
-	free(rout);
 	SDL_Quit();
 }
 

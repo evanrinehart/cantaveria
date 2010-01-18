@@ -22,6 +22,3 @@
    evanrinehart@gmail.com
 */
 
-void splash_setup();
-void splash_update();
-void splash_draw();

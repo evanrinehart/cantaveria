@@ -22,8 +22,5 @@
    evanrinehart@gmail.com
 */
 
-void init_synth();
-int load_song(char* filename);
-void play_song(int id);
 
-void synth_update(float lout[], float rout[], int count);
+void synth_generate(float lout[], float rout[], int count);

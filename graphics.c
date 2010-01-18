@@ -11,6 +11,7 @@ drawing commands. */
 
 #include <util.h>
 #include <input.h>
+#include <kernel.h>
 #include <video.h>
 #include <graphics.h>
 #include <loader.h>

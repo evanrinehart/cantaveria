@@ -24,20 +24,19 @@
 
 #include <stdlib.h>
 
-#include <util.h>
 #include <input.h>
-#include <video.h>
+#include <kernel.h>
 #include <graphics.h>
-#include <game.h>
-#include <splash.h>
-#include <intro.h>
-#include <title.h>
 
 static struct {
 	int gfx;
 	int counter;
 	int t1, t2, t3;
 } my;
+
+
+extern void title_setup();
+extern void intro_setup();
 
 void splash_press(input in){
 	title_setup();

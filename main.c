@@ -21,29 +21,14 @@
 */
 
 #include <stdio.h>
-#include <stdlib.h>
 
-#include <util.h>
-#include <input.h>
 #include <video.h>
-#include <graphics.h>
-#include <game.h>
-#include <loader.h>
-#include <text.h>
-
-#include <splash.h>
-
-
-
-
-void terminate(){
-	loader_quit();
-	video_quit();
-};
+#include <input.h>
+#include <kernel.h>
 
 void main_loop(){
 	int T = 0;
-	while(!ended()){
+	while(!is_game_over()){
 		int i;
 		T += since();
 		for(i=0; i<T/dt; i++){
@@ -58,18 +43,8 @@ void main_loop(){
 }
 
 int main(int argc, char* argv[]){
-
-	video_init(argc, argv);
-	loader_init();
-	graphics_init();
-	text_init();
-
-	atexit(terminate);
-
-	splash_setup();
-
+	initialize(argc, argv);
 	main_loop();
-
 	return 0;
 }
 

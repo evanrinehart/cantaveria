@@ -31,61 +31,11 @@
 #include <graphics.h>
 #include <game.h>
 #include <intro.h>
+#include <kernel.h>
 
 struct game game;
 
 
-static struct {
-	void (*update)();
-	void (*draw)();
-	void (*press)(input in);
-	void (*release)(input in);
-} handler;
-
-
-
-
-
-void set_handler(
-	void (*update)(),
-	void (*draw)(),
-	void (*press)(input in),
-	void (*release)(input in)
-){
-	handler.update = update;
-	handler.draw = draw;
-	handler.press = press;
-	handler.release = release;
-}
-
-void dispatch_input(){
-	input in = get_input();
-	while(in.type != NO_INPUT){
-		if(in.type == BUTTON_PRESS){
-			handler.press(in);
-		}
-		else if(in.type == BUTTON_RELEASE){
-			handler.release(in);
-		}
-		else if(in.type == END_OF_PROGRAM){
-			end_program();
-		}
-		in = get_input();
-	}
-}
-
-void update(){
-	dispatch_input();
-	fps_update();
-	console_clear();
-	animate_sprites();
-	handler.update();
-}
-
-void draw(){
-	handler.draw();
-	draw_final();
-}
 
 /*
 zones binary file format
@@ -595,7 +545,7 @@ void player_init(int id){
 
 void game_press(input in){
 	if(in.button==ESCAPE_KEY){
-		end_program();
+		game_is_over();
 	}
 	player_press(0, in.button);
 }

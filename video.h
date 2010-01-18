@@ -21,16 +21,6 @@
 */
 
 
-#define VERSION_MAJOR 0
-#define VERSION_MINOR 0
-
-#define MAX_PLAYERS 6
-
-#define dt 10
-#define DELAY_AMOUNT 1
-
-#define PI 3.14159265359
-#define PI2 2*PI
 
 #define SCREEN_W 320
 #define SCREEN_H 240
@@ -40,10 +30,7 @@
 
 #define COLOR_KEY 0x000000
 
-#define SAMPLE_RATE 44100
-#define BUFFER_SIZE 1024
 
-#define RANDOM_SEED 57
 
 
 void video_init(int argc, char* argv[]);
@@ -51,9 +38,6 @@ void video_quit();
 
 int since(); /* ms since last time since() was called */
 void delay(int ms); /* wait ms ms */
-void end_program();
-int ended();
-
 
 void update_video();
 void clear_video();
@@ -64,12 +48,6 @@ void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H);
 void draw_gfx_raw(int gfxid, int x, int y, int X, int Y, int W, int H);
 int gfx_width(int gfxid);
 int gfx_height(int gfxid);
-
-/* sound control */
-int load_sound(char* filename);
-void play_sound(int id);
-int load_music(char* filename);
-int play_music(int id);
 
 void fps_update();
 void fps_draw();

@@ -22,16 +22,14 @@
 
 /* sound system */
 
-void init_sound();
+#define SAMPLE_RATE 44100
+#define BUFFER_SIZE 1024
+
+void audio_init();
+void audio_quit();
 
 int load_sound(char* filename);
 void play_sound(int id);
-
-
-enum {
-SOUND_TEXTPOP,
-SOUND_TEXTEND,
-SOUND_ALT,
-SOUND_SELECT
-};
+int load_music(char* filename);
+int play_music(int id);
 

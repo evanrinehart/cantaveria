@@ -21,24 +21,17 @@
 */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 
-#include <util.h>
 #include <input.h>
-#include <video.h>
+#include <kernel.h>
+
 #include <graphics.h>
-#include <game.h>
-#include <loader.h>
 
-#include <title.h>
-#include <intro.h>
-
-
+extern void title_setup();
 
 void intro_press(input in){
 	if(in.button == ESCAPE_KEY){
-		end_program();
+		game_is_over();
 	}
 	else{
 		title_setup();

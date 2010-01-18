@@ -102,15 +102,6 @@ enum {
 };
 
 
-void update(); /* pump input and do dt ms of game time */
-void draw();
-void set_handler(
-	void (*update)(),
-	void (*draw)(),
-	void (*press)(input in),
-	void (*release)(input in)
-);
-
 /* what is the stuff below doing here */
 
 
