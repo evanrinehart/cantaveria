@@ -38,7 +38,7 @@
 
 void terminate(){
 	loader_quit();
-	backend_quit();
+	video_quit();
 };
 
 void main_loop(){
@@ -59,7 +59,7 @@ void main_loop(){
 
 int main(int argc, char* argv[]){
 
-	backend_init(argc, argv);
+	video_init(argc, argv);
 	loader_init();
 	graphics_init();
 	text_init();

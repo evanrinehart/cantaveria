@@ -583,7 +583,7 @@ void setup_audio(){
 
 
 
-void backend_init(int argc, char* argv[]){
+void video_init(int argc, char* argv[]){
 
 	sdl_init();
 	input_init("foobar");
@@ -596,7 +596,7 @@ void backend_init(int argc, char* argv[]){
 
 }
 
-void backend_quit(){
+void video_quit(){
 	printf("sdl: quit\n");
 	SDL_CloseAudio();
 	free(lout);
