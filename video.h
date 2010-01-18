@@ -46,8 +46,8 @@
 #define RANDOM_SEED 57
 
 
-void backend_init(int argc, char* argv[]);
-void backend_quit();
+void video_init(int argc, char* argv[]);
+void video_quit();
 
 int since(); /* ms since last time since() was called */
 void delay(int ms); /* wait ms ms */

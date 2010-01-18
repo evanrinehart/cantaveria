@@ -26,7 +26,7 @@
 
 #include <util.h>
 #include <input.h>
-#include <backend.h>
+#include <video.h>
 #include <graphics.h>
 #include <game.h>
 #include <splash.h>

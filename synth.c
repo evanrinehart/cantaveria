@@ -29,7 +29,7 @@
 #include <math.h>
 
 #include <util.h>
-#include <backend.h>
+#include <video.h>
 #include <loader.h>
 
 typedef struct {

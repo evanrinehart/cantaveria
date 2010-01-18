@@ -27,7 +27,7 @@
 
 #include <util.h>
 #include <input.h>
-#include <backend.h>
+#include <video.h>
 //#include <game.h>
 #include <loader.h>
 #include <sound.h>
