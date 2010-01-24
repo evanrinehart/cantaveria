@@ -22,23 +22,24 @@
 
 #include <stdio.h>
 
+#include <root.h>
 #include <video.h>
 #include <input.h>
 #include <kernel.h>
 
 void main_loop(){
-	int T = 0;
+	int t = 0;
 	while(!is_game_over()){
 		int i;
-		T += since();
-		for(i=0; i<T/dt; i++){
+		t += since();
+		for(i=0; i < t/QUANTUM; i++){
 			update();
 		}
-		if(T/dt > 0){
+		if(t/QUANTUM > 0){
 			draw();
-			T %= dt;
+			t %= QUANTUM;
 		}
-		delay(DELAY_AMOUNT);
+		delay(SLEEP_MS);
 	}
 }
 

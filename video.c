@@ -25,9 +25,9 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 
+#include <root.h>
 #include <util.h>
 #include <input.h>
-#include <kernel.h>
 #include <video.h>
 #include <loader.h>
 

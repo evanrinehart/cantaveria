@@ -23,6 +23,7 @@
 */
 #include <stdlib.h>
 
+#include <root.h>
 #include <video.h>
 #include <audio.h>
 #include <input.h>
@@ -34,8 +35,10 @@
 #include <util.h>
 
 #include <kernel.h>
+#include <transfer.h>
 
-extern void splash_setup();
+int game_over = false;
+int dt = QUANTUM;
 
 static struct {
 	void (*update)();
@@ -44,11 +47,28 @@ static struct {
 	void (*release)(input in);
 } handler;
 
-void terminate(){
+
+static void terminate(){
 	loader_quit();
 	audio_quit();
 	video_quit();
 };
+
+static void press(input in){ handler.press(in); }
+static void release(input in){ handler.release(in); }
+
+static void dispatch_input(){
+	input in = get_input();
+	while(in.type != NO_INPUT){
+		switch(in.type){
+			case BUTTON_PRESS: press(in); break;
+			case BUTTON_RELEASE: release(in); break;
+			case END_OF_PROGRAM: game_is_over(); break;
+			case NO_INPUT: break;
+		}
+		in = get_input();
+	}
+}
 
 void initialize(int argc, char* argv[]){
 	video_init(argc, argv);
@@ -60,36 +80,7 @@ void initialize(int argc, char* argv[]){
 	rand_reset(RANDOM_SEED);
 	atexit(terminate);
 
-	splash_setup();
-}
-
-
-void set_handler(
-	void (*update)(),
-	void (*draw)(),
-	void (*press)(input in),
-	void (*release)(input in)
-){
-	handler.update = update;
-	handler.draw = draw;
-	handler.press = press;
-	handler.release = release;
-}
-
-void dispatch_input(){
-	input in = get_input();
-	while(in.type != NO_INPUT){
-		if(in.type == BUTTON_PRESS){
-			handler.press(in);
-		}
-		else if(in.type == BUTTON_RELEASE){
-			handler.release(in);
-		}
-		else if(in.type == END_OF_PROGRAM){
-			game_is_over();
-		}
-		in = get_input();
-	}
+	setup_splash();
 }
 
 void update(){
@@ -105,13 +96,22 @@ void draw(){
 	draw_final();
 }
 
-
-int game_over = 0;
-
 void game_is_over(){
-	game_over = 1;
+	game_over = true;
 }
 
 int is_game_over(){
 	return game_over;
+}
+
+void set_handler(
+	void (*update)(),
+	void (*draw)(),
+	void (*press)(input in),
+	void (*release)(input in)
+){
+	handler.update = update;
+	handler.draw = draw;
+	handler.press = press;
+	handler.release = release;
 }

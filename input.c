@@ -296,6 +296,7 @@ void input_init(const char* filename){
 	kmadd(0, DOWN_BUTTON, SDLK_s);
 
 	kmadd(0, JUMP_BUTTON, SDLK_k);
+	kmadd(0, FIRE_BUTTON, SDLK_j);
 
 	kmadd(0, ESCAPE_KEY, SDLK_ESCAPE);
 	kmadd(0, PAUSE_KEY, SDLK_PAUSE);

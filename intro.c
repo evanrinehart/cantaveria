@@ -23,22 +23,22 @@
 #include <stdio.h>
 
 #include <input.h>
-#include <kernel.h>
 
 #include <graphics.h>
 
-extern void title_setup();
+#include <transfer.h>
 
-void intro_press(input in){
+
+static void press(input in){
 	if(in.button == ESCAPE_KEY){
 		game_is_over();
 	}
 	else{
-		title_setup();
+		setup_title();
 	}
 }
 
-void intro_release(input in){
+static void release(input in){
 
 }
 
@@ -46,19 +46,16 @@ void intro_release(input in){
 
 
 
-void intro_update(){
+static void update(){
 	console_printf("this is the intro");
 	console_printf("press any key");
 }
 
-void intro_draw(){
+static void draw(){
 
 }
 
-void intro_setup(){
-	set_handler(
-		intro_update, intro_draw,
-		intro_press, intro_release
-	);
+void setup_intro(){
+	set_handler(update, draw, press, release);
 }
 

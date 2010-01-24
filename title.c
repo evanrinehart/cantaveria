@@ -25,40 +25,37 @@
 #include <input.h>
 #include <graphics.h>
 
-#include <kernel.h>
+#include <transfer.h>
 
 
-extern void game_setup();
-
-
-void title_press(input in){
+static void press(input in){
 	if(in.button == ESCAPE_KEY){
 		game_is_over();
 	}
 	else{
-		game_setup();
+		setup_inner();
 	}
 }
 
-void title_release(input in){
+static void release(input in){
 
 }
 
-void title_update(){
+static void update(){
 	console_printf("this is the title screen");
 	console_printf("new, load, options, quit?");
 	console_printf("press any key");
 }
 
-void title_draw(){
+static void draw(){
 
 }
 
 
-void title_setup(){
+void setup_title(){
 	//load some graphics
 	//place the graphics
 	//if any, setup sprite update callbacks
-	set_handler(title_update, title_draw, title_press, title_release);
+	set_handler(update, draw, press, release);
 	printf("you just entered the title screen\n");
 }

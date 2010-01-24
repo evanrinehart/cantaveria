@@ -24,9 +24,11 @@
 
 #include <stdlib.h>
 
+#include <root.h>
 #include <input.h>
-#include <kernel.h>
 #include <graphics.h>
+
+#include <transfer.h>
 
 static struct {
 	int gfx;
@@ -35,38 +37,32 @@ static struct {
 } my;
 
 
-extern void title_setup();
-extern void intro_setup();
-
-void splash_press(input in){
-	title_setup();
+static void press(input in){
+	setup_title();
 }
 
-void splash_release(input in){
+static void release(input in){
 
 }
 
 
-void splash_update(){
+static void update(){
 	my.counter++;
 
 	if(my.counter > my.t3){
-		intro_setup();
+		setup_intro();
 	}
 }
 
-void splash_draw(){
+static void draw(){
 	if(my.counter > my.t1 && my.counter < my.t2){
 		draw_bitmap(my.gfx, (320-256)/2, 0);
 	}
 }
 
 
-void splash_setup(){
-	set_handler(
-		splash_update, splash_draw, 
-		splash_press, splash_release
-	);
+void setup_splash(){
+	set_handler(update, draw, press, release);
 
 	my.counter = 0;
 	my.t1 = 1000/dt;

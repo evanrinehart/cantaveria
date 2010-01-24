@@ -24,13 +24,14 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <root.h>
 #include <loader.h>
 #include <util.h>
 #include <input.h>
 #include <video.h>
 #include <graphics.h>
 #include <game.h>
-#include <kernel.h>
+#include <transfer.h>
 
 struct game game;
 
@@ -542,31 +543,33 @@ void player_init(int id){
 
 
 
-void game_press(input in){
+static void press(input in){
 	if(in.button==ESCAPE_KEY){
 		game_is_over();
 	}
+
 	player_press(0, in.button);
 }
 
-void game_release(input in){
+static void release(input in){
 	player_release(0, in.button);
 }
 
-void game_update(){
+static void update(){
 	player_update(0);
 	camera_update();
 	console_printf("%d fps",get_fps());
 	console_printf("state: %s",statenames[pstate[0].state]);
+	console_printf("%d", randi(1,6));
 }
 
-void game_draw(){
+static void draw(){
 	draw_stage();
 	draw_sprites();
 }
 
-void game_setup(){
-	set_handler(game_update, game_draw, game_press, game_release);
+void setup_inner(){
+	set_handler(update, draw, press, release);
 
 	rand_reset(0);
 

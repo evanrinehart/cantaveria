@@ -244,7 +244,7 @@ void point_camera(int x, int y){
 void animate_sprite(int i){
 	sprite* spr = sprites[i];
 
-	spr->frame_counter += dt;
+//	spr->frame_counter += dt;
 	animation* ani = animations[spr->anim];
 
 
