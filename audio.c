@@ -43,8 +43,9 @@ void audio_callback(void *userdata, Uint8 *stream, int bytes){
 		out[j] = (Sint16)(lout[i]*32767); j++;
 		out[j] = (Sint16)(rout[i]*32767); j++;
 	}
-
 }
+
+
 void audio_init(){
 	SDL_AudioSpec want;
 	SDL_AudioSpec got;
@@ -86,5 +87,7 @@ void audio_quit(){
 	free(lout);
 	free(rout);
 }
+
+
 
 

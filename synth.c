@@ -54,21 +54,38 @@ int terrd = 46080; //bpm * tpb
 void set_sample_rate(int x){ srate = x; }
 void set_bpm(int x){ bpm = x; }
 
+
 void synth_init(int sample_rate){
 	srate = sample_rate;
 	seq_init();
 }
 
-void generate(int samples, float left[], float right[]){
+void generate(float left[], float right[], int count){
 	int i;
-	for(i=0; i<samples; i++){
+
+/* supposed to mix all generators for count samples
+this includes synthesizers and sample generators */
+/* this loop is unsuitable as an inner loop */
+	for(i=0; i<count; i++){
 		left[i] = 0;
 		right[i] = 0;
 	}
+
+
+/* instead zero them and pass them to each generator
+which will accumulate their output into left and right
+
+in the end divide by maximum number of generators
+
+the final stage is master volume, which will be increased if
+the result is too quiet */
 }
 
 void control(event* e){
-
+/* we decided on polyphonic synth (and multiple instances of
+a playing samlple). important to remember that all controller
+events affect entire instrument channels. this means it affects
+all generators for that intrument */
 }
 
 void synth_generate(float left[], float right[], int samples){
@@ -76,22 +93,13 @@ void synth_generate(float left[], float right[], int samples){
 	for(;;){
 		int next = seq_lookahead(samples);
 		if(next < 0) break;
-		generate(next - i, left+i, right+i);
+		generate(left+i, right+i, next-i);
 		control(seq_get_event());
 		i = next;
 	};
-	generate(samples - i, left+i, right+i);
+	generate(left+i, right+i, samples-i);
 	seq_advance(samples);	
 }
-
-
-
-
-
-
-
-
-
 
 
 

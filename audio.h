@@ -18,6 +18,8 @@
    The Free Software Foundation, Inc.
    51 Franklin Street, Fifth Floor
    Boston, MA  02110-1301, USA
+
+   evanrinehart@gmail.com
 */
 
 /* sound system */
@@ -28,8 +30,4 @@
 void audio_init();
 void audio_quit();
 
-int load_sound(char* filename);
-void play_sound(int id);
-int load_music(char* filename);
-int play_music(int id);
 
