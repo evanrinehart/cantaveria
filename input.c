@@ -308,11 +308,3 @@ void save_input(const char* filename){
 
 
 
-
-
-/* display of controller mappings */
-
-const char* str_input(enum input_button button, int player){
-	return "";
-}
-

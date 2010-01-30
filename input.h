@@ -60,4 +60,4 @@ void input_init(const char* filename);
 void save_input(const char* filename);
 input get_input();
 void remap_input(enum input_button, int player);
-const char* str_input(enum input_button, int player);
+

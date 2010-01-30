@@ -1,6 +1,16 @@
 /*
-A lag-r complimentary multiply-with-carry random number generator
-Copyright 2010 Evan Rinehart
+rng.c
+random number generator
+
+Copyright (C) 2009 Evan Rinehart
+
+This software comes with no warranty.
+1. This software can be used for any purpose, good or evil.
+2. Modifications must retain this license, at least in spirit.
+
+
+Theory of Operation
+Lag-1024 complimentary multiply-with-carry (CMWC) generator
 
 This algorithm performs the following operation
 	ax + c

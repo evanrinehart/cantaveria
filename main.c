@@ -26,6 +26,7 @@
 #include <video.h>
 #include <input.h>
 #include <kernel.h>
+#include <transfer.h>
 
 void main_loop(){
 	int t = 0;
