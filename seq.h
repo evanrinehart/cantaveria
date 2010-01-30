@@ -21,6 +21,15 @@
 
    evanrinehart@gmail.com
 */
+
+
+typedef enum {
+	MUS_COOL
+
+
+} mus_id;
+
+
 typedef struct event event;
 struct event {
 	int tick;
@@ -30,8 +39,16 @@ struct event {
 
 void seq_init();
 
+/* use these from audio thread */
 int seq_lookahead(int samples);
 event* seq_get_event();
 void seq_advance(int samples);
 
+
+/* use these from main thread */
+void music_play();
+void music_pause();
+void music_reset();
+int music_load(char* filename, mus_id id);
+void music_change(mus_id id);
 
