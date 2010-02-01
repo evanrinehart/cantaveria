@@ -107,34 +107,34 @@ struct jbutton_map* jmfind(Uint8 joystick, Uint8 jbutton){
 
 enum input_type kmtype(Uint8 type){
 	switch(type){
-		case SDL_KEYDOWN: return BUTTON_PRESS;
-		case SDL_KEYUP: return BUTTON_RELEASE;
-		default:
-			report_error("input map_key: invalid SDL event type\n");
-			return NO_INPUT;
+	case SDL_KEYDOWN: return BUTTON_PRESS;
+	case SDL_KEYUP: return BUTTON_RELEASE;
+	default:
+		report_error("input map_key: invalid SDL event type\n");
+		return NO_INPUT;
 	}
 }
 
 enum input_type jmtype(Uint8 type){
 	switch(type){
-		case SDL_JOYBUTTONDOWN: return BUTTON_PRESS;
-		case SDL_JOYBUTTONUP: return BUTTON_RELEASE;
-		default:
-			report_error("input map_jbutton: invalid SDL event type\n");
-			return NO_INPUT;
+	case SDL_JOYBUTTONDOWN: return BUTTON_PRESS;
+	case SDL_JOYBUTTONUP: return BUTTON_RELEASE;
+	default:
+		report_error("input map_jbutton: invalid SDL event type\n");
+		return NO_INPUT;
 	}
 }
 
 enum input_button ambutton(int state, struct axis_map* am){
 	switch(state){
-		case -1: return am->button[0];
-		case 1: return am->button[1];
-		case 0:
-			report_error("input axis_motion: axis state 0 does not imply a button\n");
-			return INVALID_BUTTON;
-		default:
-			report_error("input axis_motion: invalid axis state (%d)\n", state);
-			return INVALID_BUTTON;
+	case -1: return am->button[0];
+	case 1: return am->button[1];
+	case 0:
+		report_error("input axis_motion: axis state 0 does not imply a button\n");
+		return INVALID_BUTTON;
+	default:
+		report_error("input axis_motion: invalid axis state (%d)\n", state);
+		return INVALID_BUTTON;
 	}
 }
 
@@ -245,22 +245,22 @@ input get_input(){
 	*/
 
 	switch(e.type){
-		case SDL_KEYDOWN:
-		case SDL_KEYUP:
-			return map_key(&e);
+	case SDL_KEYDOWN:
+	case SDL_KEYUP:
+		return map_key(&e);
 
-		case SDL_JOYBUTTONDOWN:
-		case SDL_JOYBUTTONUP:
-			return map_jbutton(&e);
+	case SDL_JOYBUTTONDOWN:
+	case SDL_JOYBUTTONUP:
+		return map_jbutton(&e);
 
-		case SDL_JOYAXISMOTION:
-			return map_jaxis(&e);
+	case SDL_JOYAXISMOTION:
+		return map_jaxis(&e);
 
-		case SDL_QUIT:
-			return EndOfProgram;
+	case SDL_QUIT:
+		return EndOfProgram;
 
-		default:
-			return NoInput;
+	default:
+		return NoInput;
 	}
 }
 
