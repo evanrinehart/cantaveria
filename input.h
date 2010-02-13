@@ -25,6 +25,8 @@ enum input_type {
 	BUTTON_PRESS,
 	BUTTON_RELEASE,
 	NO_INPUT,
+	SKIP_INPUT,
+	INVALID_INPUT,
 	END_OF_PROGRAM
 };
 
@@ -46,7 +48,9 @@ enum input_button {
 
 	ESCAPE_KEY,
 	PAUSE_KEY,
-	INVALID_BUTTON
+
+	INVALID_BUTTON,
+	NONDESCRIPT_BUTTON,
 };
 
 typedef struct {
@@ -60,4 +64,4 @@ void input_init(const char* filename);
 void save_input(const char* filename);
 input get_input();
 void remap_input(enum input_button, int player);
-
+const char* input_str(input in);

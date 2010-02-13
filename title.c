@@ -42,9 +42,6 @@ static void release(input in){
 }
 
 static void update(){
-	console_printf("this is the title screen");
-	console_printf("new, load, options, quit?");
-	console_printf("press any key");
 }
 
 static void draw(){
@@ -57,5 +54,9 @@ void setup_title(){
 	//place the graphics
 	//if any, setup sprite update callbacks
 	set_handler(update, draw, press, release);
-	printf("you just entered the title screen\n");
+
+	console_clear();
+	console_printf("this is the title screen");
+	console_printf("new, load, options, quit?");
+	console_printf("press any key");
 }

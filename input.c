@@ -32,7 +32,10 @@
 #define JOY_THRESH 1000
 
 static input NoInput = {NO_INPUT, INVALID_BUTTON, 0};
+static input SkipInput = {SKIP_INPUT, INVALID_BUTTON, 0};
 static input EndOfProgram = {END_OF_PROGRAM, INVALID_BUTTON, 0};
+
+static SDL_Event last_event;
 
 /* controller mappings */
 struct key_map {
@@ -111,7 +114,7 @@ enum input_type kmtype(Uint8 type){
 	case SDL_KEYUP: return BUTTON_RELEASE;
 	default:
 		report_error("input map_key: invalid SDL event type\n");
-		return NO_INPUT;
+		return INVALID_INPUT;
 	}
 }
 
@@ -121,7 +124,7 @@ enum input_type jmtype(Uint8 type){
 	case SDL_JOYBUTTONUP: return BUTTON_RELEASE;
 	default:
 		report_error("input map_jbutton: invalid SDL event type\n");
-		return NO_INPUT;
+		return INVALID_INPUT;
 	}
 }
 
@@ -149,7 +152,10 @@ input map_key(SDL_Event* e){
 		return in;
 	}
 	else{
-		return NoInput;
+		in.type = kmtype(e->type);
+		in.player = 0;
+		in.button = NONDESCRIPT_BUTTON;
+		return in;
 	}
 }
 
@@ -166,7 +172,10 @@ input map_jbutton(SDL_Event* e){
 		return in;
 	}
 	else{
-		return NoInput;
+		in.type = jmtype(e->type);
+		in.player = 0;
+		in.button = NONDESCRIPT_BUTTON;
+		return in;
 	}
 }
 
@@ -192,7 +201,7 @@ input axis_motion(Sint16 value, struct axis_map* am){
 	}
 
 	if(diff == 0){
-		return NoInput;
+		return SkipInput;
 	}
 	else if(state0 != 0){
 		in.type = BUTTON_RELEASE;
@@ -217,53 +226,9 @@ input map_jaxis(SDL_Event* e){
 		return axis_motion(value, am);
 	}
 	else{
-		return NoInput;
+		return SkipInput;
 	}
 }
-
-
-
-void remap_input(enum input_button button, int player){
-	/*remap_flag = 1*/
-}
-
-
-
-
-/* *** */
-input get_input(){
-	SDL_Event e;
-
-	if(SDL_PollEvent(&e) == 0){
-		return NoInput;
-	}
-
-	/*
-	if(remap_flag){
-		remap(&e);
-	}
-	*/
-
-	switch(e.type){
-	case SDL_KEYDOWN:
-	case SDL_KEYUP:
-		return map_key(&e);
-
-	case SDL_JOYBUTTONDOWN:
-	case SDL_JOYBUTTONUP:
-		return map_jbutton(&e);
-
-	case SDL_JOYAXISMOTION:
-		return map_jaxis(&e);
-
-	case SDL_QUIT:
-		return EndOfProgram;
-
-	default:
-		return NoInput;
-	}
-}
-
 
 
 
@@ -285,6 +250,58 @@ void kmadd(int player, enum input_button button, SDLKey sym){
 	ptr->next = km;
 }
 
+
+/* *** */
+input get_input(){
+	SDL_Event e;
+	input in;
+
+	while(SDL_PollEvent(&e) != 0){
+		last_event = e;
+		switch(e.type){
+			case SDL_KEYDOWN:
+			case SDL_KEYUP:
+				return map_key(&e);
+
+			case SDL_JOYBUTTONDOWN:
+			case SDL_JOYBUTTONUP:
+				return map_jbutton(&e);
+
+			case SDL_JOYAXISMOTION:
+				in = map_jaxis(&e);
+				if(in.type == SKIP_INPUT)
+					return in;
+				else
+					break;
+
+			case SDL_QUIT:
+				return EndOfProgram;
+		}
+	}
+
+	return NoInput;
+}
+
+
+void remap_last_input(enum input_button button, int player){
+	SDL_Event e = last_event;
+	switch(e.type){
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			kmadd(player, button, e.key.keysym.sym);
+			break;
+		case SDL_JOYBUTTONDOWN:
+		case SDL_JOYBUTTONUP:
+			//jmadd(player, button, e.jbutton.button);
+			break;
+		case SDL_JOYAXISMOTION:
+			//amadd...
+			break;
+	}
+}
+
+
+
 void input_init(const char* filename){
 	/* set up mappings */
 	// A -> Left
@@ -297,6 +314,14 @@ void input_init(const char* filename){
 
 	kmadd(0, JUMP_BUTTON, SDLK_k);
 	kmadd(0, FIRE_BUTTON, SDLK_j);
+	kmadd(0, INVENTORY_BUTTON, SDLK_i);
+	kmadd(0, SPECIAL_BUTTON, SDLK_l);
+
+	kmadd(0, L_BUTTON, SDLK_u);
+	kmadd(0, R_BUTTON, SDLK_o);
+
+	kmadd(0, START_BUTTON, SDLK_q);
+	kmadd(0, SELECT_BUTTON, SDLK_e);
 
 	kmadd(0, ESCAPE_KEY, SDLK_ESCAPE);
 	kmadd(0, PAUSE_KEY, SDLK_PAUSE);
@@ -307,4 +332,28 @@ void save_input(const char* filename){
 }
 
 
+const char* input_str(input in){
+	switch(in.button){
+		case START_BUTTON: return "START";
+		case SELECT_BUTTON: return "SELECT";
+		case L_BUTTON: return "L";
+		case R_BUTTON: return "R";
+
+		case LEFT_BUTTON: return "LEFT";
+		case RIGHT_BUTTON: return "RIGHT";
+		case UP_BUTTON: return "UP";
+		case DOWN_BUTTON: return "DOWN";
+
+		case FIRE_BUTTON: return "FIRE";
+		case JUMP_BUTTON: return "JUMP";
+		case INVENTORY_BUTTON: return "INVENTORY";
+		case SPECIAL_BUTTON: return "SPECIAL";
+
+		case ESCAPE_KEY: return "ESCAPE";
+		case PAUSE_KEY: return "PAUSE";
+		case INVALID_BUTTON: return "INVALID";
+		case NONDESCRIPT_BUTTON: return "NONDESCRIPT";
+		default: return "ERROR";
+	}
+}
 

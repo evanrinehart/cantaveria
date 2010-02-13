@@ -477,9 +477,6 @@ void player_press(int id, int key){
 		case DOWN_BUTTON:
 			ps->uphold = 1;
 			break;
-		default:
-			report_error(
-				"game: player press invalid %d\n", key);
 	}
 }
 
@@ -503,9 +500,6 @@ void player_release(int id, int key){
 		case DOWN_BUTTON:
 			ps->uphold = 0;
 			break;
-		default:
-			report_error(
-				"game: player release invalid %d\n", key);
 	}
 }
 
@@ -548,6 +542,8 @@ static void press(input in){
 		game_is_over();
 	}
 
+	console_printf("you pressed %s", input_str(in));
+
 	player_press(0, in.button);
 }
 
@@ -555,12 +551,17 @@ static void release(input in){
 	player_release(0, in.button);
 }
 
+
+int x = 0;
 static void update(){
 	player_update(0);
 	camera_update();
-	console_printf("%d fps",get_fps());
-	console_printf("state: %s",statenames[pstate[0].state]);
-	console_printf("%d", randi(1,6));
+
+	x++;
+	if(x > 100){
+		x %= 100;
+		console_scroll(1);
+	}
 }
 
 static void draw(){

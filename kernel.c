@@ -57,6 +57,10 @@ static void terminate(){
 static void press(input in){ handler.press(in); }
 static void release(input in){ handler.release(in); }
 
+void dispatch_error(const char* msg){
+	report_error("kernel.c dispatch_input: %s\n", msg);
+}
+
 static void dispatch_input(){
 	input in = get_input();
 	while(in.type != NO_INPUT){
@@ -64,7 +68,9 @@ static void dispatch_input(){
 			case BUTTON_PRESS: press(in); break;
 			case BUTTON_RELEASE: release(in); break;
 			case END_OF_PROGRAM: game_is_over(); break;
-			case NO_INPUT: break;
+			case SKIP_INPUT: dispatch_error("SKIP_INPUT is not supposed to come from generator"); break;
+			case INVALID_INPUT: dispatch_error("INVALID_INPUT produced in generator"); break;
+			case NO_INPUT: dispatch_error("NO_INPUT is impossible here"); break;
 		}
 		in = get_input();
 	}
@@ -86,7 +92,7 @@ void initialize(int argc, char* argv[]){
 void update(){
 	dispatch_input();
 	fps_update();
-	console_clear();
+//	console_clear();
 	animate_sprites();
 	handler.update();
 }

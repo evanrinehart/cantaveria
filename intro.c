@@ -47,8 +47,6 @@ static void release(input in){
 
 
 static void update(){
-	console_printf("this is the intro");
-	console_printf("press any key");
 }
 
 static void draw(){
@@ -57,5 +55,9 @@ static void draw(){
 
 void setup_intro(){
 	set_handler(update, draw, press, release);
+
+	console_clear();
+	console_printf("this is the intro");
+	console_printf("press any key");
 }
 

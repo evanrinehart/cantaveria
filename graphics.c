@@ -395,8 +395,21 @@ void console_clear(){
 	console_ptr = 0;
 }
 
+void console_scroll(int n){
+	int i;
+	if(console_ptr - n < 0) n = console_ptr;
+	if(n == 0) return;
+	for(i=n; i<25; i++){
+		memcpy(console[i-n], console[i], 80);
+	}
+	console[25-n][0] = '\0';
+	console_ptr -= n;
+}
+
 void console_printf(char* format, ...){
-	if(console_ptr==25) return;
+	if(console_ptr==25){
+		console_scroll(1);
+	}
 	va_list ap;
 	va_start(ap, format);
 	vsnprintf(console[console_ptr], 80, format, ap);
