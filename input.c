@@ -357,3 +357,39 @@ const char* input_str(input in){
 	}
 }
 
+
+void print_last_raw(char* buf, int size){
+	SDL_Event e = last_event;
+	switch(e.type){
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			snprintf(
+				buf,size,
+				SDL_GetKeyName(e.key.keysym.sym)
+			);
+			break;
+
+		case SDL_JOYBUTTONDOWN:
+		case SDL_JOYBUTTONUP:
+			snprintf(
+				buf, size,
+				"J%d_B%d",
+				e.jbutton.which,
+				e.jbutton.button
+			);
+			break;
+
+		case SDL_JOYAXISMOTION:
+			snprintf(
+				buf,size,
+				"J%d_AXIS%d",
+				e.jaxis.which,
+				e.jaxis.axis
+			);
+			break;
+
+		default:
+			snprintf(buf, size, "???");
+			break;
+	}
+}

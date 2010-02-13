@@ -536,13 +536,12 @@ void player_init(int id){
 }
 
 
-
 static void press(input in){
 	if(in.button == ESCAPE_KEY){
 		game_is_over();
 	}
 
-	console_printf("you pressed %s", input_str(in));
+	//console_printf("zrand() -> %010u", zrand());
 
 	player_press(0, in.button);
 }
