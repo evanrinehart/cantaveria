@@ -389,7 +389,9 @@ void enable_stage(int yn){
 
 /* console */
 char console[25][80];
+int console_time[25];
 int console_ptr = 0;
+int console_timer = 0;
 
 void console_clear(){
 	console_ptr = 0;
@@ -406,6 +408,15 @@ void console_scroll(int n){
 	console_ptr -= n;
 }
 
+void console_update(){
+	if(console_timer == 0) return;
+	console_timer -= 1;
+	if(console_timer == 0 && console_ptr > 0){
+		console_scroll(1);
+		console_timer = 10;
+	}
+}
+
 void console_printf(char* format, ...){
 	if(console_ptr==25){
 		console_scroll(1);
@@ -415,6 +426,7 @@ void console_printf(char* format, ...){
 	vsnprintf(console[console_ptr], 80, format, ap);
 	console[console_ptr][79] = '\0';
 	console_ptr++;
+	console_timer = 200;
 	va_end(ap);
 }
 

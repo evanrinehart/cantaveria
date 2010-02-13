@@ -538,7 +538,7 @@ void player_init(int id){
 
 
 static void press(input in){
-	if(in.button==ESCAPE_KEY){
+	if(in.button == ESCAPE_KEY){
 		game_is_over();
 	}
 
@@ -552,16 +552,10 @@ static void release(input in){
 }
 
 
-int x = 0;
 static void update(){
 	player_update(0);
 	camera_update();
-
-	x++;
-	if(x > 100){
-		x %= 100;
-		console_scroll(1);
-	}
+	console_update();
 }
 
 static void draw(){
@@ -574,6 +568,7 @@ void setup_inner(){
 
 	rand_reset(0);
 
+	console_clear();
 
 	load_zone("myzone");
 	game.current_zone = game.zones[0];
