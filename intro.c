@@ -23,10 +23,9 @@
 #include <stdio.h>
 
 #include <input.h>
-
 #include <graphics.h>
-
 #include <transfer.h>
+#include <console.h>
 
 
 static void press(input in){

@@ -24,7 +24,7 @@
 
 #include <input.h>
 #include <graphics.h>
-
+#include <console.h>
 #include <transfer.h>
 
 
