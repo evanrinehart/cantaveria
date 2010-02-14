@@ -10,6 +10,7 @@
 //#include <entity.h>
 #include <transfer.h>
 
+#include <console.h>
 
 //int run(Y* y, int dt){
 /*
