@@ -37,6 +37,7 @@
 #include <video.h>
 #include <graphics.h>
 #include <loader.h>
+#include <console.h>
 
 #include <game.h>
 
