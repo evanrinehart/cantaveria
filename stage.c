@@ -23,9 +23,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <util.h>
 #include <list.h>
+#include <loader.h>
+#include <graphics.h>
 
 #include <stage.h>
 
@@ -78,10 +81,12 @@ typedef struct {
 
 typedef struct {
 	int id;
+	char name[32];
 	int w, h, i, j;
 	int fgtiles;
 	int bgtiles;
 	int dectiles;
+	int bgimage;
 	enum tile_shape shapes[256];
 	stage** stages; // w by h array
 } zone;
@@ -161,6 +166,26 @@ stage* find_stage(stage* home, int i, int j){
 		return stage_lookup(z, si - z->w, sj - z->h);
 }
 
+stage* load_stage(reader* rd){
+	int i,j;
+	stage* s = xmalloc(sizeof(stage));
+	s->i = read_short(rd);
+	s->j = read_short(rd);
+	read_byte(rd); // flags ?
+
+	for(i=0; i<4; i++){
+		char* str = read_string(rd);
+		free(str);
+	}
+
+	for(i=0; i<15; i++){
+		for(j=0; j<20; j++){
+			s->fg[i][j] = read_byte(rd);
+		}
+	}
+
+	return s;
+}
 
 /* collision computations */
 /*FIXME*/
@@ -274,30 +299,48 @@ void stage_init(){
 	zones = empty();
 }
 
-int load_zone(const char* filename){
-	int w = 4;
-	int h = 4;
+
+int load_zone_gfx(reader* rd){
+	char* filename = read_string(rd);
+	int id = load_bitmap(filename);
+	free(filename);
+	return id;
+}
+
+
+int load_zone(char* filename){
 	int i, j;
+
+	reader* rd = data_open("zones/", filename);
 	zone* z = xmalloc(sizeof(zone)); /* load routine */
 
+	strncpy(z->name, filename, 32);
 	z->id = 0;
-	z->w = w;
-	z->h = h;
-	z->i = 0;
-	z->j = 0;
-	z->fgtiles = 0;
-	z->bgtiles = 0;
-	z->dectiles = 0;
-	z->stages = xmalloc(sizeof(stage*)*w*h);
+	z->fgtiles = load_zone_gfx(rd);
+//	z->bgtiles = load_zone_gfx(rd);
+//	z->dectiles = load_zone_gfx(rd);;
+	z->bgimage = load_bitmap("background.tga");
 
-	for(i=0; i<w; i++){
-		for(j=0; j<h; j++){
+	for(i=0; i<256; i++){
+		z->shapes[i] = read_byte(rd);
+	}
+
+	z->i = read_short(rd);
+	z->j = read_short(rd);
+	z->w = read_short(rd);
+	z->h = read_short(rd);
+	z->stages = xmalloc(z->w * z->h * sizeof(stage*));
+
+	for(i=0; i < z->w; i++){
+		for(j=0; j < z->h; j++){
 			*(z->stages + i + j*z->w) = NULL;
 		}
 	}
 
-	for(i=0; i<256; i++){
-		z->shapes[i] = 0;
+	int N = read_short(rd);
+	for(i=0; i<N; i++){
+		stage* s = load_stage(rd);
+		z->stages[s->i + s->j * z->w] = s;
 	}
 
 	push(zones, z);

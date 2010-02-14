@@ -27,7 +27,7 @@ typedef struct {
 } location;
 
 void stage_init();
-int load_zone(const char* filename);
+int load_zone(char* filename);
 void print_zone(int id);
 void stage_draw_fg(int cx, int cy);
 void stage_draw_bg(int cx, int cy);
