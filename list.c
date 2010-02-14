@@ -66,17 +66,23 @@ void recycle(list* L){
 
 
 
-void list_print(list* L){
+
+
+void print_list(list* L, void (*print)(void* item)){
 	list* ptr = L->next;
 	printf("(");
 	while(ptr){
-		char* s = ptr->item;
-		printf("%s", s);
+		print(ptr->item);
 		if(ptr->next)
 			printf(", ");
 		ptr = ptr->next;
 	}
-	printf(")\n");
+	printf(")");
+}
+
+void println_list(list* L, void (*print)(void* item)){
+	print_list(L, print);
+	printf("\n");
 }
 
 void list_print_free(){
@@ -92,22 +98,27 @@ void list_print_free(){
 	printf(")\n");
 }
 
+void print(void* item){
+	char* s = item;
+	printf("%s", s);
+}
+
 void list_sanitytest(){
 	list* L = empty();
 	char* s;
 	printf("empty: ");
-	list_print(L);
+	println_list(L, print);
 
 	printf("push a b c: ");
 	push(L, "a");
 	push(L, "b");
 	push(L, "c");
-	list_print(L);
+	println_list(L, print);
 
 	printf("pop: ");
 	s = pop(L);
 	printf("%s ", s);
-	list_print(L);
+	println_list(L, print);
 
 	printf("freelist: ");
 	list_print_free();
@@ -115,7 +126,7 @@ void list_sanitytest(){
 	printf("pop: ");
 	s = pop(L);
 	printf("%s ", s);
-	list_print(L);
+	println_list(L, print);
 
 	printf("freelist: ");
 	list_print_free();
@@ -124,7 +135,7 @@ void list_sanitytest(){
 	append(L, "a");
 	append(L, "b");
 	append(L, "c");
-	list_print(L);
+	println_list(L, print);
 	
 	printf("freelist: ");
 	list_print_free();
