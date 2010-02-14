@@ -141,7 +141,7 @@ void printf_small(int x, int y, char* format, ...){
 
 
 
-
+/*
 void draw_screen(zone* z, int si, int sj){
 
 	struct screen* scr = ZONE_LOOKUP(z,si,sj);
@@ -216,6 +216,7 @@ void draw_stage(){
 		draw_screen(z, si+table[i][0], sj+table[i][1]);
 	}
 }
+*/
 
 void draw_sprites(){
 	int i;
