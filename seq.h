@@ -52,3 +52,8 @@ void music_reset();
 int music_load(char* filename, mus_id id);
 void music_change(mus_id id);
 
+int event_channel(event* e);
+int event_type(event* e);
+int event_val1(event* e);
+int event_val2(event* e);
+int event_val(event* e);

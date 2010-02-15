@@ -118,3 +118,25 @@ it might well be simpler to implement looping as
 an event which exists at the loop point after all
 other events that occur at that time which sends
 the sequence to a specific tick */
+
+
+
+int event_channel(event* e){
+	return 0;
+}
+
+int event_type(event* e){
+	return 0;
+}
+
+int event_val1(event* e){
+	return 0;
+}
+
+int event_val2(event* e){
+	return 0;
+}
+
+int event_val(event* e){
+	return 0;
+}

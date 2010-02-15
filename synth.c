@@ -22,8 +22,11 @@
    evanrinehart@gmail.com
 */
 
+#include <stdlib.h>
+
 #include <synth.h>
 #include <seq.h>
+#include <list.h>
 
 /*
 timing stuff
@@ -51,41 +54,79 @@ int tick;
 int terr = 0; // 1/(bpm*tpb) of a sample
 int terrd = 46080; //bpm * tpb
 
+list* channels;
+
+
+typedef struct {
+	int id;
+	float L, R, V;
+	void* ud;
+	void (*mix)(void* ud, float out[], int count);
+	void (*control)(void* ud, event* e);
+} channel;
+
+
 void set_sample_rate(int x){ srate = x; }
 void set_bpm(int x){ bpm = x; }
 
 
 void synth_init(int sample_rate){
 	srate = sample_rate;
+	channels = empty();
 	seq_init();
 }
 
-void generate(float left[], float right[], int count){
-	int i;
 
-/* supposed to mix all generators for count samples
-this includes synthesizers and sample generators */
-/* this loop is unsuitable as an inner loop */
-	for(i=0; i<count; i++){
-		left[i] = 0;
-		right[i] = 0;
+
+
+
+
+
+channel* find_channel(int id){
+	list* ptr = channels->next;
+	while(ptr){
+		channel* ch = ptr->item;
+		if(ch->id == id) return ch;
+		ptr = ptr->next;
 	}
+	return NULL;
+}
 
+void mix(channel* ch, float in[], float left[], float right[], int count){
+	int i;
+	for(i=0; i<count; i++){
+		left[i] += in[i] * ch->L * ch->V;
+		right[i] += in[i] * ch->R * ch->V;
+	}
+}
 
-/* instead zero them and pass them to each generator
-which will accumulate their output into left and right
+void zero(float buf[], int count){
+	int i;
+	for(i=0; i<count; i++){
+		buf[i] = 0;
+	}
+}
 
-in the end divide by maximum number of generators
+void generate(float left[], float right[], int count){
+	float buf[2048];
+	list* ptr = channels->next;
 
-the final stage is master volume, which will be increased if
-the result is too quiet */
+	zero(left, count);
+	zero(right, count);
+	while(ptr){
+		channel* ch = ptr->item;
+
+		zero(buf, count);
+		ch->mix(ch->ud, buf, count);
+		mix(ch, buf, left, right, count);
+
+		ptr = ptr->next;
+	}
 }
 
 void control(event* e){
-/* we decided on polyphonic synth (and multiple instances of
-a playing samlple). important to remember that all controller
-events affect entire instrument channels. this means it affects
-all generators for that intrument */
+	channel* ch = find_channel(event_channel(e));
+	ch->control(ch->ud, e);
 }
 
 void synth_generate(float left[], float right[], int samples){
@@ -101,36 +142,3 @@ void synth_generate(float left[], float right[], int samples){
 	seq_advance(samples);	
 }
 
-
-
-
-/* possible generators (scratch work)
-
-square wave
-saw wave
-triangle wave
-square saw produce a band limited signal
-
-string signal
-this uses a karplus strong algorithm
-noise -> variable delay (linear interpolating) -> first order low pass
-
-voice signal
-formant synthesis
-two or three gaussians (perhaps padded) -> IFFT
-also works for bell
-
-detuned oscillators
-
-samples on ch 10
-just samples
-
-effects
-portamento
-vibrato
-echo
-chorus
-reverb
-appegiator
-adsr envelope
-*/
