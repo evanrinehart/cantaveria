@@ -51,7 +51,6 @@ void graphics_init();
 
 void draw_final();
 void draw_sprites();
-void draw_stage();
 
 
 int load_sprite(char* filename, int id);
