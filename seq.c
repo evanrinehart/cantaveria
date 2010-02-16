@@ -21,9 +21,11 @@
 
    evanrinehart@gmail.com
 */
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <seq.h>
+
 
 static struct {
 	int tick;
@@ -38,7 +40,10 @@ static struct {
 } my;
 
 void seq_init(){
+	printf("  sequencer: ... ");
 
+
+	printf("OK\n");
 }
 
 int would_loop(){
@@ -83,12 +88,13 @@ the event pointer, and finally advances the tick count */
 //returns samples from now an event will occur
 //if no event will occur in sbound samples, returns -1
 int seq_lookahead(int sbound){
-return -1;
+return sbound;
+
 	int tbound = sbound*46080/1323000;
 	int T = distance_to_next();
 	if(T < 0) return -1;
 	return T > tbound ?
-		-1 :
+		sbound :
 		T*1 + 0;
 }
 
@@ -122,21 +128,32 @@ the sequence to a specific tick */
 
 
 int event_channel(event* e){
-	return 0;
+	return e->midi[0] & 0x0f;
 }
 
 int event_type(event* e){
-	return 0;
+	return e->midi[0] & 0xf0;
 }
 
 int event_val1(event* e){
-	return 0;
+	return e->midi[1];
 }
 
 int event_val2(event* e){
-	return 0;
+	return e->midi[2];
 }
 
 int event_val(event* e){
-	return 0;
+	return (e->midi[1] << 8) | (e->midi[0]);
+}
+
+void print_event(event* e){
+	printf("(%02x, %02x, %02x, %02x)",
+		e->midi[0] & 0xf0, e->midi[0] & 0x0f,
+		e->midi[1], e->midi[2]);
+}
+
+void println_event(event* e){
+	print_event(e);
+	printf("\n");
 }

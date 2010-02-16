@@ -24,6 +24,7 @@
 
 #include <SDL/SDL.h>
 
+#include <seq.h>
 #include <synth.h>
 #include <audio.h>
 #include <util.h>
@@ -46,6 +47,19 @@ void audio_callback(void *userdata, Uint8 *stream, int bytes){
 }
 
 
+
+char* sample_format_str(int format){
+	switch(format){
+		case AUDIO_S16: return "signed 16-bit LE";
+		case AUDIO_U16: return "unsigned 16-bit LE";
+		case AUDIO_S16MSB: return "signed 16-bit BE";
+		case AUDIO_U16MSB: return "unsigned 16-bit BE";
+		case AUDIO_S8: return "signed 8-bit";
+		case AUDIO_U8: return "unsigned 8-bit";
+		default: return "unknown";
+	}
+}
+
 void audio_init(){
 	SDL_AudioSpec want;
 	SDL_AudioSpec got;
@@ -64,22 +78,31 @@ void audio_init(){
 	}
 
 	printf("audio:\n");
-	printf(" sample rate = %d\n", got.freq);
-	printf(" channels = %d\n", got.channels);
-	printf(" samples = %d\n", got.samples);
-	printf(" format = %d\n", got.format);
+	printf("  spec = (\n");
+	printf("    sample rate = %d\n", got.freq);
+	printf("    channels = %d\n", got.channels);
+	printf("    samples = %d\n", got.samples);
+	printf("    format = %s\n", sample_format_str(got.format));
+	printf("  )\n");
 
 	if(got.format != AUDIO_S16){
 		printf("    WARNING: audio format not AUDIO_S16 :(\n");
+		SDL_CloseAudio();
+		printf("  *no sound*\n");
 		return;
 	}
-
 	lout = xmalloc(got.samples*sizeof(float));
 	rout = xmalloc(got.samples*sizeof(float));
+	memset(lout, 0, got.samples*sizeof(float));
+	memset(rout, 0, got.samples*sizeof(float));
 
-	printf(" sound on\n");
+	synth_init();
+	seq_init();
+
+	printf("  sound on\n");
 	SDL_PauseAudio(0);
 	
+
 }
 
 void audio_quit(){

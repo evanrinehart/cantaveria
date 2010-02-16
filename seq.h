@@ -57,3 +57,5 @@ int event_type(event* e);
 int event_val1(event* e);
 int event_val2(event* e);
 int event_val(event* e);
+void print_event(event* e);
+void println_event(event* e);

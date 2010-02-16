@@ -22,6 +22,7 @@
    evanrinehart@gmail.com
 */
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <synth.h>
@@ -43,6 +44,18 @@ which in the above example = 28 and 32760/46080
 
 */
 
+typedef struct {
+	void (*generate)(void* ud, float out[], int count);
+	void (*cut)(void* ud);
+	void* ud;
+} generator;
+
+typedef struct {
+	float L, R, V;
+	void* ud;
+	void (*mix)(void* ud, float out[], int count);
+	void (*control)(void* ud, event* e);
+} channel;
 
 int srate;
 int bpm = 120;
@@ -54,43 +67,41 @@ int tick;
 int terr = 0; // 1/(bpm*tpb) of a sample
 int terrd = 46080; //bpm * tpb
 
-list* channels;
+
+channel channels[16];
 
 
-typedef struct {
-	int id;
-	float L, R, V;
-	void* ud;
-	void (*mix)(void* ud, float out[], int count);
-	void (*control)(void* ud, event* e);
-} channel;
+
 
 
 void set_sample_rate(int x){ srate = x; }
 void set_bpm(int x){ bpm = x; }
 
 
-void synth_init(int sample_rate){
-	srate = sample_rate;
-	channels = empty();
-	seq_init();
+
+
+
+void dummy_mix(void* ud, float out[], int count){
+}
+
+void dummy_control(void* ud, event* e){
+}
+
+channel make_dummy_channel(){
+	channel ch;
+
+	ch.L = 1;
+	ch.R = 1;
+	ch.V = 1;
+
+	ch.ud = NULL;
+	ch.mix = dummy_mix;
+	ch.control = dummy_control;
+
+	return ch;
 }
 
 
-
-
-
-
-
-channel* find_channel(int id){
-	list* ptr = channels->next;
-	while(ptr){
-		channel* ch = ptr->item;
-		if(ch->id == id) return ch;
-		ptr = ptr->next;
-	}
-	return NULL;
-}
 
 void mix(channel* ch, float in[], float left[], float right[], int count){
 	int i;
@@ -107,25 +118,33 @@ void zero(float buf[], int count){
 	}
 }
 
-void generate(float left[], float right[], int count){
-	float buf[2048];
-	list* ptr = channels->next;
-
-	zero(left, count);
-	zero(right, count);
-	while(ptr){
-		channel* ch = ptr->item;
-
-		zero(buf, count);
-		ch->mix(ch->ud, buf, count);
-		mix(ch, buf, left, right, count);
-
-		ptr = ptr->next;
+void reduce(float buf[], int count, float factor){
+	int i;
+	for(i=0; i<count; i++){
+		buf[i] /= factor;
 	}
 }
 
+void generate(float left[], float right[], int count){
+	float buf[4096];
+	int i;
+
+	zero(left, count);
+	zero(right, count);
+	for(i=0; i<16; i++){
+		channel* ch = &(channels[i]);
+		zero(buf, count);
+		ch->mix(ch->ud, buf, count);
+	return;
+		mix(ch, buf, left, right, count);
+	}
+	reduce(left, count, 16.0f);
+	reduce(right, count, 16.0f);
+}
+
 void control(event* e){
-	channel* ch = find_channel(event_channel(e));
+	int id = event_channel(e);
+	channel* ch = &(channels[id]);
 	ch->control(ch->ud, e);
 }
 
@@ -133,12 +152,24 @@ void synth_generate(float left[], float right[], int samples){
 	int i=0;
 	for(;;){
 		int next = seq_lookahead(samples);
-		if(next < 0) break;
 		generate(left+i, right+i, next-i);
-		control(seq_get_event());
 		i = next;
+		if(i == samples) break;
+		control(seq_get_event());
 	};
-	generate(left+i, right+i, samples-i);
-	seq_advance(samples);	
+//	seq_advance(samples);
 }
 
+
+void synth_init(){
+	int i;
+	printf("  synth: ... ");
+
+	for(i=0; i<16; i++){
+		channels[i] = make_dummy_channel();
+	}
+
+	//srate = sample_rate;
+
+	printf("OK\n");
+}

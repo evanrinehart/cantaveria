@@ -23,6 +23,6 @@
 */
 
 
-void synth_init(int sample_rate);
+void synth_init();
 void synth_generate(float lout[], float rout[], int count);
 

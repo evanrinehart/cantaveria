@@ -398,11 +398,11 @@ void setup_joysticks(){
 	printf("sdl: detected %d joysticks\n",N);
 	for(i=0; i<N; i++){
 		if(SDL_JoystickOpen(i)){
-			printf(" joy%d: %s\n", i, SDL_JoystickName(i));
+			printf("  joy%d: %s\n", i, SDL_JoystickName(i));
 		}
 		else{
 			printf(
-					" joy%d: %s (failed to open)\n",
+					"  joy%d: %s (failed to open)\n",
 					i, SDL_JoystickName(i)
 			      );
 		}
@@ -503,13 +503,13 @@ void setup_video(){
 	} 
 
 	printf("video:\n");
-	printf(" resolution: %d x %d %s\n",W,H,fullscreen?"fullscreen":"windowed");
-	printf(" pixel dimensions: %d x %d\n",screen_w,screen_h);
-	printf(" aspect ratio: %g\n",((double)W)/H);
-	printf(" opengl: %s\n",gl_flag?"yes":"no");
-	printf(" x-offset: %d\n",screen_offset_x);
-	printf(" y-offset: %d\n",screen_offset_y);
-	printf(" video on\n");
+	printf("  resolution: %d x %d %s\n",W,H,fullscreen?"fullscreen":"windowed");
+	printf("  pixel dimensions: %d x %d\n",screen_w,screen_h);
+	printf("  aspect ratio: %g\n",((double)W)/H);
+	printf("  opengl: %s\n",gl_flag?"yes":"no");
+	printf("  x-offset: %d\n",screen_offset_x);
+	printf("  y-offset: %d\n",screen_offset_y);
+	printf("  video on\n");
 
 }
 
