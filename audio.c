@@ -38,7 +38,6 @@ void audio_callback(void *userdata, Uint8 *stream, int bytes){
 	int buflen = bytes / 2;        /* Sint16 = 2 bytes */
 	int samples = buflen / 2;      /* 2 channels */
 
-printf("audio_callback: %d bytes\n", bytes/2);
 	synth_generate(lout, rout, samples);
 
 	for(i=0, j=0; i<samples; i++){
