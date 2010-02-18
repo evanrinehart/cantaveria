@@ -53,9 +53,15 @@ void foo_mix(void* data, float out[], int count){
 void foo_control(void* data, int type, int val1, int val2, int val){
 	struct foo* foo = data;
 	switch(type){
-		case 0: foo->on = 1; break;
-		case 2: foo->on = 0; break;
-		case 1: foo->f = note2f(val1); break;
+		case 1:
+			foo->f = note2f(val1);
+			foo->on = 1;
+			break;
+		case 0:
+			if(foo->f == note2f(val1)){
+				foo->on = 0;
+			}
+			break;
 	}
 }
 
