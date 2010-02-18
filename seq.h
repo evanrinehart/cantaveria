@@ -33,7 +33,10 @@ typedef enum {
 typedef struct event event;
 struct event {
 	int tick;
-	char midi[4];
+	int type;
+	int chan;
+	int val1;
+	int val2;
 	struct event* next;
 };
 
@@ -52,10 +55,9 @@ void music_reset();
 int music_load(char* filename, mus_id id);
 void music_change(mus_id id);
 
-int event_channel(event* e);
-int event_type(event* e);
-int event_val1(event* e);
-int event_val2(event* e);
-int event_val(event* e);
-void print_event(event* e);
-void println_event(event* e);
+
+/***/
+void seq_play_sound(int id);
+void seq_instant(int type, int chan, int val1, int val2);
+event* seq_get_immediate();
+

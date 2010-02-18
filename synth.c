@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <synth.h>
 #include <seq.h>
@@ -54,7 +55,7 @@ typedef struct {
 	float L, R, V;
 	void* ud;
 	void (*mix)(void* ud, float out[], int count);
-	void (*control)(void* ud, event* e);
+	void (*control)(void* ud, int type, int val1, int val2, int val);
 } channel;
 
 int srate;
@@ -84,7 +85,7 @@ void set_bpm(int x){ bpm = x; }
 void dummy_mix(void* ud, float out[], int count){
 }
 
-void dummy_control(void* ud, event* e){
+void dummy_control(void* ud, int type, int val1, int val2, int val){
 }
 
 channel make_dummy_channel(){
@@ -97,6 +98,58 @@ channel make_dummy_channel(){
 	ch.ud = NULL;
 	ch.mix = dummy_mix;
 	ch.control = dummy_control;
+
+	return ch;
+}
+
+
+
+struct foo {
+	int on;
+	float t;
+	float f;
+};
+
+void foo_mix(void* ud, float out[], int count){
+	struct foo* foo = ud;
+	int i;
+
+	if(foo->on == 0) return;
+
+	for(i=0; i<count; i++){
+		out[i] += sin(foo->t);
+		foo->t += foo->f;
+		while(foo->t > 2*3.14159){
+			foo->t -= 2*3.14159;
+		}
+	}
+}
+
+float note2f(int note){
+	return 440*3.14159*2*pow(2, note/12.0)/44100;
+}
+
+void foo_control(void* ud, int type, int val1, int val2, int val){
+	struct foo* foo = ud;
+	switch(type){
+		case 0: foo->on = 1; break;
+		case 2: foo->on = 0; break;
+		case 1: foo->f = note2f(val1); break;
+	}
+}
+
+channel make_foo_channel(){
+	channel ch = make_dummy_channel();
+	ch.mix = foo_mix;
+	ch.control = foo_control;
+
+	struct foo* foo = malloc(sizeof(struct foo));
+
+	foo->t = 0;
+	foo->f = 0;
+	foo->on = 1;
+
+	ch.ud = foo;
 
 	return ch;
 }
@@ -128,6 +181,7 @@ void reduce(float buf[], int count, float factor){
 void generate(float left[], float right[], int count){
 	float buf[4096];
 	int i;
+	float V = 1.0f;
 
 	zero(left, count);
 	zero(right, count);
@@ -135,21 +189,35 @@ void generate(float left[], float right[], int count){
 		channel* ch = &(channels[i]);
 		zero(buf, count);
 		ch->mix(ch->ud, buf, count);
-	return;
 		mix(ch, buf, left, right, count);
 	}
-	reduce(left, count, 16.0f);
-	reduce(right, count, 16.0f);
+	reduce(left, count, 16.0f/V);
+	reduce(right, count, 16.0f/V);
 }
 
 void control(event* e){
-	int id = event_channel(e);
-	channel* ch = &(channels[id]);
-	ch->control(ch->ud, e);
+	int chan = e->chan;
+	int type = e->type;
+	int val1 = e->val1;
+	int val2 = e->val2;
+	int val  = (e->val2 << 8) | e->val1;
+	channel* ch = &(channels[chan]);
+	ch->control(ch->ud, type, val1, val2, val);
+}
+
+void immediate_control(){
+	event* e = seq_get_immediate();
+	while(e){
+		control(e);
+		e = seq_get_immediate();
+	}
 }
 
 void synth_generate(float left[], float right[], int samples){
 	int i=0;
+
+	immediate_control();
+
 	for(;;){
 		int next = seq_lookahead(samples);
 		generate(left+i, right+i, next-i);
@@ -165,7 +233,8 @@ void synth_init(){
 	int i;
 	printf("  synth: ... ");
 
-	for(i=0; i<16; i++){
+	channels[0] = make_foo_channel();
+	for(i=1; i<16; i++){
 		channels[i] = make_dummy_channel();
 	}
 

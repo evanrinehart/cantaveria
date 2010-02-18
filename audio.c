@@ -26,8 +26,8 @@
 
 #include <seq.h>
 #include <synth.h>
-#include <audio.h>
 #include <util.h>
+#include <audio.h>
 
 float* lout;
 float* rout;
@@ -113,4 +113,10 @@ void audio_quit(){
 
 
 
+void audio_lock(){
+	SDL_LockAudio();
+}
 
+void audio_unlock(){
+	SDL_UnlockAudio();
+}

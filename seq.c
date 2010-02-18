@@ -25,29 +25,38 @@
 #include <stdlib.h>
 
 #include <seq.h>
+#include <list.h>
+#include <audio.h>
+#include <util.h>
+
+int tick;
+int terr;
+int loop_start;
+int loop_end;
+int looping;
+
+//event lists
+list* sequence;
+list* blank_events;
+list* immediate_events;
+
+event* next_event;
 
 
-static struct {
-	int tick;
-	int terr; // number 1/1323000 ticks
 
-	int loop_start;
-	int loop_end;
-	int looping;
-
-	event* next_event;
-	event* events;
-} my;
 
 void seq_init(){
 	printf("  sequencer: ... ");
 
+	blank_events = empty();
+	immediate_events = empty();
+	sequence = empty();
 
 	printf("OK\n");
 }
 
 int would_loop(){
-	return my.looping && my.next_event->tick > my.loop_end;
+	return looping && next_event->tick > loop_end;
 }
 
 event* get_event_after(int tick){
@@ -56,10 +65,10 @@ event* get_event_after(int tick){
 
 event* get_next_event(){
 	if(would_loop()){
-		return get_event_after(my.loop_start);
+		return get_event_after(loop_start);
 	}
 	else {
-		return my.next_event;
+		return next_event;
 	}
 }
 
@@ -75,8 +84,8 @@ int distance_to_next(){
 	if(next_tick < 0) return -1;
 
 	return would_loop() ?
-		next_tick - my.loop_start + my.loop_end - my.tick :
-		next_tick - my.tick;
+		next_tick - loop_start + loop_end - tick :
+		next_tick - tick;
 
 }
 
@@ -112,9 +121,9 @@ return;
 	// 46080 1/1323000 ticks = 1 sample
 	int N = 46080 * samples;
 	int D = 1323000;
-	my.terr += N;
-	my.tick += N/D + my.terr/D;
-	my.terr %= D;
+	terr += N;
+	tick += N/D + terr/D;
+	terr %= D;
 //needs to handle looping
 }
 
@@ -127,33 +136,51 @@ the sequence to a specific tick */
 
 
 
-int event_channel(event* e){
-	return e->midi[0] & 0x0f;
+
+/* *** */
+event* make_event(int type, int chan, int val1, int val2){
+	event* e;
+	if(blank_events->next){
+		e = pop(blank_events);
+	}
+	else{
+		e = xmalloc(sizeof(event));
+	}
+
+	e->type = type;
+	e->chan = chan;
+	e->val1= val1;
+	e->val2= val2;
+	e->tick = 0;
+	return e;
 }
 
-int event_type(event* e){
-	return e->midi[0] & 0xf0;
+void recycle_event(event* e){
+	push(blank_events, e);
 }
 
-int event_val1(event* e){
-	return e->midi[1];
+
+void seq_instant(int type, int chan, int val1, int val2){
+	event* e = make_event(type, chan, val1, val2);
+	audio_lock();
+	append(immediate_events, e);
+	audio_unlock();
 }
 
-int event_val2(event* e){
-	return e->midi[2];
+
+void seq_play_sound(int id){
+	seq_instant(0x90, 15, id, 0);
 }
 
-int event_val(event* e){
-	return (e->midi[1] << 8) | (e->midi[0]);
-}
 
-void print_event(event* e){
-	printf("(%02x, %02x, %02x, %02x)",
-		e->midi[0] & 0xf0, e->midi[0] & 0x0f,
-		e->midi[1], e->midi[2]);
-}
 
-void println_event(event* e){
-	print_event(e);
-	printf("\n");
+event* seq_get_immediate(){
+	event* e = pop(immediate_events);
+	if(e != NULL){
+		recycle_event(e);
+		return e;
+	}
+	else{
+		return NULL;
+	}
 }
