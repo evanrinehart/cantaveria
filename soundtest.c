@@ -25,6 +25,7 @@ static void press(input in){
 		case FIRE_BUTTON: play(5); break;
 		case JUMP_BUTTON: play(7); break;
 		case SPECIAL_BUTTON: play(9); break;
+		default: break;
 	}
 
 	seq_instant(0, 0, 0, 0);

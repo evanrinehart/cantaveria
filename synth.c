@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <org.h>
 #include <synth.h>
 #include <seq.h>
 #include <list.h>
@@ -46,16 +47,11 @@ which in the above example = 28 and 32760/46080
 */
 
 typedef struct {
-	void (*generate)(void* ud, float out[], int count);
-	void (*cut)(void* ud);
-	void* ud;
-} generator;
-
-typedef struct {
 	float L, R, V;
-	void* ud;
-	void (*mix)(void* ud, float out[], int count);
-	void (*control)(void* ud, int type, int val1, int val2, int val);
+	mix_callback mix;
+	control_callback control;
+	cleanup_callback cleanup;
+	void* data;
 } channel;
 
 int srate;
@@ -75,82 +71,35 @@ channel channels[16];
 
 
 
-void set_sample_rate(int x){ srate = x; }
 void set_bpm(int x){ bpm = x; }
 
 
 
 
 
-void dummy_mix(void* ud, float out[], int count){
-}
-
-void dummy_control(void* ud, int type, int val1, int val2, int val){
-}
+void dummy_mix(void* v, float f[], int i){}
+void dummy_control(void* v, int a, int b, int c, int d){}
+void dummy_cleanup(void* v){}
 
 channel make_dummy_channel(){
 	channel ch;
-
 	ch.L = 1;
 	ch.R = 1;
 	ch.V = 1;
-
-	ch.ud = NULL;
 	ch.mix = dummy_mix;
+	ch.cleanup = dummy_cleanup;
 	ch.control = dummy_control;
-
+	ch.data = NULL;
 	return ch;
 }
 
-
-
-struct foo {
-	int on;
-	float t;
-	float f;
-};
-
-void foo_mix(void* ud, float out[], int count){
-	struct foo* foo = ud;
-	int i;
-
-	if(foo->on == 0) return;
-
-	for(i=0; i<count; i++){
-		out[i] += sin(foo->t);
-		foo->t += foo->f;
-		while(foo->t > 2*3.14159){
-			foo->t -= 2*3.14159;
-		}
-	}
-}
-
-float note2f(int note){
-	return 440*3.14159*2*pow(2, note/12.0)/44100;
-}
-
-void foo_control(void* ud, int type, int val1, int val2, int val){
-	struct foo* foo = ud;
-	switch(type){
-		case 0: foo->on = 1; break;
-		case 2: foo->on = 0; break;
-		case 1: foo->f = note2f(val1); break;
-	}
-}
-
-channel make_foo_channel(){
+channel make_channel_from_instrument(enum instrument_name name){
 	channel ch = make_dummy_channel();
-	ch.mix = foo_mix;
-	ch.control = foo_control;
-
-	struct foo* foo = malloc(sizeof(struct foo));
-
-	foo->t = 0;
-	foo->f = 0;
-	foo->on = 1;
-
-	ch.ud = foo;
-
+	instrument ins = load_instrument(name);
+	ch.mix = ins.mix;
+	ch.control = ins.control;
+	ch.cleanup = ins.cleanup;
+	ch.data = ins.data;
 	return ch;
 }
 
@@ -188,7 +137,7 @@ void generate(float left[], float right[], int count){
 	for(i=0; i<16; i++){
 		channel* ch = &(channels[i]);
 		zero(buf, count);
-		ch->mix(ch->ud, buf, count);
+		ch->mix(ch->data, buf, count);
 		mix(ch, buf, left, right, count);
 	}
 	reduce(left, count, 16.0f/V);
@@ -202,7 +151,7 @@ void control(event* e){
 	int val2 = e->val2;
 	int val  = (e->val2 << 8) | e->val1;
 	channel* ch = &(channels[chan]);
-	ch->control(ch->ud, type, val1, val2, val);
+	ch->control(ch->data, type, val1, val2, val);
 }
 
 void immediate_control(){
@@ -233,7 +182,7 @@ void synth_init(){
 	int i;
 	printf("  synth: ... ");
 
-	channels[0] = make_foo_channel();
+	channels[0] = make_channel_from_instrument(ORG_FOO);
 	for(i=1; i<16; i++){
 		channels[i] = make_dummy_channel();
 	}
