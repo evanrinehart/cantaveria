@@ -12,7 +12,6 @@ This software comes with no warranty.
 #include <stdlib.h>
 #include <math.h>
 
-#include <audio.h> /* to have SAMPLE_RATE */
 #include <org.h>
 
 
