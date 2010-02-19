@@ -149,7 +149,7 @@ void control(event* e){
 	int type = e->type;
 	int val1 = e->val1;
 	int val2 = e->val2;
-	int val  = (e->val2 << 8) | e->val1;
+	int val  = (e->val2 << 7) | e->val1;
 	channel* ch = &(channels[chan]);
 	ch->control(ch->data, type, val1, val2, val);
 }

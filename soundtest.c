@@ -15,6 +15,13 @@ void stop(int note){
 	seq_instant(EV_NOTEOFF, 0, note, 0);
 }
 
+void bend(int amount){
+	seq_instant(EV_PITCHBEND, 0, 0, amount);
+}
+
+int bend_amount = 8192;
+int bend_v = 0;
+
 static void press(input in){
 	if(in.button == ESCAPE_KEY){
 		game_is_over();
@@ -29,6 +36,8 @@ static void press(input in){
 		case FIRE_BUTTON: play(5); break;
 		case JUMP_BUTTON: play(7); break;
 		case SPECIAL_BUTTON: play(9); break;
+		case L_BUTTON: bend_v = -1; break;
+		case R_BUTTON: bend_v = 1; break;
 		default: break;
 	}
 }
@@ -41,12 +50,21 @@ static void release(input in){
 		case FIRE_BUTTON: stop(5); break;
 		case JUMP_BUTTON: stop(7); break;
 		case SPECIAL_BUTTON: stop(9); break;
+		case L_BUTTON: bend_v = 0; break;
+		case R_BUTTON: bend_v = 0; break;
 		default: break;
 	}
 }
 
 static void update(){
 	console_update();
+
+	bend_amount += bend_v;
+	if(bend_amount > 0x7f) bend_amount = 0x7f;
+	if(bend_amount < 0x00) bend_amount = 0x00;
+	if(bend_v != 0){
+		bend(bend_amount);
+	}
 }
 
 static void draw(){

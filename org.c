@@ -33,7 +33,7 @@ rendered ambient (PADsynth)
 #define TABLE_SIZE (1<<13)
 float sine_table[TABLE_SIZE];
 
-int note2tablestep(int note){
+int note2tablestep(float note){
 	/* critical formula for tuning a table */
 	/* table steps for 2pif/SAMPLE_RATE radians is...*/
 	/* TABLE_SIZE/PI2 == entries per radian */
@@ -57,8 +57,11 @@ float note2wavestep(int note){
 /* ORG_DEFAULT: default fallback instrument */
 struct defstate {
 	int on[16];
+	int note[16];
 	int step[16];
 	int ptr[16];
+	int bendstep[16];
+	float bend;
 };
 
 void default_gen(struct defstate* data, int z, float out[], int count){
@@ -66,9 +69,12 @@ void default_gen(struct defstate* data, int z, float out[], int count){
 	int i;
 	for(i=0; i<count; i++){
 		out[i] += sine_table[data->ptr[z]];
-		data->ptr[z] += data->step[z];
+		data->ptr[z] += data->step[z] + data->bendstep[z];
 		while(data->ptr[z] >= TABLE_SIZE){
 			data->ptr[z] -= TABLE_SIZE;
+		}
+		while(data->ptr[z] < 0){
+			data->ptr[z] += TABLE_SIZE;
 		}
 	}
 }
@@ -81,13 +87,22 @@ void default_mix(void* ud, float out[], int count){
 	}
 }
 
+
+void default_bend_gen(struct defstate* data, int i, float bend){
+	if(data->on[i] == 0) return;
+	int note = data->note[i];
+	data->bendstep[i] = note2tablestep(note + bend) - data->step[i];
+}
+
 void default_turn_on(struct defstate* data, int note){
 	int step = note2tablestep(note);
 	int i;
 	for(i=0; i<16; i++){
 		if(data->on[i]==0){
 			data->step[i] = step;
+			data->note[i] = note;
 			data->on[i] = 1;
+			default_bend_gen(data, i, data->bend);
 			return;
 		}
 	}
@@ -104,11 +119,24 @@ void default_turn_off(struct defstate* data, int note){
 	}
 }
 
+void default_bend(struct defstate* data, int amount){
+	int max = 16383;
+	int relative = amount - max/2;
+	float bend = 1.0*relative/max * 4;
+	int i;
+
+	data->bend = bend;
+	for(i=0; i<16; i++){
+		default_bend_gen(data, i, bend);
+	}
+}
+
 void default_control(void* ud, int type, int val1, int val2, int val){
 	struct defstate* data = ud;
 	switch(type){
 		case EV_NOTEON: default_turn_on(data, val1); break;
 		case EV_NOTEOFF: default_turn_off(data, val1); break;
+		case EV_PITCHBEND: default_bend(data, val); break;
 	}
 }
 
@@ -120,8 +148,11 @@ instrument make_default(){
 	int i;
 	for(i=0; i<16; i++){
 		data->on[i] = 0;
+		data->note[i] = 0;
 		data->step[i] = 100;
 		data->ptr[i] = 0;
+		data->bendstep[i] = 0;
+		data->bend = 0;
 	}
 	ins.mix = default_mix;
 	ins.control = default_control;
