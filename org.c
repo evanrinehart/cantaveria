@@ -25,14 +25,18 @@ instrument make_cool() {
 	return ins;
 }
 
-float note2f(int note){
-	return 440*3.14159*2*pow(2, note/12.0)/SAMPLE_RATE;
+float note2step(int note){
+	/* critical formula for tuning */
+	/* delta(omega*t) == wave increment */
+	/*                == 2 pi f / samp_rate */
+	/*                == 2pi f_0 2^(note/12) / samp_rate */
+	return 440*PI2*pow(2, note/12.0)/SAMPLE_RATE;
 }
 
 struct foo {
 	int on;
 	float t;
-	float f;
+	float step;
 };
 
 void foo_mix(void* data, float out[], int count){
@@ -43,9 +47,9 @@ void foo_mix(void* data, float out[], int count){
 
 	for(i=0; i<count; i++){
 		out[i] += sin(foo->t);
-		foo->t += foo->f;
-		while(foo->t > 2*3.14159){
-			foo->t -= 2*3.14159;
+		foo->t += foo->step;
+		while(foo->t > PI2){
+			foo->t -= PI2;
 		}
 	}
 }
@@ -54,11 +58,11 @@ void foo_control(void* data, int type, int val1, int val2, int val){
 	struct foo* foo = data;
 	switch(type){
 		case EV_NOTEON:
-			foo->f = note2f(val1);
+			foo->step = note2step(val1);
 			foo->on = 1;
 			break;
 		case EV_NOTEOFF:
-			if(foo->f == note2f(val1)){
+			if(foo->step == note2step(val1)){
 				foo->on = 0;
 			}
 			break;

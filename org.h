@@ -10,6 +10,8 @@ This software comes with no warranty.
 */
 
 #define SAMPLE_RATE 44100
+#define PI 3.1415926535897931
+#define PI2 2*PI
 
 enum {
 	EV_NOTEON = 0x90,
