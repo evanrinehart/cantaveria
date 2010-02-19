@@ -56,22 +56,50 @@ float note2wavestep(int note){
 
 /* ORG_DEFAULT: default fallback instrument */
 struct defstate {
-	int on;
-	int step;
-	int ptr;
+	int on[16];
+	int step[16];
+	int ptr[16];
 };
+
+void default_gen(struct defstate* data, int z, float out[], int count){
+	if(data->on[z] == 0) return;
+	int i;
+	for(i=0; i<count; i++){
+		out[i] += sine_table[data->ptr[z]];
+		data->ptr[z] += data->step[z];
+		while(data->ptr[z] >= TABLE_SIZE){
+			data->ptr[z] -= TABLE_SIZE;
+		}
+	}
+}
 
 void default_mix(void* ud, float out[], int count){
 	struct defstate* data = ud;
 	int i;
+	for(i=0; i<16; i++){
+		default_gen(data, i, out, count);
+	}
+}
 
-	if(data->on == 0) return;
+void default_turn_on(struct defstate* data, int note){
+	int step = note2tablestep(note);
+	int i;
+	for(i=0; i<16; i++){
+		if(data->on[i]==0){
+			data->step[i] = step;
+			data->on[i] = 1;
+			return;
+		}
+	}
+}
 
-	for(i=0; i<count; i++){
-		out[i] += sine_table[data->ptr];
-		data->ptr += data->step;
-		while(data->ptr >= TABLE_SIZE){
-			data->ptr -= TABLE_SIZE;
+void default_turn_off(struct defstate* data, int note){
+	int step = note2tablestep(note);
+	int i;
+	for(i=0; i<16; i++){
+		if(data->step[i] == step){
+			data->on[i] = 0;
+			return;
 		}
 	}
 }
@@ -79,15 +107,8 @@ void default_mix(void* ud, float out[], int count){
 void default_control(void* ud, int type, int val1, int val2, int val){
 	struct defstate* data = ud;
 	switch(type){
-		case EV_NOTEON:
-			data->step = note2tablestep(val1);
-			data->on = 1;
-			break;
-		case EV_NOTEOFF:
-			if(data->step == note2tablestep(val1)){
-				data->on = 0;
-			}
-			break;
+		case EV_NOTEON: default_turn_on(data, val1); break;
+		case EV_NOTEOFF: default_turn_off(data, val1); break;
 	}
 }
 
@@ -96,8 +117,12 @@ void default_cleanup(void* data){ free(data); }
 instrument make_default(){
 	instrument ins;
 	struct defstate* data = malloc(sizeof(struct defstate));
-	data->on = 0;
-	data->step = 100;
+	int i;
+	for(i=0; i<16; i++){
+		data->on[i] = 0;
+		data->step[i] = 100;
+		data->ptr[i] = 0;
+	}
 	ins.mix = default_mix;
 	ins.control = default_control;
 	ins.cleanup = default_cleanup;
