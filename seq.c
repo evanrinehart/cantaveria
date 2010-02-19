@@ -25,6 +25,7 @@
 #include <stdlib.h>
 
 #include <seq.h>
+#include <org.h>
 #include <list.h>
 #include <audio.h>
 #include <util.h>

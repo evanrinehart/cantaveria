@@ -9,6 +9,14 @@ This software comes with no warranty.
 2. Modifications must retain this license, at least in spirit.
 */
 
+#define SAMPLE_RATE 44100
+
+enum {
+	EV_NOTEON = 0x90,
+	EV_NOTEOFF = 0x80,
+	EV_CONTROLLER = 0xC0,
+	EV_PITCHBEND = 0xE0
+};
 
 typedef void (*mix_callback)(void* data, float out[], int count);
 typedef void (*control_callback)(void* data, int type, int val1, int val2, int val);

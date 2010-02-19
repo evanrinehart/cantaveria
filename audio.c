@@ -24,6 +24,7 @@
 
 #include <SDL/SDL.h>
 
+#include <org.h>
 #include <seq.h>
 #include <synth.h>
 #include <util.h>

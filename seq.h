@@ -30,6 +30,7 @@ typedef enum {
 } mus_id;
 
 
+
 typedef struct event event;
 struct event {
 	int tick;

@@ -24,7 +24,6 @@
 
 /* sound system */
 
-#define SAMPLE_RATE 44100
 #define BUFFER_SIZE 1024
 
 void audio_init();
