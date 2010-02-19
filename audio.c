@@ -79,12 +79,11 @@ void audio_init(){
 	}
 
 	printf("audio:\n");
-	printf("  spec = (\n");
+	printf("  spec:\n");
 	printf("    sample rate = %d\n", got.freq);
 	printf("    channels = %d\n", got.channels);
 	printf("    samples = %d\n", got.samples);
 	printf("    format = %s\n", sample_format_str(got.format));
-	printf("  )\n");
 
 	if(got.format != AUDIO_S16){
 		printf("    WARNING: audio format not AUDIO_S16 :(\n");
@@ -97,6 +96,7 @@ void audio_init(){
 	memset(lout, 0, got.samples*sizeof(float));
 	memset(rout, 0, got.samples*sizeof(float));
 
+	org_init();
 	synth_init();
 	seq_init();
 

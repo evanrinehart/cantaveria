@@ -182,7 +182,7 @@ void synth_init(){
 	int i;
 	printf("  synth: ... ");
 
-	channels[0] = make_channel_from_instrument(ORG_FOO);
+	channels[0] = make_channel_from_instrument(ORG_DEFAULT);
 	for(i=1; i<16; i++){
 		channels[i] = make_dummy_channel();
 	}

@@ -14,17 +14,36 @@ This software comes with no warranty.
 
 #include <org.h>
 
+/*
+heres a list of instrument ideas...
 
-instrument make_cool() {
-	instrument ins;
-	ins.mix = NULL;
-	ins.control = NULL;
-	ins.cleanup = NULL;
-	ins.data = NULL;
-	return ins;
+piano (not sure yet)
+brass (not sure yet)
+string (not sure yet)
+drum (probably samples)
+bass kick (classic analog algorithm)
+square triangle saw (polyblep ?)
+wind instruments (additive synth via uninterpolated table)
+sampler (perhaps a compressed array of samples)
+rendered ambient (PADsynth)
+
+*/
+
+/* SINE TABLE */
+#define TABLE_SIZE (1<<13)
+float sine_table[TABLE_SIZE];
+
+int note2tablestep(int note){
+	/* critical formula for tuning a table */
+	/* table steps for 2pif/SAMPLE_RATE radians is...*/
+	/* TABLE_SIZE/PI2 == entries per radian */
+	/* step == 2pif/SAMPLE_RATE * (TABLE_SIZE/PI2) */
+	/*      == f * TABLE_SIZE / SAMPLE_RATE */
+	/*      == f_0 2^(note/12) TABLE_SIZE / SAMPLE_RATE */
+	return 440*pow(2, note/12.0)*TABLE_SIZE / SAMPLE_RATE;
 }
 
-float note2step(int note){
+float note2wavestep(int note){
 	/* critical formula for tuning */
 	/* delta(omega*t) == wave increment */
 	/*                == 2 pi f / samp_rate */
@@ -32,57 +51,83 @@ float note2step(int note){
 	return 440*PI2*pow(2, note/12.0)/SAMPLE_RATE;
 }
 
-struct foo {
+
+
+
+/* ORG_DEFAULT: default fallback instrument */
+struct defstate {
 	int on;
-	float t;
-	float step;
+	int step;
+	int ptr;
 };
 
-void foo_mix(void* data, float out[], int count){
-	struct foo* foo = data;
+void default_mix(void* ud, float out[], int count){
+	struct defstate* data = ud;
 	int i;
 
-	if(foo->on == 0) return;
+	if(data->on == 0) return;
 
 	for(i=0; i<count; i++){
-		out[i] += sin(foo->t);
-		foo->t += foo->step;
-		while(foo->t > PI2){
-			foo->t -= PI2;
+		out[i] += sine_table[data->ptr];
+		data->ptr += data->step;
+		while(data->ptr >= TABLE_SIZE){
+			data->ptr -= TABLE_SIZE;
 		}
 	}
 }
 
-void foo_control(void* data, int type, int val1, int val2, int val){
-	struct foo* foo = data;
+void default_control(void* ud, int type, int val1, int val2, int val){
+	struct defstate* data = ud;
 	switch(type){
 		case EV_NOTEON:
-			foo->step = note2step(val1);
-			foo->on = 1;
+			data->step = note2tablestep(val1);
+			data->on = 1;
 			break;
 		case EV_NOTEOFF:
-			if(foo->step == note2step(val1)){
-				foo->on = 0;
+			if(data->step == note2tablestep(val1)){
+				data->on = 0;
 			}
 			break;
 	}
 }
 
-void foo_cleanup(void* data){ free(data); }
+void default_cleanup(void* data){ free(data); }
 
-instrument make_foo(){
+instrument make_default(){
 	instrument ins;
-	ins.mix = foo_mix;
-	ins.control = foo_control;
-	ins.cleanup = foo_cleanup;
-	ins.data = malloc(sizeof(struct foo));
+	struct defstate* data = malloc(sizeof(struct defstate));
+	data->on = 0;
+	data->step = 100;
+	ins.mix = default_mix;
+	ins.control = default_control;
+	ins.cleanup = default_cleanup;
+	ins.data = data;
 	return ins;
 }
 
+
+
+
+
+
+
+/*** exported methods ***/
 instrument load_instrument(enum instrument_name name){
 	switch(name){
-		case ORG_FOO: return make_foo();
-		case ORG_COOL: return make_cool();
-		default: return make_foo();
+		case ORG_DEFAULT: return make_default();
+//		case ORG_COOL: return make_cool();
+		default: return make_default();
 	}
 }
+
+
+void org_init(){
+	int i;
+	for(i=0; i<TABLE_SIZE; i++){
+		sine_table[i] = sin( (PI2*i) / TABLE_SIZE);
+	}
+}
+
+
+
+

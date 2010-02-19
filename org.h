@@ -32,10 +32,11 @@ typedef struct {
 } instrument;
 
 enum instrument_name {
-ORG_FOO,
-ORG_COOL
+ORG_DEFAULT,
+ORG_UNKNOWN
 };
 
 
 
 instrument load_instrument(enum instrument_name name);
+void org_init();
