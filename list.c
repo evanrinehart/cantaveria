@@ -53,7 +53,7 @@ void* pop(list* L){
 }
 
 void append(list* L, void* item){
-	list* ptr = L->next;
+	list* ptr = L;
 	while(ptr->next){
 		ptr = ptr->next;
 	}
