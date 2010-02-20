@@ -41,9 +41,15 @@ void push(list* L, void* item){
 }
 
 void* pop(list* L){
-	void* item = L->next->item;
-	remove_from_list(L, L->next);
-	return item;
+	if(L->next){
+		void* item = L->next->item;
+		remove_from_list(L, L->next);
+		return item;
+	}
+	else{
+		return NULL;
+	}
+
 }
 
 void append(list* L, void* item){
