@@ -30,12 +30,12 @@ rendered ambient (PADsynth)
 */
 
 /* SINE TABLE */
-#define TABLE_SIZE (1<<13)
+#define TABLE_SIZE (1<<8)
 #define RELEASE_STEPS (SAMPLE_RATE/333)
 #define RELEASE_RATE 0.999
 float sine_table[TABLE_SIZE];
 
-int note2tablestep(float note){
+float note2tablestep(float note){
 	/* critical formula for tuning a table */
 	/* table steps for 2pif/SAMPLE_RATE radians is...*/
 	/* TABLE_SIZE/PI2 == entries per radian */
@@ -43,9 +43,22 @@ int note2tablestep(float note){
 	/*      == f * TABLE_SIZE / SAMPLE_RATE */
 	/*      == f_0 2^(note/12) TABLE_SIZE / SAMPLE_RATE */
 	float f = 440 * pow(2, note/12.0);
-	return TABLE_SIZE*f / SAMPLE_RATE;
+	return f*TABLE_SIZE / SAMPLE_RATE;
 }
 
+float sine_table_interp(float ptr){
+	float i0 = floor(ptr);
+	float i1 = i0+1;
+	int I0 = i0;
+	int I1 = i1;
+	if(I0 < 0) I0 += TABLE_SIZE;
+	if(I1 >= TABLE_SIZE) I1 -= TABLE_SIZE;
+	float y0 = sine_table[I0];
+	float y1 = sine_table[I1];
+
+	float ans = (ptr-i0)*((y1-y0)/(i1-i0)) + y0;
+	return ans;
+}
 
 
 float normalize(float note){
@@ -76,11 +89,10 @@ float normalize(float note){
 struct defstate {
 	int on[16];
 	int note[16];
-	int step[16];
-	int ptr[16];
+	float step[16];
+	float ptr[16];
 	float release[16];
-	int relptr[16];
-	int bendstep[16];
+	float bendstep[16];
 	float bend;
 };
 
@@ -88,7 +100,7 @@ void default_gen(struct defstate* data, int z, float out[], int count){
 	if(data->on[z] == 0) return;
 	int i;
 	for(i=0; i<count; i++){
-		int step = data->step[z] + data->bendstep[z];
+		float step = data->step[z] + data->bendstep[z];
 		if(data->on[z] == 2){
 			data->release[z] *= RELEASE_RATE;
 			if(data->release[z] < 0.01){
@@ -98,7 +110,8 @@ void default_gen(struct defstate* data, int z, float out[], int count){
 		}
 
 		float factor = normalize(data->note[z] + data->bend) * data->release[z];
-		float amp = sine_table[data->ptr[z]];
+		//float amp = sine_table[data->ptr[z]];
+		float amp = sine_table_interp(data->ptr[z]);
 		out[i] += amp * factor;
 		data->ptr[z] += step;
 		while(data->ptr[z] >= TABLE_SIZE){
@@ -126,7 +139,7 @@ void default_bend_gen(struct defstate* data, int i, float bend){
 }
 
 void default_turn_on(struct defstate* data, int note){
-	int step = note2tablestep(note);
+	float step = note2tablestep(note);
 	int i;
 	for(i=0; i<16; i++){
 		if(data->on[i]==0){
