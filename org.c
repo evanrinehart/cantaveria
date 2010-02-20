@@ -31,6 +31,8 @@ rendered ambient (PADsynth)
 
 /* SINE TABLE */
 #define TABLE_SIZE (1<<13)
+#define RELEASE_STEPS (SAMPLE_RATE/333)
+#define RELEASE_RATE 0.999
 float sine_table[TABLE_SIZE];
 
 int note2tablestep(float note){
@@ -73,6 +75,8 @@ struct defstate {
 	int note[16];
 	int step[16];
 	int ptr[16];
+	float release[16];
+	int relptr[16];
 	int bendstep[16];
 	float bend;
 };
@@ -81,16 +85,16 @@ void default_gen(struct defstate* data, int z, float out[], int count){
 	if(data->on[z] == 0) return;
 	int i;
 	for(i=0; i<count; i++){
-		float factor = normalize(data->note[z] + data->bend);
 		int step = data->step[z] + data->bendstep[z];
-		int i1 = data->ptr[z];
-		int i0 = i1 - step;
 		if(data->on[z] == 2){
-			if(sine_table[i1]*sine_table[i0] <= 0){
+			data->release[z] *= RELEASE_RATE;
+			if(data->release[z] < 0.01){
 				data->on[z] = 0;
 				break;
 			}
 		}
+
+		float factor = normalize(data->note[z] + data->bend) * data->release[z];
 		float amp = sine_table[data->ptr[z]];
 		out[i] += amp * factor;
 		data->ptr[z] += step;
@@ -127,6 +131,7 @@ void default_turn_on(struct defstate* data, int note){
 			data->note[i] = note;
 			data->on[i] = 1;
 			data->ptr[i] = 0;
+			data->release[i] = 1.0;
 			default_bend_gen(data, i, data->bend);
 			return;
 		}
@@ -134,10 +139,9 @@ void default_turn_on(struct defstate* data, int note){
 }
 
 void default_turn_off(struct defstate* data, int note){
-	int step = note2tablestep(note);
 	int i;
 	for(i=0; i<16; i++){
-		if(data->step[i] == step){
+		if(data->note[i] == note && data->on[i] == 1){
 			data->on[i] = 2;
 			return;
 		}
