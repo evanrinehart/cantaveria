@@ -44,6 +44,8 @@ int note2tablestep(float note){
 	return TABLE_SIZE*f / SAMPLE_RATE;
 }
 
+
+
 float normalize(float note){
 	if(note < -24){
 		return 4;
@@ -80,8 +82,18 @@ void default_gen(struct defstate* data, int z, float out[], int count){
 	int i;
 	for(i=0; i<count; i++){
 		float factor = normalize(data->note[z] + data->bend);
-		out[i] += sine_table[data->ptr[z]] * factor;
-		data->ptr[z] += data->step[z] + data->bendstep[z];
+		int step = data->step[z] + data->bendstep[z];
+		int i1 = data->ptr[z];
+		int i0 = i1 - step;
+		if(data->on[z] == 2){
+			if(sine_table[i1]*sine_table[i0] <= 0){
+				data->on[z] = 0;
+				break;
+			}
+		}
+		float amp = sine_table[data->ptr[z]];
+		out[i] += amp * factor;
+		data->ptr[z] += step;
 		while(data->ptr[z] >= TABLE_SIZE){
 			data->ptr[z] -= TABLE_SIZE;
 		}
@@ -114,6 +126,7 @@ void default_turn_on(struct defstate* data, int note){
 			data->step[i] = step;
 			data->note[i] = note;
 			data->on[i] = 1;
+			data->ptr[i] = 0;
 			default_bend_gen(data, i, data->bend);
 			return;
 		}
@@ -125,7 +138,7 @@ void default_turn_off(struct defstate* data, int note){
 	int i;
 	for(i=0; i<16; i++){
 		if(data->step[i] == step){
-			data->on[i] = 0;
+			data->on[i] = 2;
 			return;
 		}
 	}
