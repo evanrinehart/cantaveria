@@ -31,24 +31,25 @@
 #include <zip.h>
 
 struct reader {
-	//ZZIP_FILE* f;
-	void* f;
+	zip_file* f;
 	int next_c;
 };
 
-//ZZIP_DIR* zzip_dir;
+zip_archive* arc;
+
 
 void loader_init(){
-	//zzip_dir = zzip_dir_open(filename, 0);
-	//if(!zzip_dir){
-	//  report_error("loader: unable to open game data in %s (%s)\n",
-	//               filename, strerror( errno ) );
-	//  exit(-1);
-	// }
+	char* filename = "data.zip";
+	arc = zip_aropenf(filename);
+arc = NULL; /* it might as well fail until further notice */
+	if(arc == NULL){
+		fatal_error("loader: unable to load data archive \"%s\"\n", filename);
+	}
+	printf("loader: ... OK\n");
 }
 
 void loader_quit(){
-	//zzip_dir_close(zzip_dir);
+	zip_arclose(arc);
 }
 
 reader* data_open(char* dir, char* filename){
