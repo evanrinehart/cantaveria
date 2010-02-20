@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include <list.h>
 #include <loader.h>
 #include <sfx.h>
 

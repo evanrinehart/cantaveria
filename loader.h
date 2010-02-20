@@ -34,8 +34,8 @@ int loader_scanline(reader* rd, char* format, ...);
 unsigned char* loader_readall(char* filename, int* size);
 void loader_close(reader* rd);
 
-//list* loader_readdir(char* path);
-//void loader_freedirlist(list* dirs);
+list* loader_readdir(char* path);
+void loader_freedirlist(list* dirs);
 
 /*binary i/o*/
 int read_byte(reader* rd);

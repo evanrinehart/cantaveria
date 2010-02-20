@@ -31,6 +31,7 @@
 #include <stdarg.h>
 #include <math.h>
 
+#include <list.h>
 #include <util.h>
 #include <input.h>
 #include <kernel.h>

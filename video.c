@@ -25,6 +25,7 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 
+#include <list.h>
 #include <root.h>
 #include <util.h>
 #include <input.h>

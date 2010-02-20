@@ -26,6 +26,7 @@
 #include <stdio.h>
 
 
+#include <list.h>
 #include <loader.h>
 #include <util.h>
 #include <zip.h>
@@ -198,7 +199,6 @@ char* read_string(reader* rd){
 
 
 
-/*
 list* loader_readdir(char* path){
 	zip_dir* dir = zip_opendir(arc, path);
 	char* entry = zip_readdir(dir);
@@ -218,6 +218,6 @@ void loader_freedirlist(list* dirs){
 		free(ptr->item);
 		ptr = ptr->next;
 	}
-	list_recycle(dirs);
+	recycle(dirs);
 }
-*/
+

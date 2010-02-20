@@ -23,6 +23,7 @@
 */
 #include <stdlib.h>
 
+#include <list.h>
 #include <root.h>
 #include <video.h>
 #include <audio.h>
