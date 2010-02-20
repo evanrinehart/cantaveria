@@ -26,10 +26,9 @@
 #include <stdio.h>
 
 
-
-
 #include <loader.h>
 #include <util.h>
+#include <zip.h>
 
 struct reader {
 	//ZZIP_FILE* f;
