@@ -44,7 +44,7 @@ void loader_init(){
 	if(arc == NULL){
 		fatal_error("loader: unable to load data archive \"%s\" (%s)\n", filename, zip_geterror());
 	}
-	printf("loader: ... OK\n");
+	boot_msg("loader: ... OK\n");
 }
 
 void loader_quit(){
@@ -65,15 +65,12 @@ reader* loader_open(char* filename){
 	buf[1023] = 0;
 
 	reader* rd = xmalloc(sizeof(reader));
-	rd->next_c = -1;
+	//rd->next_c = -1;
 	//rd->f = zzip_file_open(zzip_dir, buf, 0);
 	//rd->f = zzip_open(buf, 0);
-	rd->f = NULL;
+	rd->f = zip_fopen(arc, filename);
 	if(!rd->f){
-		//report_error("loader: unable to open %s (%s)\n",
-		//           filename, zzip_strerror_of( zzip_dir ) );
-/*		report_error("loader: unable to open %s (%s)\n",
-				filename, strerror( errno ) );*/
+		error_msg("loader: can't open %s (%s)\n", filename, zip_geterror());
 		free(rd);
 		return NULL;
 	}

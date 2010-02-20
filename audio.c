@@ -59,8 +59,7 @@ void audio_init(){
 
 
 	if(SDL_OpenAudio(&want, &got)<0){
-		report_error("sdl: cannot open audio (%s)\n", SDL_GetError());
-		exit(-1);
+		fatal_error("sdl: cannot open audio (%s)\n", SDL_GetError());
 	}
 
 	printf("audio:\n");

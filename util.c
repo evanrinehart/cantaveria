@@ -35,13 +35,6 @@ void report_verror(const char* format, va_list ap){
 	vprintf(format, ap);
 }
 
-void report_error(const char* format, ...){
-	va_list ap;
-	va_start(ap, format);
-	report_verror(format, ap);
-	va_end(ap);
-}
-
 void fatal_error(const char* format, ...){
 	va_list ap;
 	va_start(ap, format);
@@ -50,8 +43,22 @@ void fatal_error(const char* format, ...){
 	exit(-1);
 }
 
+void boot_msg(const char* format, ...){
+	va_list ap;
+	va_start(ap, format);
+	vprintf(format, ap);
+	va_end(ap);
+}
+
+void error_msg(const char* format, ...){
+	va_list ap;
+	va_start(ap, format);
+	report_verror(format, ap);
+	va_end(ap);
+}
+
 void out_of_memory(const char* prefix){
-	report_error("%s: *out of memory*\n", prefix);
+	error_msg("%s: *out of memory*\n", prefix);
 	exit(-2);
 }
 
@@ -172,7 +179,7 @@ void tree_insert(
 			else{ptr->r = node; break;}
 		}
 		else{ /* key already exists */
-			report_error("tree_insert: key already exists\n");
+			error_msg("tree_insert: key already exists\n");
 			break;
 		}
 	}
