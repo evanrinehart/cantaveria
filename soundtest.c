@@ -7,19 +7,22 @@
 #include <seq.h>
 #include <org.h>
 
+
+int main_note = 0;
+
 void play(int note){
-	seq_instant(EV_NOTEON, 0, note, 0);
+	seq_instant(EV_NOTEON, 0, note+main_note, 0);
 }
 
 void stop(int note){
-	seq_instant(EV_NOTEOFF, 0, note, 0);
+	seq_instant(EV_NOTEOFF, 0, note+main_note, 0);
 }
 
 void bend(int amount){
 	seq_instant(EV_PITCHBEND, 0, 0, amount);
 }
 
-int bend_amount = 8192;
+int bend_amount = 64;
 int bend_v = 0;
 
 static void press(input in){
@@ -38,6 +41,8 @@ static void press(input in){
 		case SPECIAL_BUTTON: play(9); break;
 		case L_BUTTON: bend_v = -1; break;
 		case R_BUTTON: bend_v = 1; break;
+		case START_BUTTON: main_note-=12; break;
+		case SELECT_BUTTON: main_note+=12; break;
 		default: break;
 	}
 }

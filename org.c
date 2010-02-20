@@ -40,17 +40,28 @@ int note2tablestep(float note){
 	/* step == 2pif/SAMPLE_RATE * (TABLE_SIZE/PI2) */
 	/*      == f * TABLE_SIZE / SAMPLE_RATE */
 	/*      == f_0 2^(note/12) TABLE_SIZE / SAMPLE_RATE */
-	return 440*pow(2, note/12.0)*TABLE_SIZE / SAMPLE_RATE;
+	float f = 440 * pow(2, note/12.0);
+	return TABLE_SIZE*f / SAMPLE_RATE;
 }
 
-float note2wavestep(int note){
-	/* critical formula for tuning */
-	/* delta(omega*t) == wave increment */
-	/*                == 2 pi f / samp_rate */
-	/*                == 2pi f_0 2^(note/12) / samp_rate */
-	return 440*PI2*pow(2, note/12.0)/SAMPLE_RATE;
+float normalize(float note){
+	if(note < -24){
+		return 4;
+	}
+	if(note < -12){
+		return 2;
+	}
+	if(note < 24){
+		return 1;
+	}
+	if(note < 36){
+		return 0.5;
+	}
+	if(note < 48){
+		return 0.25;
+	}
+	return 0.125;
 }
-
 
 
 
@@ -68,7 +79,8 @@ void default_gen(struct defstate* data, int z, float out[], int count){
 	if(data->on[z] == 0) return;
 	int i;
 	for(i=0; i<count; i++){
-		out[i] += sine_table[data->ptr[z]];
+		float factor = normalize(data->note[z] + data->bend);
+		out[i] += sine_table[data->ptr[z]] * factor;
 		data->ptr[z] += data->step[z] + data->bendstep[z];
 		while(data->ptr[z] >= TABLE_SIZE){
 			data->ptr[z] -= TABLE_SIZE;
@@ -124,7 +136,6 @@ void default_bend(struct defstate* data, int amount){
 	int relative = amount - max/2;
 	float bend = 1.0*relative/max * 4;
 	int i;
-
 	data->bend = bend;
 	for(i=0; i<16; i++){
 		default_bend_gen(data, i, bend);
