@@ -41,9 +41,8 @@ zip_archive* arc;
 void loader_init(){
 	char* filename = "data.zip";
 	arc = zip_aropenf(filename);
-arc = NULL; /* it might as well fail until further notice */
 	if(arc == NULL){
-		fatal_error("loader: unable to load data archive \"%s\"\n", filename);
+		fatal_error("loader: unable to load data archive \"%s\" (%s)\n", filename, zip_geterror());
 	}
 	printf("loader: ... OK\n");
 }

@@ -132,50 +132,65 @@ static int read_short(zip_archive* arc, unsigned* n){
 }
 
 
-static struct record* parse_local_header(zip_archive* arc){
+static int parse_local_header(zip_archive* arc, struct record** result){
 	unsigned L1, L2;
-	struct record* r = malloc(sizeof(struct record));
+	struct record* r;
 	unsigned n;
 	unsigned ddesc;
 
-	if(skip(arc, 4) ||
-	read_short(arc, &r->method) ||
-	skip(arc, 8) ||
-	read_long(arc, &n) ||
-	read_long(arc, &n) ||
-	read_short(arc, &L1) ||
-	read_short(arc, &L2)){
-		free(r); 
-		return NULL;
+set_error("refused to execute code before review");
+return -1;
+	r = malloc(sizeof(struct record));
+	if(r == NULL){
+		out_of_memory();
+		return -1;
+	}
+
+	if(
+		skip(arc, 4) ||
+		read_short(arc, &r->method) ||
+		skip(arc, 8) ||
+		read_long(arc, &n) ||
+		read_long(arc, &n) ||
+		read_short(arc, &L1) ||
+		read_short(arc, &L2)
+	){
+		free(r);
+		return -1;
 	}
 
 	char* filename = malloc(L1+1);
-	if(read_bytes(arc, filename, L1) ||
-	skip(arc, L2) ||
-	skip(arc, r->clen)){
+	if(
+		read_bytes(arc, filename, L1) ||
+		skip(arc, L2) ||
+		skip(arc, r->clen)
+	){
 		free(filename);
 		free(r);
-		return NULL;
+		return -1;
 	}
+
+
 	r->filename = filename;
 	r->offset = arc->ptr + 30 + L1 + L2;
 	arc->ptr += 26 + L1 + L2 + r->clen + ddesc;
 
-	return r;
+	*result = r;
+
+	return 0;
 }
 
 static int build_directory(zip_archive* arc){
-  /* for each local file header
-     create a record, fill in the info
-     if filename ends in /, its a directory
-     else create two copies of the record
-       and place one in the directory record contents */
-
 	while(1){
-		struct record* r = parse_local_header(arc);
+		struct record* r;
+		if(parse_local_header(arc, &r) < 0){
+			return -1;
+		}
+
 		if(r == NULL){ /* end of file chunks */
 			break;
 		}
+
 		set_record(arc, r);
 	}
 
@@ -199,7 +214,10 @@ static void free_directory(zip_archive* arc){
 
 static int fill_inbuf(zip_file* f){
 	int n = f->arc->read(f->arc->userdata, f->inbuf, BUF_SIZE);
-	if(n<0) return -1;
+	if(n<0){
+		set_error("archive i/o error");
+		return -1;
+	}
 	f->strm.next_in = f->inbuf;
 	f->strm.avail_in = n;
 	return n;
@@ -209,14 +227,31 @@ static int inflate_chunk(zip_file* f, byte buf[], int count){
 	f->strm.next_out = buf;
 	f->strm.avail_out = count;
 	int e = inflate(&f->strm, Z_SYNC_FLUSH);
-	if(e==Z_STREAM_END){
+	switch(e){
+	case Z_OK:
+		return count - f->strm.avail_out;
+	case Z_STREAM_END:
 		f->eof = 1;
-		return count - f->strm.avail_out;
+		return count = f->strm.avail_out;
+	case Z_NEED_DICT:
+		set_error("inflate needs a preset dictionary at this point");
+		return -1;
+	case Z_DATA_ERROR:
+		set_error("inflate data error (input corrupted or in wrong format)");
+		return -1;
+	case Z_STREAM_ERROR:
+		set_error("inflate stream error (inconsistent stream structure)");
+		return -1;
+	case Z_BUF_ERROR:
+		set_error("inflate buffer error (probably not enough input data)");
+		return -1;
+	case Z_MEM_ERROR:
+		set_error("inflate out of memory");
+		return -1;
+	default:
+		set_error("inflate error (unknown)");
+		return -1;
 	}
-	if(e==Z_OK){
-		return count - f->strm.avail_out;
-	}
-	return e;
 }
 
 
@@ -309,11 +344,17 @@ void zip_fclose(zip_file* f){
 
 int zip_fread(zip_file* f, byte buf[], int count){
 	int total = 0;
-	int e, n;
+	int n;
 
 	while(count > 0 && !f->eof){
-		e = fill_inbuf(f);
+		if(fill_inbuf(f) < 0){
+			return -1;
+		}
+
 		n = inflate_chunk(f, buf, count);
+		if(n < 0){
+			return -1;
+		}
 		count -= n;
 		total += n;
 	}
