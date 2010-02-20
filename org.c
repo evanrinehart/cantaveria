@@ -49,22 +49,25 @@ int note2tablestep(float note){
 
 
 float normalize(float note){
-	if(note < -24){
-		return 4;
-	}
-	if(note < -12){
-		return 2;
-	}
-	if(note < 24){
-		return 1;
-	}
-	if(note < 36){
-		return 0.5;
-	}
-	if(note < 48){
-		return 0.25;
-	}
-	return 0.125;
+	/* original
+	-inf, -24 : 4
+	-24, -12: 2
+	-12, 24: 1
+	24,36: 0.5
+	36,48: 0.25
+	48, +inf: 0.125*/
+	const float min = -48;
+	const float max = 48;
+	const float left = 4;
+	const float right = 0.125;
+
+	if(note < min) return left;
+	if(note > max) return right;
+
+	float ans = (note - min)*((right-left) / (max-min)) + left;
+	if(ans > 4) return 4;
+	if(ans < 0.125) return 0.125;
+	return ans;
 }
 
 
