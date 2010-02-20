@@ -39,7 +39,6 @@
 #include <loader.h>
 #include <console.h>
 
-#include <game.h>
 
 
 /* graphics data */
@@ -142,81 +141,6 @@ void printf_small(int x, int y, char* format, ...){
 
 
 
-
-void draw_screen(zone* z, int si, int sj){
-
-	struct screen* scr = ZONE_LOOKUP(z,si,sj);
-	if(!scr) return;
-	int G = z->tileset_gfx;
-	int x = si*20*16 - camera.x;
-	int y = sj*15*16 - camera.y;
-	int i,j;
-
-	for(j=0; j < 15; j++){
-		for(i=0; i < 20; i++){
-			int id = scr->tiles[i][j];
-			if(id != 0){
-				int X = (id&0xf)<<4;
-				int Y = (id>>4)<<4;
-				draw_gfx(G, x, y, X, Y, 16, 16);
-			}
-			else{
-				int X = x+camera.x/2;
-				const int WW = 512;
-				if((X%WW)+16 >= WW){
-					int W = WW - (X%WW);
-
-					draw_gfx(
-							z->bg_gfx,
-							x, y,
-							X, y,
-							W, 16
-						);
-
-					X %= WW;
-					draw_gfx(
-							z->bg_gfx,
-							x+W, y,
-							0, y,
-							16-W, 16
-						);
-				}
-				else {
-					X %= WW;
-					draw_gfx(
-							z->bg_gfx,
-							x, y,
-							X, y,
-							16, 16
-						);
-				}
-
-
-			}
-			x += 16;
-		}
-		x -= 320;
-		y += 16;
-	}
-
-}
-
-void draw_stage(){
-	int i;
-	zone* z = game.current_zone;
-	int si = game.si;
-	int sj = game.sj;
-
-	int table[8][2] = {
-		{ 1,0},{ 1, 1},{0, 1},{-1, 1},
-		{-1,0},{-1,-1},{0,-1},{ 1,-1}
-	};
-
-	draw_screen(z, si, sj);
-	for(i=0; i<8; i++){
-		draw_screen(z, si+table[i][0], sj+table[i][1]);
-	}
-}
 
 void draw_sprites(){
 	int i;

@@ -25,7 +25,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <zzip/lib.h>
 
 
 
@@ -33,12 +32,12 @@
 #include <util.h>
 
 struct reader {
-	ZZIP_FILE* f;
+	//ZZIP_FILE* f;
+	void* f;
 	int next_c;
 };
 
-ZZIP_DIR* zzip_dir;
-int errno;
+//ZZIP_DIR* zzip_dir;
 
 void loader_init(){
 	//zzip_dir = zzip_dir_open(filename, 0);
@@ -67,15 +66,15 @@ reader* loader_open(char* filename){
 	buf[1023] = 0;
 
 	reader* rd = xmalloc(sizeof(reader));
-	//printf("loader: %s\n",buf);
 	rd->next_c = -1;
 	//rd->f = zzip_file_open(zzip_dir, buf, 0);
-	rd->f = zzip_open(buf, 0);
+	//rd->f = zzip_open(buf, 0);
+	rd->f = NULL;
 	if(!rd->f){
 		//report_error("loader: unable to open %s (%s)\n",
 		//           filename, zzip_strerror_of( zzip_dir ) );
-		report_error("loader: unable to open %s (%s)\n",
-				filename, strerror( errno ) );
+/*		report_error("loader: unable to open %s (%s)\n",
+				filename, strerror( errno ) );*/
 		free(rd);
 		return NULL;
 	}
@@ -85,24 +84,26 @@ reader* loader_open(char* filename){
 
 void loader_close(reader* rd){
 	//zzip_file_close(rd->f);
-	zzip_fclose(rd->f);
+	//zzip_fclose(rd->f);
 	free(rd);
 }
 
 
 int loader_read(reader* rd, void* buf, int count){
-	return zzip_read(rd->f, buf, count);
+	//return zzip_read(rd->f, buf, count);
+	return -1;
 }
 
 unsigned char* loader_readall(char* filename, int* size){
-	ZZIP_STAT zs;
+	//ZZIP_STAT zs;
 	reader* rd = loader_open(filename);
 	if(!rd) return NULL;
-	if(zzip_fstat(rd->f, &zs) < 0){
+	/*if(zzip_fstat(rd->f, &zs) < 0){
 		report_error("loader: stat error on %s\n",filename);
 		return NULL;
-	}
-	int N = zs.st_size;
+	}*/
+	//int N = zs.st_size;
+	int N = 0;
 	unsigned char* buf = xmalloc(N);
 	loader_read(rd,buf,N);
 	if(size) *size = N;
@@ -112,6 +113,9 @@ unsigned char* loader_readall(char* filename, int* size){
 
 
 int loader_scanline(reader* rd, char* format, ...){
+	return -1;
+/* not sure whats going on here, but probably needs rethinking */
+
 
 	char buf[256];
 	int i=0;
@@ -163,21 +167,21 @@ int loader_scanline(reader* rd, char* format, ...){
 
 
 /*binary i/o*/
-unsigned char read_byte(reader* rd){
-	unsigned char c;
+int read_byte(reader* rd){
+	unsigned char c = 0;
 	loader_read(rd, &c, 1);
 	return c;
 }
 
-short read_short(reader* rd){
-	unsigned char c[2];
+int read_short(reader* rd){
+	unsigned char c[2] = {0,0};
 	loader_read(rd, c+0, 1);
 	loader_read(rd, c+1, 1);
 	return (c[0]<<8) | c[1];
 }
 
 int read_int(reader* rd){
-	unsigned char c[4];
+	unsigned char c[4] = {0,0,0,0};
 	loader_read(rd, c+0, 1);
 	loader_read(rd, c+1, 1);
 	loader_read(rd, c+2, 1);
@@ -198,6 +202,8 @@ char* read_string(reader* rd){
 
 
 char** loader_readdir(char* path){
+	return NULL;
+/*
 	char buf[1024] = "data/";
 	strcat(buf, path);
 
@@ -228,7 +234,7 @@ char** loader_readdir(char* path){
 		}
 	}
 
-	return res;
+	return res;*/
 }
 
 void loader_freedirlist(char** list){

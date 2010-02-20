@@ -2,12 +2,12 @@ PROJECT = cantaveria
 CFLAGS = -I. -g -O2 -Wall -Wextra -Wno-unused-parameter
 OBJ = video.o audio.o input.o kernel.o \
       loader.o graphics.o sfx.o text.o console.o \
-      intro.o title.o splash.o game.o \
+      intro.o title.o splash.o iotest.o \
       synth.o seq.o dsp.o \
       rng.o util.o
 
 CC = gcc
-LIBS = -lSDL -lGL -lzzip -lm
+LIBS = -lSDL -lGL -lm
 
 $(PROJECT): main.o $(OBJ) data.zip
 	$(CC) -o $(PROJECT) $(LIBS) main.o $(OBJ)

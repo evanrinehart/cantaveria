@@ -26,8 +26,8 @@ void loader_init();
 void loader_quit();
 
 reader* data_open(char* dir, char* filename);
-
 reader* loader_open(char* filename);
+
 int loader_read(reader* rd, void* buf, int count);
 int loader_scanline(reader* rd, char* format, ...);
 unsigned char* loader_readall(char* filename, int* size);
@@ -37,7 +37,7 @@ char** loader_readdir(char* path);
 void loader_freedirlist(char** list);
 
 /*binary i/o*/
-unsigned char read_byte(reader* rd);
-short read_short(reader* rd);
+int read_byte(reader* rd);
+int read_short(reader* rd);
 int read_int(reader* rd);
 char* read_string(reader* rd);
