@@ -29,12 +29,13 @@ reader* data_open(char* dir, char* filename);
 reader* loader_open(char* filename);
 
 int loader_read(reader* rd, void* buf, int count);
+int loader_readline(reader* rd, char* buf, int size);
 int loader_scanline(reader* rd, char* format, ...);
 unsigned char* loader_readall(char* filename, int* size);
 void loader_close(reader* rd);
 
-char** loader_readdir(char* path);
-void loader_freedirlist(char** list);
+//list* loader_readdir(char* path);
+//void loader_freedirlist(list* dirs);
 
 /*binary i/o*/
 int read_byte(reader* rd);

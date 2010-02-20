@@ -65,9 +65,6 @@ reader* loader_open(char* filename){
 	buf[1023] = 0;
 
 	reader* rd = xmalloc(sizeof(reader));
-	//rd->next_c = -1;
-	//rd->f = zzip_file_open(zzip_dir, buf, 0);
-	//rd->f = zzip_open(buf, 0);
 	rd->f = zip_fopen(arc, filename);
 	if(!rd->f){
 		error_msg("loader: can't open %s (%s)\n", filename, zip_geterror());
@@ -79,81 +76,86 @@ reader* loader_open(char* filename){
 
 
 void loader_close(reader* rd){
-	//zzip_file_close(rd->f);
-	//zzip_fclose(rd->f);
+	zip_fclose(rd->f);
 	free(rd);
 }
 
 
 int loader_read(reader* rd, void* buf, int count){
-	//return zzip_read(rd->f, buf, count);
-	return -1;
+	return zip_fread(rd->f, buf, count);
 }
 
 unsigned char* loader_readall(char* filename, int* size){
-	//ZZIP_STAT zs;
 	reader* rd = loader_open(filename);
 	if(!rd) return NULL;
-	/*if(zzip_fstat(rd->f, &zs) < 0){
-		report_error("loader: stat error on %s\n",filename);
-		return NULL;
-	}*/
-	//int N = zs.st_size;
-	int N = 0;
-	unsigned char* buf = xmalloc(N);
-	loader_read(rd,buf,N);
-	if(size) *size = N;
-	loader_close(rd);
-	return buf;
+
+	/* somehow read all of rd into a buffer and return it */
+
+	return NULL;
 }
 
+int loader_readline(reader* rd, char* buf, int size){
+	char c;
+	int i = 0;
+	int n;
+
+	while(i < size){
+		n = loader_read(rd, &c, 1);
+		if(n == 0){ /* end of file */
+			buf[i] = '\0';
+			return 0;
+		}
+
+		if(n < 0){
+			error_msg("loader_readline: %s\n", zip_geterror());
+			return -1;
+		}
+
+		if(c == '\r'){ /* CRLF ? */
+			n = loader_read(rd, &c, 1);
+			if(n == 0){ /* file ended with CR... well take it */
+				buf[i] = '\0';
+				return 0;
+			}
+
+			if(n < 0){
+				error_msg("loader_readline: %s\n", zip_geterror());
+				return -1;
+			}
+
+			if(c != '\n'){
+				error_msg("loader_readline: I cannot read lines ending in CR and not CRLF\n");
+				return -1;
+			}
+
+			buf[i] = '\0';
+			return 0;
+		}
+
+		if(c == '\n'){ /* LF */
+			buf[i] = '\0';
+			return 0;
+		}
+
+		buf[i] = c;
+		i += 1;
+	}
+
+	error_msg("loader_readline: buffer size too small\n");
+	return 0;
+}
 
 int loader_scanline(reader* rd, char* format, ...){
-	return -1;
-/* not sure whats going on here, but probably needs rethinking */
-
-
-	char buf[256];
-	int i=0;
-	while(i<255){
-		char c;
-
-		/* get next character */
-		if(rd->next_c != -1){
-			c = rd->next_c;
-			rd->next_c = -1;
-		}
-		else{
-			int n = loader_read(rd, &c, 1);
-			if(n==0){
-				break;
-			}
-		}
-
-		/* see if it is a end of line sequence */
-		if(c=='\r'){
-			int n = loader_read(rd, &c, 1);
-			if(n==0){
-				break;
-			}
-			if(c!='\n'){
-				rd->next_c = c;
-			}
-			break;
-		}
-		else if(c=='\n'){
-			break;
-		}
-
-		buf[i++] = c;
-	}
-	buf[i]='\0';
-
+	char buf[256] = "";
 	va_list ap;
+	int ret;
+
+	if(loader_readline(rd, buf, 256) < 0){
+		return -1;
+	}
+
 	va_start(ap, format);
-
-	int ret = vsscanf(buf,format,ap);
-
+	ret = vsscanf(buf,format,ap);
 	va_end(ap);
 
 	return ret;
@@ -196,47 +198,26 @@ char* read_string(reader* rd){
 
 
 
-
-char** loader_readdir(char* path){
-	return NULL;
 /*
-	char buf[1024] = "data/";
-	strcat(buf, path);
+list* loader_readdir(char* path){
+	zip_dir* dir = zip_opendir(arc, path);
+	char* entry = zip_readdir(dir);
+	list* dirs = empty();
 
-	ZZIP_DIR* dir = zzip_opendir(buf);
-
-	int N = 0;
-	ZZIP_DIRENT* ent;
-	while( (ent = zzip_readdir(dir)) ) N++;
-
-	char** res = xmalloc((N+1)*sizeof(char*));
-
-	zzip_closedir(dir);
-	dir = zzip_opendir(buf);
-
-	int i = 0;
-	while(i < N+1){
-		ent = zzip_readdir(dir);
-		if(!ent){
-			res[i] = NULL;
-			i++;
-		}
-		else if(ent->d_name[0] == '.'){
-		}
-		else{
-			res[i] = xmalloc(strlen(ent->d_name)+1);
-			strcpy(res[i], ent->d_name);
-			i++;
-		}
+	while(entry){
+		push(dirs, entry);
+		entry = zip_readdir(dir);
 	}
 
-	return res;*/
+	return dirs;
 }
 
-void loader_freedirlist(char** list){
-	int i;
-	for(i=0; list[i]; i++){
-		free(list[i]);
+void loader_freedirlist(list* dirs){
+	list* ptr = dirs->next;
+	while(ptr){
+		free(ptr->item);
+		ptr = ptr->next;
 	}
+	list_recycle(dirs);
 }
-
+*/
