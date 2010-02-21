@@ -168,6 +168,35 @@ void print_record(struct record* rec){
 	printf("(%s, %uB, %uB, +0x%x, method %u)\n", rec->filename, rec->clen, rec->ulen, rec->offset, rec->method);
 }
 
+char* method_str(unsigned method){
+	switch(method){
+		case 0: return "uncompressed";
+		case 1: return "shrink";
+		case 2:
+		case 3:
+		case 4:
+		case 5: return "reduce";
+		case 6: return "implode";
+		case 8: return "deflate";
+		case 9: return "deflate64";
+		case 10: return "IBM TERSE (old)";
+		case 12: return "bzip2";
+		case 14: return "lzma";
+		case 18: return "IBM TERSE (new)";
+		case 19: return "IBM LZ77 z";
+		case 97: return "WavPack";
+		case 98: return "PPMd";
+		default: return "unknown";
+	}
+}
+
+void unrecognized_method(unsigned method){
+	char buf[64];
+	snprintf(buf, 64, "unrecognized compression method '%s'", method_str(method));
+	buf[63] = '\0';
+	set_error(buf);
+}
+
 static void set_record(zip_archive* arc, char* filename, int ulen, int clen, int offset, int method){
 	struct record* rec = make_record(filename, ulen, clen, offset, method);
 	hash_insert(arc, rec);
@@ -415,6 +444,7 @@ zip_archive* zip_aropenf(char* filename){
 }
 
 zip_archive* zip_aropen(zip_reader* rd){
+	int i;
 	zip_archive* arc = malloc(sizeof(zip_archive));
 	if(arc == NULL){
 		out_of_memory();
@@ -426,7 +456,6 @@ zip_archive* zip_aropen(zip_reader* rd){
 	arc->userdata = rd->userdata;
 	arc->ptr = 0;
 
-	int i;
 	for(i=0; i<TABLE_SIZE; i++){
 		arc->table[i] = NULL;
 	}
@@ -447,6 +476,22 @@ void zip_arclose(zip_archive* arc){
 }
 
 zip_file* zip_fopen(zip_archive* arc, char* path){
+	struct record* r = get_record(arc, path);
+	if(r == NULL){
+		set_error("file not found");
+		return NULL;
+	}
+
+	if(r->filename[strlen(r->filename)-1] == '/'){
+		set_error("cannot open directory");
+		return NULL;
+	}
+
+	if(r->method != 8){
+		unrecognized_method(r->method);
+		return NULL;
+	}
+
 	zip_file* f = malloc(sizeof(zip_file));
 	if(f == NULL){
 		out_of_memory();
@@ -462,12 +507,6 @@ zip_file* zip_fopen(zip_archive* arc, char* path){
 	f->strm.avail_in = 0;
 	f->strm.next_out = NULL;
 	f->strm.avail_out = 0;
-
-	struct record* r = get_record(arc, path);
-	if(r == NULL){
-		set_error("file not found");
-		return NULL;
-	}
 	f->clen = r->clen;
 	f->cptr = 0;
 	f->ulen = r->ulen;
