@@ -209,7 +209,8 @@ char* read_string(reader* rd){
 list* loader_readdir(char* path){
 	zip_dir* dir = zip_opendir(arc, path);
 	if(dir == NULL){
-		error_msg("loader_readdir: unable to open (%s)\n", zip_geterror());
+		error_msg("loader_readdir: unable to open '%s' (%s)\n",
+			path, zip_geterror());
 		return NULL;
 	}
 

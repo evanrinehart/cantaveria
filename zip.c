@@ -145,7 +145,7 @@ static void contents_insert(struct record* item, struct record* dir){
 	item->next = dir->contents;
 	dir->contents = item;
 }
-
+/*
 static void print_hash(zip_archive* arc){
 	int i;
 	struct record* rec;
@@ -168,7 +168,7 @@ static void print_zipfile(zip_file* f){
 static void print_record(struct record* rec){
 	printf("(%s, %uB, %uB, +0x%x, method %u)\n", rec->filename, rec->clen, rec->ulen, rec->offset, rec->method);
 }
-
+*/
 static char* method_str(unsigned method){
 	switch(method){
 		case 0: return "uncompressed";
