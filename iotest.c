@@ -22,12 +22,15 @@
    evanrinehart@gmail.com
 */
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <root.h>
 #include <input.h>
 #include <console.h>
 #include <transfer.h>
+#include <list.h>
+#include <loader.h>
 
 
 static void press(input in){
@@ -48,5 +51,6 @@ static void draw(){
 
 
 void setup_inner(){
+	console_clear();
 	set_handler(update, draw, press, release);
 }

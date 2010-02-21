@@ -142,7 +142,8 @@ static char* baseof(char* path){
 }
 
 static void contents_insert(struct record* item, struct record* dir){
-	
+	item->next = dir->contents;
+	dir->contents = item;
 }
 
 static void print_hash(zip_archive* arc){
@@ -198,18 +199,19 @@ static void unrecognized_method(unsigned method){
 }
 
 static void set_record(zip_archive* arc, char* filename, int ulen, int clen, int offset, int method){
+	struct record* rec;
+	struct record* dir;
+	char* dirname;
 	if(get_record(arc, filename)) return;
-
-	struct record* rec = make_record(filename, ulen, clen, offset, method);
+	rec = make_record(filename, ulen, clen, offset, method);
 	hash_insert(arc, rec);
-/*
-	char* dirname = baseof(filename);
-	if(!get_record(arc, dirname)){
+	dirname = baseof(filename);
+	if(dirname == NULL) return;
+	if(get_record(arc, dirname) == NULL)
 		set_record(arc, dirname, 0, 0, 0, 0);
-	}
-	struct record* dir = get_record(arc, dirname);
-	contents_insert(dir, copy_record(rec));
-*/
+	dir = get_record(arc, dirname);
+	contents_insert(copy_record(rec), dir);
+	free(dirname);
 }
 
 
@@ -576,6 +578,11 @@ int zip_feof(zip_file* f){
 
 
 zip_dir* zip_opendir(zip_archive* arc, char* path){
+	if(path[strlen(path)-1] != '/'){
+		set_error("path does not specify directory");
+		return NULL;
+	}
+
 	zip_dir* dir = malloc(sizeof(zip_dir));
 	if(dir == NULL){
 		out_of_memory();
@@ -585,6 +592,7 @@ zip_dir* zip_opendir(zip_archive* arc, char* path){
 	struct record* r = get_record(arc, path);
 	if(r == NULL){
 		set_error("file not found");
+		free(dir);
 		return NULL;
 	}
 

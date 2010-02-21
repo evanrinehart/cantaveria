@@ -208,23 +208,22 @@ char* read_string(reader* rd){
 
 list* loader_readdir(char* path){
 	zip_dir* dir = zip_opendir(arc, path);
-	char* entry = zip_readdir(dir);
-	list* dirs = empty();
+	if(dir == NULL){
+		error_msg("loader_readdir: unable to open (%s)\n", zip_geterror());
+		return NULL;
+	}
 
-	while(entry){
-		push(dirs, entry);
-		entry = zip_readdir(dir);
+	list* dirs = empty();
+	while(1){
+		char* entry = zip_readdir(dir);
+		if(entry == NULL) break;
+		else push(dirs, entry);
 	}
 
 	return dirs;
 }
 
 void loader_freedirlist(list* dirs){
-	list* ptr = dirs->next;
-	while(ptr){
-		free(ptr->item);
-		ptr = ptr->next;
-	}
 	recycle(dirs);
 }
 
