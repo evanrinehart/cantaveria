@@ -56,7 +56,7 @@ struct zip_dir {
 };
 
 
-char errbuf[EBUF_SIZE] = "";
+static char errbuf[EBUF_SIZE] = "";
 
 
 /* internal routines */
@@ -95,11 +95,11 @@ static struct record* make_record(char* filename, int ulen, int clen, int offset
 	r->contents = NULL;
 	return r;
 }
-/*
+
 static struct record* copy_record(struct record* rec){
-	return make_record(rec->filename, rec->ulen, rec->clen, rec->offset);
+	return make_record(rec->filename, rec->ulen, rec->clen, rec->offset, rec->method);
 }
-*/
+
 static struct record* get_record(zip_archive* arc, char* filename){
 	int i = hash(filename) % TABLE_SIZE;
 	struct record* ptr = arc->table[i];
@@ -129,7 +129,7 @@ static void hash_insert(zip_archive* arc, struct record* rec){
 	rec->next = ptr;
 	arc->table[i] = rec;
 }
-/*
+
 static char* baseof(char* path){
 	if(strlen(path) < 2) return NULL;
 	int ptr = strlen(path) - 2;
@@ -144,8 +144,8 @@ static char* baseof(char* path){
 static void contents_insert(struct record* item, struct record* dir){
 	
 }
-*/
-void print_hash(zip_archive* arc){
+
+static void print_hash(zip_archive* arc){
 	int i;
 	struct record* rec;
 	for(i=0; i<TABLE_SIZE; i++){
@@ -159,16 +159,16 @@ void print_hash(zip_archive* arc){
 	}
 }
 
-void print_zipfile(zip_file* f){
+static void print_zipfile(zip_file* f){
 	printf("(+0x%x, %u/%uB, cptr +0x%x, uptr %u)\n",
 	f->offset, f->clen, f->ulen, f->cptr, f->uptr);
 }
 
-void print_record(struct record* rec){
+static void print_record(struct record* rec){
 	printf("(%s, %uB, %uB, +0x%x, method %u)\n", rec->filename, rec->clen, rec->ulen, rec->offset, rec->method);
 }
 
-char* method_str(unsigned method){
+static char* method_str(unsigned method){
 	switch(method){
 		case 0: return "uncompressed";
 		case 1: return "shrink";
@@ -190,7 +190,7 @@ char* method_str(unsigned method){
 	}
 }
 
-void unrecognized_method(unsigned method){
+static void unrecognized_method(unsigned method){
 	char buf[64];
 	snprintf(buf, 64, "unrecognized compression method '%s'", method_str(method));
 	buf[63] = '\0';
@@ -198,8 +198,18 @@ void unrecognized_method(unsigned method){
 }
 
 static void set_record(zip_archive* arc, char* filename, int ulen, int clen, int offset, int method){
+	if(get_record(arc, filename)) return;
+
 	struct record* rec = make_record(filename, ulen, clen, offset, method);
 	hash_insert(arc, rec);
+/*
+	char* dirname = baseof(filename);
+	if(!get_record(arc, dirname)){
+		set_record(arc, dirname, 0, 0, 0, 0);
+	}
+	struct record* dir = get_record(arc, dirname);
+	contents_insert(dir, copy_record(rec));
+*/
 }
 
 
@@ -320,16 +330,9 @@ static int parse_local_header(zip_archive* arc){
 static int build_directory(zip_archive* arc){
 	while(1){
 		unsigned sig;
-		if(read_long(arc, &sig) < 0){
-			return -1;
-		}
-
-		if(sig == 0x04034b50){
-			parse_local_header(arc);
-		}
-		else{
-			break;
-		}
+		if(read_long(arc, &sig) < 0) return -1;
+		else if(sig == 0x04034b50) parse_local_header(arc);
+		else break;
 	}
 
 	return 0;
@@ -339,6 +342,7 @@ static int build_directory(zip_archive* arc){
 static void free_directory_r(struct record* r){
 	if(r->contents) free_directory_r(r->contents);
 	if(r->next) free_directory_r(r->next);
+	free(r->filename);
 	free(r);
 }
 
