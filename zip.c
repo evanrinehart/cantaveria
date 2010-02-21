@@ -17,16 +17,16 @@ This software comes with no warranty.
 
 #include <zip.h>
 
-#define BUF_SIZE 256
+#define BUF_SIZE 1024
 #define TABLE_SIZE 128
 #define EBUF_SIZE 256
 
 struct record {
 	char* filename;
-	unsigned method;
 	unsigned offset;
 	unsigned clen;
 	unsigned ulen;
+	unsigned method;
 	struct record* next;
 	struct record* contents;
 };
@@ -43,8 +43,9 @@ struct zip_archive {
 
 struct zip_file {
 	zip_archive* arc;
-	int ptr;
-	int len;
+	int cptr, clen;
+	int uptr, ulen;
+	int offset;
 	byte inbuf[BUF_SIZE];
 	int eof;
 	z_stream strm;
@@ -79,28 +80,97 @@ static unsigned long hash(char* str){
 	return hash;
 }
 
+
+static struct record* make_record(char* filename, int ulen, int clen, int offset, int method){
+	struct record* r = malloc(sizeof(struct record));
+	if(r == NULL){
+		return NULL;
+	}
+	r->filename = strdup(filename);
+	r->clen = clen;
+	r->ulen = ulen;
+	r->offset = offset;
+	r->method = method;
+	r->next = NULL;
+	r->contents = NULL;
+	return r;
+}
+/*
+static struct record* copy_record(struct record* rec){
+	return make_record(rec->filename, rec->ulen, rec->clen, rec->offset);
+}
+*/
 static struct record* get_record(zip_archive* arc, char* filename){
 	int i = hash(filename) % TABLE_SIZE;
 	struct record* ptr = arc->table[i];
 	while(ptr){
-		if(strcmp(filename, ptr->filename)) return ptr;
+		if(strcmp(filename, ptr->filename) == 0){
+			return ptr;
+		}
 		ptr = ptr->next;
 	}
 	return NULL;
 }
 
-static void set_record(zip_archive* arc, char* filename, int ulen, int clen, int offset){
-	/* if record exists, exit */
+static void hash_insert(zip_archive* arc, struct record* rec){
+	int i = hash(rec->filename) % TABLE_SIZE;
+	struct record* ptr = arc->table[i];
 
-	/* make record, insert it */
+	if(get_record(arc, rec->filename)){
+		printf("cant insert %s twice\n", rec->filename);
+		return;
+	}
 
-	/* extract directory name */
+	if(ptr == NULL){
+		arc->table[i] = rec;
+		return;
+	}
 
-	/* set_record on that */
+	rec->next = ptr;
+	arc->table[i] = rec;
+}
+/*
+static char* baseof(char* path){
+	if(strlen(path) < 2) return NULL;
+	int ptr = strlen(path) - 2;
+	while(ptr > 0 && path[ptr] != '/') ptr--;
+	if(ptr == 0) return NULL;
+	char* result = malloc(ptr+5);
+	memcpy(result, path, ptr+1);
+	result[ptr+1] = '\0';
+	return result;
+}
 
-	/* get_record on that */
+static void contents_insert(struct record* item, struct record* dir){
+	
+}
+*/
+void print_hash(zip_archive* arc){
+	int i;
+	struct record* rec;
+	for(i=0; i<TABLE_SIZE; i++){
+		printf("table[%d]: ",i);
+		rec = arc->table[i];
+		while(rec){
+			printf("%p ", rec);
+			rec = rec->next;
+		}
+		printf("\n");
+	}
+}
 
-	/* insert record into dir contents */
+void print_zipfile(zip_file* f){
+	printf("(+0x%x, %u/%uB, cptr +0x%x, uptr %u)\n",
+	f->offset, f->clen, f->ulen, f->cptr, f->uptr);
+}
+
+void print_record(struct record* rec){
+	printf("(%s, %uB, %uB, +0x%x, method %u)\n", rec->filename, rec->clen, rec->ulen, rec->offset, rec->method);
+}
+
+static void set_record(zip_archive* arc, char* filename, int ulen, int clen, int offset, int method){
+	struct record* rec = make_record(filename, ulen, clen, offset, method);
+	hash_insert(arc, rec);
 }
 
 
@@ -178,14 +248,15 @@ static int read_short(zip_archive* arc, unsigned* n){
 
 static int parse_local_header(zip_archive* arc){
 	unsigned L1, L2;
-	unsigned ddesc;
 	char* filename;
 	unsigned method;
 	unsigned clen, ulen;
 	unsigned offset;
+	unsigned flags;
 
 	if(
-		skip(arc, 4) ||
+		skip(arc, 2) ||
+		read_short(arc, &flags) ||
 		read_short(arc, &method) ||
 		skip(arc, 8) ||
 		read_long(arc, &clen) ||
@@ -208,11 +279,11 @@ static int parse_local_header(zip_archive* arc){
 
 	filename[L1] = '\0';
 	offset = arc->ptr + 30 + L1 + L2;
-	arc->ptr += 26 + L1 + L2 + clen + ddesc;
+	arc->ptr = offset + clen + (flags&(1<<3) ? 12 : 0);
 
-printf("header: %s clen=%d ulen=%d offset=%08x\n", filename, clen, ulen, offset);
+	set_record(arc, filename, ulen, clen, offset, method);
 
-	set_record(arc, filename, clen, ulen, offset);
+	free(filename);
 
 	return 0;
 }
@@ -251,14 +322,34 @@ static void free_directory(zip_archive* arc){
 
 
 static int fill_inbuf(zip_file* f){
-	int n = f->arc->read(f->arc->userdata, f->inbuf, BUF_SIZE);
-	if(n<0){
-		set_error("archive i/o error");
+	int nread, nwant;
+	int nleftstream, nleftbuffer;
+
+	/* shift everything left */
+	memmove(f->inbuf, f->strm.next_in, f->strm.avail_in);
+	f->strm.next_in = f->inbuf;
+
+	/* fill the buffer */
+	if(f->arc->seek(f->arc->userdata, f->offset+f->cptr, SEEK_SET) < 0){
+		set_error("archive seek error");
 		return -1;
 	}
-	f->strm.next_in = f->inbuf;
-	f->strm.avail_in = n;
-	return n;
+
+	/* you want the minimum of
+	a) bytes needed to fill the buffer and
+	b) bytes left in the compressed stream */
+	nleftstream = f->clen - f->cptr;
+	nleftbuffer = BUF_SIZE - f->strm.avail_in;
+	nwant = nleftstream < nleftbuffer ? nleftstream : nleftbuffer;
+	nread = f->arc->read(f->arc->userdata, f->inbuf+f->strm.avail_in, nwant);
+	if(nread < 0){
+		set_error("archive read error");
+		return -1;
+	}
+
+	f->cptr += nread;
+	f->strm.avail_in += nread;
+	return nread;
 }
 
 static int inflate_chunk(zip_file* f, byte buf[], int count){
@@ -270,7 +361,9 @@ static int inflate_chunk(zip_file* f, byte buf[], int count){
 		return count - f->strm.avail_out;
 	case Z_STREAM_END:
 		f->eof = 1;
-		return count = f->strm.avail_out;
+		return count - f->strm.avail_out;
+	case Z_BUF_ERROR:
+		return 0;
 	case Z_NEED_DICT:
 		set_error("inflate needs a preset dictionary at this point");
 		return -1;
@@ -279,9 +372,6 @@ static int inflate_chunk(zip_file* f, byte buf[], int count){
 		return -1;
 	case Z_STREAM_ERROR:
 		set_error("inflate stream error (inconsistent stream structure)");
-		return -1;
-	case Z_BUF_ERROR:
-		set_error("inflate buffer error (probably not enough input data)");
 		return -1;
 	case Z_MEM_ERROR:
 		set_error("inflate out of memory");
@@ -334,6 +424,7 @@ zip_archive* zip_aropen(zip_reader* rd){
 	arc->seek = rd->seek;
 	arc->close = rd->close;
 	arc->userdata = rd->userdata;
+	arc->ptr = 0;
 
 	int i;
 	for(i=0; i<TABLE_SIZE; i++){
@@ -354,8 +445,6 @@ void zip_arclose(zip_archive* arc){
 	free_directory(arc);
 	free(arc);
 }
-
-
 
 zip_file* zip_fopen(zip_archive* arc, char* path){
 	zip_file* f = malloc(sizeof(zip_file));
@@ -379,31 +468,58 @@ zip_file* zip_fopen(zip_archive* arc, char* path){
 		set_error("file not found");
 		return NULL;
 	}
-	f->len = r->clen;
-	f->ptr = r->offset;
+	f->clen = r->clen;
+	f->cptr = 0;
+	f->ulen = r->ulen;
+	f->uptr = 0;
+	f->offset = r->offset;
+
+	int e = inflateInit2(&f->strm, -15);
+	if(e != Z_OK){
+		switch(e){
+			case Z_MEM_ERROR: set_error("memory"); break;
+			case Z_STREAM_ERROR: set_error("stream"); break;
+		}
+		free(f);
+		return NULL;
+	}
 
 	return f;
 }
 
 void zip_fclose(zip_file* f){
+	inflateEnd(&f->strm);
 	free(f);
 }
 
 int zip_fread(zip_file* f, byte buf[], int count){
 	int total = 0;
 	int n;
+	int sentry = 0; /* annoying */
 
 	while(count > 0 && !f->eof){
-		if(fill_inbuf(f) < 0){
-			return -1;
+		n = inflate_chunk(f, buf+total, count);
+
+		if(n < 0) return -1;
+		if(n == 0){
+			/* need more input */
+			if(fill_inbuf(f) < 0) return -1;
+			if(sentry == 1){
+				set_error("unable to satisfy buffer requirements");
+				return -1;
+			}
+			sentry = 1;
+			continue;
 		}
 
-		n = inflate_chunk(f, buf, count);
-		if(n < 0){
-			return -1;
-		}
+		sentry = 0;
 		count -= n;
 		total += n;
+
+		f->uptr += n;
+		if(f->uptr == f->ulen){
+			f->eof = 1;
+		}
 	}
 
 	return total;

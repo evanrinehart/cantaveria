@@ -166,11 +166,16 @@ SDL_Surface* load_pixmap(char* filename){
 
 	reader* rd = loader_open(path);
 	if(!rd){
+		error_msg("load_pixmap: error opening file\n");
 		return NULL;
 	}
 
 	unsigned char header[18];
-	loader_read(rd, header, 18);
+	if(loader_read(rd, header, 18) < 0){
+		error_msg("load_pixmap: error reading pixmap header\n");
+		loader_close(rd);
+		return NULL;
+	}
 
 	int w = header[12] + (header[13]<<8);
 	int h = header[14] + (header[15]<<8);
@@ -181,7 +186,12 @@ SDL_Surface* load_pixmap(char* filename){
 	if(!surf){
 		out_of_memory("load_pixmap");
 	}
-	loader_read(rd, surf->pixels, w*(bpp/8)*h);
+	if(loader_read(rd, surf->pixels, w*(bpp/8)*h) < 0){
+		error_msg("load_pixmap: error reading pixmap data\n");
+		loader_close(rd);
+		SDL_FreeSurface(surf);
+		return NULL;
+	}
 	loader_close(rd);
 
 	return surf;

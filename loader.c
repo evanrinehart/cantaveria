@@ -68,7 +68,7 @@ reader* loader_open(char* filename){
 	reader* rd = xmalloc(sizeof(reader));
 	rd->f = zip_fopen(arc, filename);
 	if(!rd->f){
-		error_msg("loader: can't open %s (%s)\n", filename, zip_geterror());
+		error_msg("loader_open: can't open %s (%s)\n", filename, zip_geterror());
 		free(rd);
 		return NULL;
 	}
@@ -83,7 +83,12 @@ void loader_close(reader* rd){
 
 
 int loader_read(reader* rd, void* buf, int count){
-	return zip_fread(rd->f, buf, count);
+	int n = zip_fread(rd->f, buf, count);
+	if(n < 0){
+		error_msg("loader_read: %s\n", zip_geterror());
+		return -1;
+	}
+	return n;
 }
 
 unsigned char* loader_readall(char* filename, int* size){
@@ -92,6 +97,8 @@ unsigned char* loader_readall(char* filename, int* size){
 
 	/* somehow read all of rd into a buffer and return it */
 
+/* FIXME */
+	error_msg("loader_readall: not yet implemented\n");
 	return NULL;
 }
 

@@ -15,10 +15,10 @@ typedef struct zip_dir zip_dir;
 typedef unsigned char byte;
 
 typedef struct {
-  int (*read)(void* userdata, byte buf[], int count);
-  int (*seek)(void* userdata, int offset, int whence);
-  void (*close)(void* userdata);
-  void* userdata;
+	int (*read)(void* userdata, byte buf[], int count);
+	int (*seek)(void* userdata, int offset, int whence);
+	void (*close)(void* userdata);
+	void* userdata;
 } zip_reader;
 
 zip_archive* zip_aropenf(char* filename);
