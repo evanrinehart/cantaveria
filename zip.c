@@ -89,109 +89,147 @@ static struct record* get_record(zip_archive* arc, char* filename){
 	return NULL;
 }
 
-static void set_record(zip_archive* arc, struct record* r){
-	/* check if r is a dir or file */
+static void set_record(zip_archive* arc, char* filename, int ulen, int clen, int offset){
+	/* if record exists, exit */
 
-	/* if file, find dir. insert into dir. insert file */
-	/* if dir, find dir or create, insert into parent */
-	int i = hash(r->filename) % TABLE_SIZE;
-	if(arc->table[i] == NULL)
-		arc->table[i] = r;
-	else{
-		struct record* ptr = arc->table[i];
-		while(ptr->next){
-			ptr = ptr->next;
-		}
-		ptr->next = r;
-	}
+	/* make record, insert it */
+
+	/* extract directory name */
+
+	/* set_record on that */
+
+	/* get_record on that */
+
+	/* insert record into dir contents */
 }
 
+
+
+static int read_bytes(zip_archive* arc, void* buf, int count){
+	return arc->read(arc->userdata, buf, count);
+}
+
+static int read_chunk(zip_archive* arc, void* buf, int count){
+	int n = read_bytes(arc, buf, count);
+	if(n < 0){
+		set_error("read error");
+		return -1;
+	}
+	if(n < count){
+		set_error("not enough data");
+		return -1;
+	}
+	return 0;
+}
 
 static int skip(zip_archive* arc, int count){
-	return -1; /* FIXME */
-}
+	char buf[256];
+	int n;
+	int total = 0;
 
-static int read_bytes(zip_archive* arc, char* buf, int count){
-	return -1;
+	while(total != count){
+		int diff = count - total;
+		int chunk = diff < 256 ? diff : 256;
+		n = read_bytes(arc, buf, chunk);
+		if(n < 0){
+			set_error("read error");
+			return -1;
+		}
+		if(n < chunk){
+			set_error("not enough data");
+			return -1;
+		}
+		total += n;
+	}
+
+	return 0;
 }
 
 static int read_long(zip_archive* arc, unsigned* n){
 	unsigned char b[4];
-	int e = arc->read(arc->userdata, b, 4);
-	if(e < 0){return -1;}
+	int e = read_bytes(arc, b, 4);
+	if(e < 0){
+		set_error("read error");
+		return -1;
+	}
+	if(e < 4){
+		set_error("not enough data");
+		return -1;
+	}
 	*n = b[0] | (b[1]<<8) | (b[2]<<16) | (b[3]<<24);
 	return 0;
 }
 
 static int read_short(zip_archive* arc, unsigned* n){
 	unsigned char b[2];
-	int e = arc->read(arc->userdata, b, 2);
-	if(e < 0){return -1;}
+	int e = read_bytes(arc, b, 2);
+	if(e < 0){
+		set_error("read error");
+		return -1;
+	}
+	if(e < 2){
+		set_error("not enough data");
+		return -1;
+	}
 	*n = b[0] | (b[1]<<8);
 	return 0;
 }
 
 
-static int parse_local_header(zip_archive* arc, struct record** result){
+static int parse_local_header(zip_archive* arc){
 	unsigned L1, L2;
-	struct record* r;
-	unsigned n;
 	unsigned ddesc;
-
-set_error("refused to execute code before review");
-return -1;
-	r = malloc(sizeof(struct record));
-	if(r == NULL){
-		out_of_memory();
-		return -1;
-	}
+	char* filename;
+	unsigned method;
+	unsigned clen, ulen;
+	unsigned offset;
 
 	if(
 		skip(arc, 4) ||
-		read_short(arc, &r->method) ||
+		read_short(arc, &method) ||
 		skip(arc, 8) ||
-		read_long(arc, &n) ||
-		read_long(arc, &n) ||
+		read_long(arc, &clen) ||
+		read_long(arc, &ulen) ||
 		read_short(arc, &L1) ||
 		read_short(arc, &L2)
 	){
-		free(r);
 		return -1;
 	}
 
-	char* filename = malloc(L1+1);
+	filename = malloc(L1+1);
 	if(
-		read_bytes(arc, filename, L1) ||
+		read_chunk(arc, filename, L1) ||
 		skip(arc, L2) ||
-		skip(arc, r->clen)
+		skip(arc, clen)
 	){
 		free(filename);
-		free(r);
 		return -1;
 	}
 
+	filename[L1] = '\0';
+	offset = arc->ptr + 30 + L1 + L2;
+	arc->ptr += 26 + L1 + L2 + clen + ddesc;
 
-	r->filename = filename;
-	r->offset = arc->ptr + 30 + L1 + L2;
-	arc->ptr += 26 + L1 + L2 + r->clen + ddesc;
+printf("header: %s clen=%d ulen=%d offset=%08x\n", filename, clen, ulen, offset);
 
-	*result = r;
+	set_record(arc, filename, clen, ulen, offset);
 
 	return 0;
 }
 
 static int build_directory(zip_archive* arc){
 	while(1){
-		struct record* r;
-		if(parse_local_header(arc, &r) < 0){
+		unsigned sig;
+		if(read_long(arc, &sig) < 0){
 			return -1;
 		}
 
-		if(r == NULL){ /* end of file chunks */
+		if(sig == 0x04034b50){
+			parse_local_header(arc);
+		}
+		else{
 			break;
 		}
-
-		set_record(arc, r);
 	}
 
 	return 0;
@@ -297,6 +335,11 @@ zip_archive* zip_aropen(zip_reader* rd){
 	arc->close = rd->close;
 	arc->userdata = rd->userdata;
 
+	int i;
+	for(i=0; i<TABLE_SIZE; i++){
+		arc->table[i] = NULL;
+	}
+
 	if(build_directory(arc) < 0){
 		free_directory(arc);
 		free(arc);
@@ -331,9 +374,13 @@ zip_file* zip_fopen(zip_archive* arc, char* path){
 	f->strm.next_out = NULL;
 	f->strm.avail_out = 0;
 
-	/*TODO: get file offset and location in arc */
-	f->len = 0;
-	f->ptr = 0;
+	struct record* r = get_record(arc, path);
+	if(r == NULL){
+		set_error("file not found");
+		return NULL;
+	}
+	f->len = r->clen;
+	f->ptr = r->offset;
 
 	return f;
 }
