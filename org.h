@@ -33,6 +33,7 @@ typedef struct {
 
 enum instrument_name {
 ORG_DEFAULT,
+ORG_KARPLUS,
 ORG_UNKNOWN
 };
 

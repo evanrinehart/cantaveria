@@ -10,16 +10,18 @@
 
 int main_note = 0;
 
+#define CHANNEL 1
+
 void play(int note){
-	seq_instant(EV_NOTEON, 0, note+main_note, 0);
+	seq_instant(EV_NOTEON, CHANNEL, note+main_note, 0);
 }
 
 void stop(int note){
-	seq_instant(EV_NOTEOFF, 0, note+main_note, 0);
+	seq_instant(EV_NOTEOFF, CHANNEL, note+main_note, 0);
 }
 
 void bend(int amount){
-	seq_instant(EV_PITCHBEND, 0, 0, amount);
+	seq_instant(EV_PITCHBEND, CHANNEL, 0, amount);
 }
 
 int bend_amount = 64;

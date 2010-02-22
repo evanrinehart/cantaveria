@@ -208,6 +208,74 @@ instrument make_default(){
 
 
 
+/* ORG_KARPLUS: karplus strong string synth */
+
+#define KARF 1024
+
+struct karplus {
+	float buf[KARF];
+	float ptr;
+	float length;
+	float note;
+	float bend;
+	float step;
+	float offset;
+};
+
+void karplus_mix(void* ud, float out[], int count){
+	int i;
+	struct karplus* data = ud;
+	for(i=0; i<count; i++){
+		int L = data->length;
+		int z1 = floor(data->ptr);
+		int z0 = z1-1;
+		if(z1 >= L) z1 -= L;
+		if(z1 < 0) z1 += L;
+		if(z0 >= L) z0 -= L;
+		if(z0 < 0) z0 += L;
+		//out[i] = linterp(data->buf, data->ptr) * 6;
+		out[i] = data->buf[z0] * 10;
+		data->buf[z1] = (data->buf[z1] + data->buf[z0]) / 2.015;
+		data->ptr += 1;
+		if(data->ptr >= L){
+			data->ptr -= L;
+		}
+	}
+}
+
+void karplus_control(void* ud, int type, int val1, int val2, int val){
+	struct karplus* data = ud;
+	int i;
+	float f, L;
+	switch(type){
+		case EV_NOTEON:
+			data->note = val1;
+			f = 440*(pow(2, val1/12.0));
+			L = SAMPLE_RATE * 1.0 / f;
+			data->length = L*2;
+			for(i=0; i<100; i++){
+				data->buf[i] += ((double)rand())/RAND_MAX - 0.5;
+			}
+			return;
+//		case EV_NOTEOFF: default_turn_off(data, val1); break;
+//		case EV_PITCHBEND: default_bend(data, val); break;
+	}
+}
+
+
+void karplus_cleanup(void* data){ free(data); }
+
+instrument make_karplus(){
+	instrument ins;
+	struct karplus* data = malloc(sizeof(struct karplus));
+	data->length = 512;
+	ins.mix = karplus_mix;
+	ins.control = karplus_control;
+	ins.cleanup = karplus_cleanup;
+	ins.data = data;
+	return ins;
+}
+
 
 
 
@@ -215,6 +283,7 @@ instrument make_default(){
 instrument load_instrument(enum instrument_name name){
 	switch(name){
 		case ORG_DEFAULT: return make_default();
+		case ORG_KARPLUS: return make_karplus();
 //		case ORG_COOL: return make_cool();
 		default: return make_default();
 	}

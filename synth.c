@@ -183,7 +183,8 @@ void synth_init(){
 	printf("  synth: ... ");
 
 	channels[0] = make_channel_from_instrument(ORG_DEFAULT);
-	for(i=1; i<16; i++){
+	channels[1] = make_channel_from_instrument(ORG_KARPLUS);
+	for(i=2; i<16; i++){
 		channels[i] = make_dummy_channel();
 	}
 
