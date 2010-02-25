@@ -33,7 +33,6 @@
 int tick;
 int terr;
 int loop_start;
-int loop_end;
 int looping;
 
 //event lists
@@ -42,21 +41,26 @@ list* blank_events;
 list* immediate_events;
 
 list* next_event;
+list* event_after_loop;
 
 
 
+void advance_event(event* now){
+	if(now->type == 0x100 && looping){
+		next_event = event_after_loop;
+		tick = loop_start;
+	}
+	else{
+		next_event = next_event->next;
+	}
+}
 
-
-event* dequeue_event(int max){
-	int N = 2646000;
-	int D = 46080;
-
+event* dequeue_event(){
 	if(next_event == NULL) return NULL;
 
-	/* FIXME, needs looping */
 	event* e = next_event->item;
-	if(e->tick-tick < max * D / N){
-		next_event = next_event->next;
+	if(e->tick <= tick){
+		advance_event(e);
 		return e;
 	}
 	else{
@@ -88,7 +92,7 @@ event* seq_advance(int max, int* used){
 	terr %= D;
 
 	*used = u;
-	return dequeue_event(max);
+	return dequeue_event();
 }
 
 
@@ -167,6 +171,11 @@ void seq_init(){
 	enqueue_event(384*5, 0x90, 1, 2, 0);
 	enqueue_event(384*6, 0x90, 1, 4, 0);
 	enqueue_event(384*7, 0x90, 1, 0, 0);
+	enqueue_event(384*8, 0x100, 0, 0, 0);
+
+	looping = 1;
+	loop_start = 0;
+	event_after_loop = sequence->next;
 
 	next_event = sequence->next;
 	printf("OK\n");

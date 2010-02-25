@@ -177,6 +177,11 @@ void synth_generate(float left[], float right[], int samples){
 		control(e);
 		i += used;
 		remaining -= used;
+		if(e == NULL && remaining > 0){
+			printf("synth: sequencer error. no event was returned, but unable to advance beyond %d samples (out of %d)\n", i, samples);
+			printf("synth: i will continue, but this caused a tick/sample drift of %d samples\n", remaining);
+			break;
+		}
 	};
 }
 
