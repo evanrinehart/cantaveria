@@ -268,7 +268,12 @@ void karplus_cleanup(void* data){ free(data); }
 instrument make_karplus(){
 	instrument ins;
 	struct karplus* data = malloc(sizeof(struct karplus));
+	int i;
 	data->length = 512;
+	data->ptr = 0;
+	for(i=0; i<KARF; i++){
+		data->buf[i] = 0;
+	}
 	ins.mix = karplus_mix;
 	ins.control = karplus_control;
 	ins.cleanup = karplus_cleanup;

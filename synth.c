@@ -145,6 +145,7 @@ void generate(float left[], float right[], int count){
 }
 
 void control(event* e){
+	if(e == NULL) return;
 	int chan = e->chan;
 	int type = e->type;
 	int val1 = e->val1;
@@ -164,17 +165,19 @@ void immediate_control(){
 
 void synth_generate(float left[], float right[], int samples){
 	int i=0;
+	int remaining = samples;
+	int used = 0;
+	event* e = NULL;
 
 	immediate_control();
 
-	for(;;){
-		int next = seq_lookahead(samples);
-		generate(left+i, right+i, next-i);
-		i = next;
-		if(i == samples) break;
-		control(seq_get_event());
+	while(remaining > 0){
+		e = seq_advance(remaining, &used);
+		generate(left+i, right+i, used);
+		control(e);
+		i += used;
+		remaining -= used;
 	};
-//	seq_advance(samples);
 }
 
 

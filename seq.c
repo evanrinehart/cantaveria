@@ -41,99 +41,55 @@ list* sequence;
 list* blank_events;
 list* immediate_events;
 
-event* next_event;
+list* next_event;
 
 
 
 
-void seq_init(){
-	printf("  sequencer: ... ");
 
-	blank_events = empty();
-	immediate_events = empty();
-	sequence = empty();
+event* dequeue_event(int max){
+	int N = 2646000;
+	int D = 46080;
 
-	printf("OK\n");
-}
+	if(next_event == NULL) return NULL;
 
-int would_loop(){
-	return looping && next_event->tick > loop_end;
-}
-
-event* get_event_after(int tick){
-	return NULL;
-}
-
-event* get_next_event(){
-	if(would_loop()){
-		return get_event_after(loop_start);
+	/* FIXME, needs looping */
+	event* e = next_event->item;
+	if(e->tick-tick < max * D / N){
+		next_event = next_event->next;
+		return e;
 	}
-	else {
-		return next_event;
+	else{
+		return NULL;
 	}
 }
 
+int samples_until_next(int max){
+	int N = 2646000;
+	int D = 46080;
 
+	if(next_event == NULL) return max;
 
-int get_next_tick(){
-	event* e = get_next_event();
-	return e ? e->tick : -1;
+	event* e = next_event->item;
+	if(e->tick - tick > max * D / N) return max;
+
+	int d = (e->tick-tick)*N/D;
+	return d < max ? d : max;
 }
 
-int distance_to_next(){
-	int next_tick = get_next_tick();
-	if(next_tick < 0) return -1;
+event* seq_advance(int max, int* used){
+	int N = 46080;     // bpm * tpb
+	int D = 2646000;   // srate * 60
 
-	return would_loop() ?
-		next_tick - loop_start + loop_end - tick :
-		next_tick - tick;
+	int u = samples_until_next(max);
 
-}
-
-
-/* below are three functions that the synth uses to
-control the sequencer. it finds control events, advances
-the event pointer, and finally advances the tick count */
-
-//returns samples from now an event will occur
-//if no event will occur in sbound samples, returns -1
-int seq_lookahead(int sbound){
-return sbound;
-
-	int tbound = sbound*46080/1323000;
-	int T = distance_to_next();
-	if(T < 0) return -1;
-	return T > tbound ?
-		sbound :
-		T*1 + 0;
-}
-
-//returns the next event that would play
-//if there is no such event, returns NULL
-event* seq_get_event(){
-return NULL;
-	//needs to handle looping
-}
-
-
-//advance the tick position
-void seq_advance(int samples){
-return;
-	// 46080 1/1323000 ticks = 1 sample
-	int N = 46080 * samples;
-	int D = 1323000;
-	terr += N;
-	tick += N/D + terr/D;
+	terr += N * u;
+	tick += terr/D;
 	terr %= D;
-//needs to handle looping
+
+	*used = u;
+	return dequeue_event(max);
 }
-
-
-/* IMPORTANT
-it might well be simpler to implement looping as
-an event which exists at the loop point after all
-other events that occur at that time which sends
-the sequence to a specific tick */
 
 
 
@@ -184,4 +140,34 @@ event* seq_get_immediate(){
 	else{
 		return NULL;
 	}
+}
+
+
+
+void enqueue_event(int when, int type, int chan, int val1, int val2){
+	event* e = make_event(type, chan, val1, val2);
+	e->tick = when;
+	append(sequence, e);
+}
+
+void seq_init(){
+	printf("  sequencer: ... ");
+
+	blank_events = empty();
+	immediate_events = empty();
+	sequence = empty();
+
+
+
+	enqueue_event(0, 0x90, 1, 0, 0);
+	enqueue_event(384, 0x90, 1, 2, 0);
+	enqueue_event(384*2, 0x90, 1, 4, 0);
+	enqueue_event(384*3, 0x90, 1, 0, 0);
+	enqueue_event(384*4, 0x90, 1, 0, 0);
+	enqueue_event(384*5, 0x90, 1, 2, 0);
+	enqueue_event(384*6, 0x90, 1, 4, 0);
+	enqueue_event(384*7, 0x90, 1, 0, 0);
+
+	next_event = sequence->next;
+	printf("OK\n");
 }

@@ -38,15 +38,12 @@ struct event {
 	int chan;
 	int val1;
 	int val2;
-	struct event* next;
 };
 
 void seq_init();
 
 /* use these from audio thread */
-int seq_lookahead(int samples);
-event* seq_get_event();
-void seq_advance(int samples);
+event* seq_advance(int samples, int* used);
 
 
 /* use these from main thread */
