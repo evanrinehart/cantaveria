@@ -22,24 +22,40 @@
    evanrinehart@gmail.com
 */
 
+#include <music.h>
+
+mus_id current_id = MUS_NOTHING;
+
+int music_load(char* filename, mus_id id){
+	return -1;
+}
+
+void music_unload(mus_id id){
+
+}
+
+mus_id music_current(){
+	return current_id;
+}
+
+void music_play(mus_id id){
+
+}
 
 
+void music_stop(mus_id id){
 
-typedef struct event event;
-struct event {
-	int tick;
-	int type;
-	int chan;
-	int val1;
-	int val2;
-};
+}
 
-void seq_init();
+void music_pause(){
 
-/* use these from audio thread */
-event* seq_advance(int samples, int* used);
-event* seq_get_immediate();
+}
 
-/***/
-void seq_instant(int type, int chan, int val1, int val2);
+void music_volume(int precent){
+
+}
+
+void music_fadeout(int seconds){
+
+}
 

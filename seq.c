@@ -148,11 +148,22 @@ event* seq_get_immediate(){
 
 
 
-void enqueue_event(int when, int type, int chan, int val1, int val2){
+void seq_enqueue(int when, int type, int chan, int val1, int val2){
 	event* e = make_event(type, chan, val1, val2);
 	e->tick = when;
 	append(sequence, e);
 }
+
+void seq_clear(){
+	list* ptr = sequence->next;
+	while(ptr){
+		free(ptr->item);
+		ptr = ptr->next;
+	}
+	recycle(sequence);
+	sequence = empty();
+}
+
 
 void seq_init(){
 	printf("  sequencer: ... ");
@@ -163,23 +174,23 @@ void seq_init(){
 
 
 
-	enqueue_event(0, 0x90, 1, 0, 0);
-	enqueue_event(384, 0x80, 1, 0, 0);
-	enqueue_event(384, 0x90, 1, 2, 0);
-	enqueue_event(384*2, 0x80, 1, 2, 0);
-	enqueue_event(384*2, 0x90, 1, 4, 0);
-	enqueue_event(384*3, 0x80, 1, 4, 0);
-	enqueue_event(384*3, 0x90, 1, 0, 0);
-	enqueue_event(384*4, 0x80, 1, 0, 0);
-	enqueue_event(384*4, 0x90, 1, 0, 0);
-	enqueue_event(384*5, 0x80, 1, 0, 0);
-	enqueue_event(384*5, 0x90, 1, 2, 0);
-	enqueue_event(384*6, 0x80, 1, 2, 0);
-	enqueue_event(384*6, 0x90, 1, 4, 0);
-	enqueue_event(384*7, 0x80, 1, 4, 0);
-	enqueue_event(384*7, 0x90, 1, 0, 0);
-	enqueue_event(384*8, 0x80, 1, 0, 0);
-	enqueue_event(384*8, 0x100, 0, 0, 0);
+	seq_enqueue(0, 0x90, 1, 0, 0);
+	seq_enqueue(384, 0x80, 1, 0, 0);
+	seq_enqueue(384, 0x90, 1, 2, 0);
+	seq_enqueue(384*2, 0x80, 1, 2, 0);
+	seq_enqueue(384*2, 0x90, 1, 4, 0);
+	seq_enqueue(384*3, 0x80, 1, 4, 0);
+	seq_enqueue(384*3, 0x90, 1, 0, 0);
+	seq_enqueue(384*4, 0x80, 1, 0, 0);
+	seq_enqueue(384*4, 0x90, 1, 0, 0);
+	seq_enqueue(384*5, 0x80, 1, 0, 0);
+	seq_enqueue(384*5, 0x90, 1, 2, 0);
+	seq_enqueue(384*6, 0x80, 1, 2, 0);
+	seq_enqueue(384*6, 0x90, 1, 4, 0);
+	seq_enqueue(384*7, 0x80, 1, 4, 0);
+	seq_enqueue(384*7, 0x90, 1, 0, 0);
+	seq_enqueue(384*8, 0x80, 1, 0, 0);
+	seq_enqueue(384*8, 0x100, 0, 0, 0);
 
 	looping = 1;
 	loop_start = 0;
