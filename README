@@ -1,0 +1,35 @@
+temporary readme with code layout annotations
+
+main.c - init + main loop
+kernel.c - core dispatcher
+
+video.c - low level graphics and principle backend stuff
+audio.c - low level audio backend stuff
+input.c - low level input source
+
+sfx.c - sound effect interface
+music.c - music player interface
+seq.c - sequencer for music
+synth.c - generates sound
+org.c - instruments
+dsp.c - dsp routines
+
+util.c - reporting and other utility functions
+rng.c - random number generator
+
+graphics.c - drawing api exposed to game modules
+text.c - drawing nice variable width text
+stage.c - the static platforms
+entity.c - 
+
+loader.c - reading from game data files
+zip.c - zip file reader
+midi.c - midi file reader
+
+splash.c - game modules
+intro.c
+title.c
+inner.c
+iotest.c
+soundtest.c
+
