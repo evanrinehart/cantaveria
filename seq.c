@@ -164,13 +164,21 @@ void seq_init(){
 
 
 	enqueue_event(0, 0x90, 1, 0, 0);
+	enqueue_event(384, 0x80, 1, 0, 0);
 	enqueue_event(384, 0x90, 1, 2, 0);
+	enqueue_event(384*2, 0x80, 1, 2, 0);
 	enqueue_event(384*2, 0x90, 1, 4, 0);
+	enqueue_event(384*3, 0x80, 1, 4, 0);
 	enqueue_event(384*3, 0x90, 1, 0, 0);
+	enqueue_event(384*4, 0x80, 1, 0, 0);
 	enqueue_event(384*4, 0x90, 1, 0, 0);
+	enqueue_event(384*5, 0x80, 1, 0, 0);
 	enqueue_event(384*5, 0x90, 1, 2, 0);
+	enqueue_event(384*6, 0x80, 1, 2, 0);
 	enqueue_event(384*6, 0x90, 1, 4, 0);
+	enqueue_event(384*7, 0x80, 1, 4, 0);
 	enqueue_event(384*7, 0x90, 1, 0, 0);
+	enqueue_event(384*8, 0x80, 1, 0, 0);
 	enqueue_event(384*8, 0x100, 0, 0, 0);
 
 	looping = 1;

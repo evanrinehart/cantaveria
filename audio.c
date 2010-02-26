@@ -79,11 +79,10 @@ void audio_init(){
 	}
 
 	printf("audio:\n");
-	printf("  spec:\n");
-	printf("    sample rate = %d\n", got.freq);
-	printf("    channels = %d\n", got.channels);
-	printf("    samples = %d\n", got.samples);
-	printf("    format = %s\n", sample_format_str(got.format));
+	printf("  sample rate: %d\n", got.freq);
+	printf("  channels: %d\n", got.channels);
+	printf("  samples: %d\n", got.samples);
+	printf("  format: %s\n", sample_format_str(got.format));
 
 	if(got.format != AUDIO_S16){
 		printf("    WARNING: audio format not AUDIO_S16 :(\n");
