@@ -25,32 +25,31 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <zzip/lib.h>
 
-
-
+#include <list.h>
 #include <loader.h>
 #include <util.h>
+#include <zip.h>
 
 struct reader {
-	ZZIP_FILE* f;
+	zip_file* f;
 	int next_c;
 };
 
-ZZIP_DIR* zzip_dir;
-int errno;
+zip_archive* arc;
+
 
 void loader_init(){
-	//zzip_dir = zzip_dir_open(filename, 0);
-	//if(!zzip_dir){
-	//  report_error("loader: unable to open game data in %s (%s)\n",
-	//               filename, strerror( errno ) );
-	//  exit(-1);
-	// }
+	char* filename = "data.zip";
+	arc = zip_aropenf(filename);
+	if(arc == NULL){
+		fatal_error("loader: unable to load data archive \"%s\" (%s)\n", filename, zip_geterror());
+	}
+	boot_msg("loader: ... OK\n");
 }
 
 void loader_quit(){
-	//zzip_dir_close(zzip_dir);
+	zip_arclose(arc);
 }
 
 reader* data_open(char* dir, char* filename){
@@ -67,15 +66,9 @@ reader* loader_open(char* filename){
 	buf[1023] = 0;
 
 	reader* rd = xmalloc(sizeof(reader));
-	//printf("loader: %s\n",buf);
-	rd->next_c = -1;
-	//rd->f = zzip_file_open(zzip_dir, buf, 0);
-	rd->f = zzip_open(buf, 0);
+	rd->f = zip_fopen(arc, filename);
 	if(!rd->f){
-		//report_error("loader: unable to open %s (%s)\n",
-		//           filename, zzip_strerror_of( zzip_dir ) );
-		report_error("loader: unable to open %s (%s)\n",
-				filename, strerror( errno ) );
+		error_msg("loader_open: can't open %s (%s)\n", filename, zip_geterror());
 		free(rd);
 		return NULL;
 	}
@@ -84,76 +77,93 @@ reader* loader_open(char* filename){
 
 
 void loader_close(reader* rd){
-	//zzip_file_close(rd->f);
-	zzip_fclose(rd->f);
+	zip_fclose(rd->f);
 	free(rd);
 }
 
 
 int loader_read(reader* rd, void* buf, int count){
-	return zzip_read(rd->f, buf, count);
+	int n = zip_fread(rd->f, buf, count);
+	if(n < 0){
+		error_msg("loader_read: %s\n", zip_geterror());
+		return -1;
+	}
+	return n;
 }
 
 unsigned char* loader_readall(char* filename, int* size){
-	ZZIP_STAT zs;
 	reader* rd = loader_open(filename);
 	if(!rd) return NULL;
-	if(zzip_fstat(rd->f, &zs) < 0){
-		report_error("loader: stat error on %s\n",filename);
-		return NULL;
-	}
-	int N = zs.st_size;
-	unsigned char* buf = xmalloc(N);
-	loader_read(rd,buf,N);
-	if(size) *size = N;
-	loader_close(rd);
-	return buf;
+
+	/* somehow read all of rd into a buffer and return it */
+
+/* FIXME */
+	error_msg("loader_readall: not yet implemented\n");
+	return NULL;
 }
 
+int loader_readline(reader* rd, char* buf, int size){
+	char c;
+	int i = 0;
+	int n;
+
+	while(i < size){
+		n = loader_read(rd, &c, 1);
+		if(n == 0){ /* end of file */
+			buf[i] = '\0';
+			return 0;
+		}
+
+		if(n < 0){
+			error_msg("loader_readline: %s\n", zip_geterror());
+			return -1;
+		}
+
+		if(c == '\r'){ /* CRLF ? */
+			n = loader_read(rd, &c, 1);
+			if(n == 0){ /* file ended with CR... well take it */
+				buf[i] = '\0';
+				return 0;
+			}
+
+			if(n < 0){
+				error_msg("loader_readline: %s\n", zip_geterror());
+				return -1;
+			}
+
+			if(c != '\n'){
+				error_msg("loader_readline: I cannot read lines ending in CR and not CRLF\n");
+				return -1;
+			}
+
+			buf[i] = '\0';
+			return 0;
+		}
+
+		if(c == '\n'){ /* LF */
+			buf[i] = '\0';
+			return 0;
+		}
+
+		buf[i] = c;
+		i += 1;
+	}
+
+	error_msg("loader_readline: buffer size too small\n");
+	return 0;
+}
 
 int loader_scanline(reader* rd, char* format, ...){
-
-	char buf[256];
-	int i=0;
-	while(i<255){
-		char c;
-
-		/* get next character */
-		if(rd->next_c != -1){
-			c = rd->next_c;
-			rd->next_c = -1;
-		}
-		else{
-			int n = loader_read(rd, &c, 1);
-			if(n==0){
-				break;
-			}
-		}
-
-		/* see if it is a end of line sequence */
-		if(c=='\r'){
-			int n = loader_read(rd, &c, 1);
-			if(n==0){
-				break;
-			}
-			if(c!='\n'){
-				rd->next_c = c;
-			}
-			break;
-		}
-		else if(c=='\n'){
-			break;
-		}
-
-		buf[i++] = c;
-	}
-	buf[i]='\0';
-
+	char buf[256] = "";
 	va_list ap;
+	int ret;
+
+	if(loader_readline(rd, buf, 256) < 0){
+		return -1;
+	}
+
 	va_start(ap, format);
-
-	int ret = vsscanf(buf,format,ap);
-
+	ret = vsscanf(buf,format,ap);
 	va_end(ap);
 
 	return ret;
@@ -163,21 +173,21 @@ int loader_scanline(reader* rd, char* format, ...){
 
 
 /*binary i/o*/
-unsigned char read_byte(reader* rd){
-	unsigned char c;
+int read_byte(reader* rd){
+	unsigned char c = 0;
 	loader_read(rd, &c, 1);
 	return c;
 }
 
-short read_short(reader* rd){
-	unsigned char c[2];
+int read_short(reader* rd){
+	unsigned char c[2] = {0,0};
 	loader_read(rd, c+0, 1);
 	loader_read(rd, c+1, 1);
 	return (c[0]<<8) | c[1];
 }
 
 int read_int(reader* rd){
-	unsigned char c[4];
+	unsigned char c[4] = {0,0,0,0};
 	loader_read(rd, c+0, 1);
 	loader_read(rd, c+1, 1);
 	loader_read(rd, c+2, 1);
@@ -196,45 +206,25 @@ char* read_string(reader* rd){
 
 
 
-
-char** loader_readdir(char* path){
-	char buf[1024] = "data/";
-	strcat(buf, path);
-
-	ZZIP_DIR* dir = zzip_opendir(buf);
-
-	int N = 0;
-	ZZIP_DIRENT* ent;
-	while( (ent = zzip_readdir(dir)) ) N++;
-
-	char** res = xmalloc((N+1)*sizeof(char*));
-
-	zzip_closedir(dir);
-	dir = zzip_opendir(buf);
-
-	int i = 0;
-	while(i < N+1){
-		ent = zzip_readdir(dir);
-		if(!ent){
-			res[i] = NULL;
-			i++;
-		}
-		else if(ent->d_name[0] == '.'){
-		}
-		else{
-			res[i] = xmalloc(strlen(ent->d_name)+1);
-			strcpy(res[i], ent->d_name);
-			i++;
-		}
+list* loader_readdir(char* path){
+	zip_dir* dir = zip_opendir(arc, path);
+	if(dir == NULL){
+		error_msg("loader_readdir: unable to open '%s' (%s)\n",
+			path, zip_geterror());
+		return NULL;
 	}
 
-	return res;
+	list* dirs = empty();
+	while(1){
+		char* entry = zip_readdir(dir);
+		if(entry == NULL) break;
+		else push(dirs, entry);
+	}
+
+	return dirs;
 }
 
-void loader_freedirlist(char** list){
-	int i;
-	for(i=0; list[i]; i++){
-		free(list[i]);
-	}
+void loader_freedirlist(list* dirs){
+	recycle(dirs);
 }
 

@@ -25,6 +25,7 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 
+#include <list.h>
 #include <root.h>
 #include <util.h>
 #include <input.h>
@@ -165,22 +166,32 @@ SDL_Surface* load_pixmap(char* filename){
 
 	reader* rd = loader_open(path);
 	if(!rd){
+		error_msg("load_pixmap: error opening file\n");
 		return NULL;
 	}
 
 	unsigned char header[18];
-	loader_read(rd, header, 18);
+	if(loader_read(rd, header, 18) < 0){
+		error_msg("load_pixmap: error reading pixmap header\n");
+		loader_close(rd);
+		return NULL;
+	}
 
 	int w = header[12] + (header[13]<<8);
 	int h = header[14] + (header[15]<<8);
 	int bpp = header[16];
-	printf("load_pixmap: %s has bpp=%d\n",filename, bpp);
+	//printf("load_pixmap: %s has bpp=%d\n",filename, bpp);
 	SDL_Surface* surf = SDL_CreateRGBSurface(0,w,h,bpp,
 			0x00ff0000,0x0000ff00,0x000000ff,0xff000000);
 	if(!surf){
 		out_of_memory("load_pixmap");
 	}
-	loader_read(rd, surf->pixels, w*(bpp/8)*h);
+	if(loader_read(rd, surf->pixels, w*(bpp/8)*h) < 0){
+		error_msg("load_pixmap: error reading pixmap data\n");
+		loader_close(rd);
+		SDL_FreeSurface(surf);
+		return NULL;
+	}
 	loader_close(rd);
 
 	return surf;
@@ -197,7 +208,7 @@ int load_gfx(char* filename){
 
 	}
 
-	printf("loading %s\n",filename);
+	//printf("loading %s\n",filename);
 
 
 	for(i=0; i<gfx_count; i++){/*check for already loaded gfx*/
@@ -334,7 +345,7 @@ int gfx_height(int gfxid){
 
 void sdl_init(){
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK)==-1){
-		report_error("sdl: %s\n",SDL_GetError());
+		error_msg("sdl: %s\n",SDL_GetError());
 		exit(-1);
 	}
 }
@@ -344,22 +355,22 @@ void sdl_init(){
 
 void print_version(){
 	char message[] =
-		"This program is distributed under the terms of the GNU General\n"
-		"Public License (v2) and comes with ABSOLUTELY NO WARRANTY.\n\n"
+"This program is distributed under the terms of the GNU General\n"
+"Public License (v2) and comes with ABSOLUTELY NO WARRANTY.\n\n"
 
-		"Send questions, comments, and bugs to evanrinehart@gmail.com\n\n"
+"Send questions, comments, and bugs to evanrinehart@gmail.com\n\n"
 
-		"Send money to:\n"
-		"1850 Claiborne St\n"
-		"Mandeville, LA 70448\n"
-		"United States of America\n\n"
+"Send money to:\n"
+"1850 Claiborne St\n"
+"Mandeville, LA 70448\n"
+"United States of America\n\n"
 
-		"Thanks! :)\n"
-		;
+"Thanks! :)\n"
+;
 
 	printf("Cantaveria (v%d.%d)\n", VERSION_MAJOR, VERSION_MINOR);
-	puts("Copyright 2009 Evan Rinehart\n\n");
-	puts(message);
+	printf("Copyright 2009 Evan Rinehart\n\n");
+	printf(message);
 }
 
 void print_help(){
@@ -395,16 +406,13 @@ void parse_options(int argc, char* argv[], int* fullscreen, int* gl_flag){
 void setup_joysticks(){
 	int N = SDL_NumJoysticks();
 	int i;
-	printf("sdl: detected %d joysticks\n",N);
+	boot_msg("sdl: detected %d joysticks\n", N);
 	for(i=0; i<N; i++){
 		if(SDL_JoystickOpen(i)){
-			printf(" joy%d: %s\n", i, SDL_JoystickName(i));
+			boot_msg(" joy%d: %s\n", i, SDL_JoystickName(i));
 		}
 		else{
-			printf(
-					" joy%d: %s (failed to open)\n",
-					i, SDL_JoystickName(i)
-			      );
+			boot_msg(" joy%d: %s (failed to open)\n", i, SDL_JoystickName(i));
 		}
 	}
 
@@ -455,8 +463,7 @@ void setup_video(){
 
 	video = SDL_SetVideoMode(W,H,32,flags);
 	if(video == NULL){
-		report_error("sdl: %s\n",SDL_GetError());
-		exit(-1);
+		fatal_error("sdl: %s\n",SDL_GetError());
 	}
 
 	if(gl_flag){
@@ -502,14 +509,14 @@ void setup_video(){
 		screen_h = 240;
 	} 
 
-	printf("video:\n");
-	printf(" resolution: %d x %d %s\n",W,H,fullscreen?"fullscreen":"windowed");
-	printf(" pixel dimensions: %d x %d\n",screen_w,screen_h);
-	printf(" aspect ratio: %g\n",((double)W)/H);
-	printf(" opengl: %s\n",gl_flag?"yes":"no");
-	printf(" x-offset: %d\n",screen_offset_x);
-	printf(" y-offset: %d\n",screen_offset_y);
-	printf(" video on\n");
+	boot_msg("video:\n");
+	boot_msg(" resolution: %d x %d %s\n",W,H,fullscreen?"fullscreen":"windowed");
+	boot_msg(" pixel dimensions: %d x %d\n",screen_w,screen_h);
+	boot_msg(" aspect ratio: %g\n",((double)W)/H);
+	boot_msg(" opengl: %s\n",gl_flag?"yes":"no");
+	boot_msg(" x-offset: %d\n",screen_offset_x);
+	boot_msg(" y-offset: %d\n",screen_offset_y);
+	boot_msg(" video on\n");
 
 }
 
@@ -529,7 +536,7 @@ void video_init(int argc, char* argv[]){
 }
 
 void video_quit(){
-	printf("sdl: quit\n");
+	boot_msg("sdl: quit\n");
 	SDL_Quit();
 }
 

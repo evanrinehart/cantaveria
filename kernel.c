@@ -23,6 +23,7 @@
 */
 #include <stdlib.h>
 
+#include <list.h>
 #include <root.h>
 #include <video.h>
 #include <audio.h>
@@ -58,7 +59,7 @@ static void press(input in){ handler.press(in); }
 static void release(input in){ handler.release(in); }
 
 void dispatch_error(const char* msg){
-	report_error("kernel.c dispatch_input: %s\n", msg);
+	error_msg("kernel.c dispatch_input: %s\n", msg);
 }
 
 static void dispatch_input(){
