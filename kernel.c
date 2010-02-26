@@ -32,6 +32,7 @@
 #include <loader.h>
 #include <graphics.h>
 #include <text.h>
+#include <stage.h>
 
 #include <util.h>
 
@@ -84,6 +85,7 @@ void initialize(int argc, char* argv[]){
 	loader_init();
 	graphics_init();
 	text_init();
+	stage_init();
 	rand_reset(RANDOM_SEED);
 	atexit(terminate);
 
