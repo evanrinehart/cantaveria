@@ -1,6 +1,6 @@
 PROJECT = cantaveria
 CFLAGS = -I. -g -O2 -Wall -Wextra -Wno-unused-parameter
-OBJ = video.o audio.o input.o kernel.o \
+OBJ = video.o audio.o input.o kernel.o gameover.o \
       loader.o graphics.o sfx.o text.o console.o stage.o \
       intro.o title.o splash.o inner.o \
       synth.o seq.o dsp.o \

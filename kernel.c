@@ -38,8 +38,8 @@
 
 #include <kernel.h>
 #include <transfer.h>
+#include <gameover.h>
 
-int game_over = false;
 int dt = QUANTUM;
 
 static struct {
@@ -54,7 +54,7 @@ static void terminate(){
 	loader_quit();
 	audio_quit();
 	video_quit();
-};
+}
 
 static void press(input in){ handler.press(in); }
 static void release(input in){ handler.release(in); }
@@ -103,14 +103,6 @@ void update(){
 void draw(){
 	handler.draw();
 	draw_final();
-}
-
-void game_is_over(){
-	game_over = true;
-}
-
-int is_game_over(){
-	return game_over;
 }
 
 void set_handler(

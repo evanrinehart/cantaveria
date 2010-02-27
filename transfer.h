@@ -10,5 +10,3 @@ void set_handler(
 	void (*release)(input in)
 );
 
-void game_is_over();
-int is_game_over();

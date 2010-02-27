@@ -18,46 +18,9 @@
    The Free Software Foundation, Inc.
    51 Franklin Street, Fifth Floor
    Boston, MA  02110-1301, USA
+
+   evanrinehart@gmail.com
 */
 
-#include <stdio.h>
-
-#include <input.h>
-#include <graphics.h>
-#include <console.h>
-#include <transfer.h>
-#include <gameover.h>
-
-
-static void press(input in){
-	if(in.button == ESCAPE_KEY){
-		game_is_over();
-	}
-	else{
-		setup_inner();
-	}
-}
-
-static void release(input in){
-
-}
-
-static void update(){
-}
-
-static void draw(){
-
-}
-
-
-void setup_title(){
-	//load some graphics
-	//place the graphics
-	//if any, setup sprite update callbacks
-	set_handler(update, draw, press, release);
-
-	console_clear();
-	console_printf("this is the title screen");
-	console_printf("new, load, options, quit?");
-	console_printf("press any key");
-}
+void game_is_over(); /* cause an event to end the program */
+int is_game_over();  /* was game_is_over executed */

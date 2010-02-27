@@ -23,8 +23,10 @@
 #include <stdio.h>
 
 #include <input.h>
-#include <graphics.h>
 #include <transfer.h>
+#include <gameover.h>
+
+#include <graphics.h>
 #include <console.h>
 
 

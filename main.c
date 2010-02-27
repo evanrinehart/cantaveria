@@ -22,11 +22,10 @@
 
 #include <stdio.h>
 
-#include <root.h>
-#include <video.h>
-#include <input.h>
-#include <kernel.h>
-#include <transfer.h>
+#include <root.h>     /* QUANTUM SLEEP_MS */
+#include <video.h>    /* since() delay() */
+#include <kernel.h>   /* initialize() draw() update() */
+#include <gameover.h> /* is_game_over() */
 
 void main_loop(){
 	int t = 0;
