@@ -22,9 +22,10 @@
 
 typedef unsigned long utf32;
 
-void report_error(const char* format, ...);
 void fatal_error(const char* format, ...);
 void out_of_memory(const char*);
+void error_msg(const char* format, ...);
+void boot_msg(const char* format, ...);
 
 void* xmalloc(size_t size);
 char* strxcpy(const char* str);

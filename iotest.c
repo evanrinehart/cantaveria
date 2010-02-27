@@ -18,28 +18,39 @@
    The Free Software Foundation, Inc.
    51 Franklin Street, Fifth Floor
    Boston, MA  02110-1301, USA
+
+   evanrinehart@gmail.com
 */
 
-typedef struct reader reader;
+#include <stdio.h>
+#include <stdlib.h>
 
-void loader_init();
-void loader_quit();
+#include <root.h>
+#include <input.h>
+#include <console.h>
+#include <transfer.h>
+#include <list.h>
+#include <loader.h>
 
-reader* data_open(char* dir, char* filename);
-reader* loader_open(char* filename);
 
-int loader_read(reader* rd, void* buf, int count);
-int loader_readline(reader* rd, char* buf, int size);
-int loader_scanline(reader* rd, char* format, ...);
-unsigned char* loader_readall(char* filename, int* size);
-void loader_close(reader* rd);
+static void press(input in){
+	game_is_over();
+}
 
-list* loader_readdir(char* path);
-void loader_freedirlist(list* dirs);
+static void release(input in){
 
-/*binary i/o*/
-int read_bytes(reader* rd, unsigned char* out, int count);
-int read_byte(reader* rd, int* out);
-int read_short(reader* rd, int* out);
-int read_int(reader* rd, int* out);
-int read_string(reader* rd, char** out);
+}
+
+
+static void update(){
+	console_update();
+}
+
+static void draw(){
+}
+
+
+void setup_inner(){
+	console_clear();
+	set_handler(update, draw, press, release);
+}

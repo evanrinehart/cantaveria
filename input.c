@@ -113,7 +113,7 @@ enum input_type kmtype(Uint8 type){
 	case SDL_KEYDOWN: return BUTTON_PRESS;
 	case SDL_KEYUP: return BUTTON_RELEASE;
 	default:
-		report_error("input map_key: invalid SDL event type\n");
+		error_msg("input map_key: invalid SDL event type\n");
 		return INVALID_INPUT;
 	}
 }
@@ -123,7 +123,7 @@ enum input_type jmtype(Uint8 type){
 	case SDL_JOYBUTTONDOWN: return BUTTON_PRESS;
 	case SDL_JOYBUTTONUP: return BUTTON_RELEASE;
 	default:
-		report_error("input map_jbutton: invalid SDL event type\n");
+		error_msg("input map_jbutton: invalid SDL event type\n");
 		return INVALID_INPUT;
 	}
 }
@@ -133,10 +133,10 @@ enum input_button ambutton(int state, struct axis_map* am){
 	case -1: return am->button[0];
 	case 1: return am->button[1];
 	case 0:
-		report_error("input axis_motion: axis state 0 does not imply a button\n");
+		error_msg("input axis_motion: axis state 0 does not imply a button\n");
 		return INVALID_BUTTON;
 	default:
-		report_error("input axis_motion: invalid axis state (%d)\n", state);
+		error_msg("input axis_motion: invalid axis state (%d)\n", state);
 		return INVALID_BUTTON;
 	}
 }
@@ -197,7 +197,7 @@ input axis_motion(Sint16 value, struct axis_map* am){
 		to do a button press
 		note that without this fix, it wont get stuck, 
 		the input system will just be slightly inconsistent*/
-		report_error("input axis_motion: (FIXME) joystick almost got stuck\n");
+		error_msg("input axis_motion: (FIXME) joystick almost got stuck\n");
 	}
 
 	if(diff == 0){

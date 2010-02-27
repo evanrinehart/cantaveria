@@ -4,10 +4,10 @@ OBJ = video.o audio.o input.o kernel.o \
       loader.o graphics.o sfx.o text.o console.o music.o \
       intro.o title.o splash.o soundtest.o \
       synth.o seq.o dsp.o org.o midi.o \
-      rng.o util.o list.o \
+      rng.o util.o list.o zip.o \
 
 CC = gcc
-LIBS = -lSDL -lGL -lzzip -lm
+LIBS = -lSDL -lGL -lm -lz
 
 $(PROJECT): main.o $(OBJ) data.zip
 	$(CC) -o $(PROJECT) $(LIBS) main.o $(OBJ)
