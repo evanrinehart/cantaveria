@@ -99,7 +99,7 @@ event* seq_advance(int max, int* used){
 
 
 /* *** */
-event* make_event(int type, int chan, int val1, int val2){
+static event* make_event(int type, int chan, int val1, int val2){
 	event* e;
 	if(blank_events->next){
 		e = pop(blank_events);
@@ -151,7 +151,7 @@ event* seq_get_immediate(){
 void seq_enqueue(int when, int type, int chan, int val1, int val2){
 	event* e = make_event(type, chan, val1, val2);
 	e->tick = when;
-	append(sequence, e);
+	seq_append(e);
 }
 
 void seq_clear(){
@@ -164,6 +164,10 @@ void seq_clear(){
 	sequence = empty();
 }
 
+
+void seq_append(event* e){
+	append(sequence, e);
+}
 
 void seq_init(){
 	printf("  sequencer: ... ");

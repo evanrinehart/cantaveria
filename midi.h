@@ -22,25 +22,5 @@
    evanrinehart@gmail.com
 */
 
+list* midi_load(char* filename);
 
-
-
-typedef struct event event;
-struct event {
-	int tick;
-	int type;
-	int chan;
-	int val1;
-	int val2;
-};
-
-void seq_init();
-
-/* use these from audio thread */
-event* seq_advance(int samples, int* used);
-event* seq_get_immediate();
-
-/***/
-void seq_instant(int type, int chan, int val1, int val2);
-void seq_clear();
-void seq_append(event* e);
