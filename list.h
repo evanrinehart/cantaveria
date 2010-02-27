@@ -10,3 +10,4 @@ void* pop(list* L);
 void append(list* L, void* item);
 void recycle(list* L);
 void print_list(list* L, void (*print)(void* item));
+int length(list* L);

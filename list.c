@@ -70,6 +70,15 @@ void recycle(list* L){
 	freelist = L;
 }
 
+int length(list* L){
+	list* ptr = L->next;
+	int c = 0;
+	while(ptr){
+		c += 1;
+		ptr = ptr->next;
+	}
+	return c;
+}
 
 
 
@@ -109,45 +118,3 @@ void print(void* item){
 	printf("%s", s);
 }
 
-void list_sanitytest(){
-	list* L = empty();
-	char* s;
-	printf("empty: ");
-	println_list(L, print);
-
-	printf("push a b c: ");
-	push(L, "a");
-	push(L, "b");
-	push(L, "c");
-	println_list(L, print);
-
-	printf("pop: ");
-	s = pop(L);
-	printf("%s ", s);
-	println_list(L, print);
-
-	printf("freelist: ");
-	list_print_free();
-	
-	printf("pop: ");
-	s = pop(L);
-	printf("%s ", s);
-	println_list(L, print);
-
-	printf("freelist: ");
-	list_print_free();
-
-	printf("append a b c: ");
-	append(L, "a");
-	append(L, "b");
-	append(L, "c");
-	println_list(L, print);
-	
-	printf("freelist: ");
-	list_print_free();
-
-	printf("recycle: ");
-	recycle(L);
-	list_print_free();
-	
-}
