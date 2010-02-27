@@ -24,7 +24,8 @@
 
 typedef enum {
 	MUS_NOTHING,
-	MUS_COOL
+	MUS_COOL,
+	MUS_TEST1
 } mus_id;
 
 int music_load(char* filename, mus_id id);
@@ -38,6 +39,7 @@ void music_pause();
 void music_volume(int precent);
 void music_fadeout(int seconds);
 
+void music_print(mus_id id);
 void music_debug();
 
 /*

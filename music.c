@@ -46,7 +46,8 @@ static char* mus_name(mus_id id){
 	switch(id){
 		case MUS_NOTHING: return "MUS_NOTHING";
 		case MUS_COOL: return "MUS_COOL";
-		default: return "?";
+		case MUS_TEST1: return "MUS_TEST1";
+		default: return "(?)";
 	}
 }
 
@@ -60,23 +61,23 @@ int music_load(char* filename, mus_id id){
 	list* events;
 
 	if(id == MUS_NOTHING){
-		//error_msg("music_load: you can't load a song into MUS_NOTHING\n");
+		printf("music_load: you can't load a song into MUS_NOTHING\n");
 		return -1;
 	}
 
 	if(is_id_invalid(id)){
-		//error_msg("music_load: music id out of range (%d)\n", id);
+		printf("music_load: music id out of range (%d)\n", id);
 		return -1;
 	}
 
 	if(songs[id] != NULL){
-		//error_msg("music_load: slot %s not empty\n", mus_name(id));
+		printf("music_load: slot %s not empty\n", mus_name(id));
 		return -1;
 	}
 
 	events = midi_load(filename);
 	if(events == NULL){
-		//error_msg("music_load: unable to load \"%s\"\n", filename);
+		printf("music_load: unable to load \"%s\"\n", filename);
 		return -1;
 	}
 
@@ -139,6 +140,33 @@ void music_fadeout(int seconds){
 	/* somehow enqueue a special event */
 }
 
+void music_print(mus_id id){
+	list* ptr;
+
+	if(is_id_invalid(id)){
+		printf("%d is an invalid id\n", id);
+		return;
+	}
+
+	if(songs[id] == NULL){
+		char* name = mus_name(id);
+		printf("%s is not loaded. use music_load(filename, %s)\n", name, name);
+		return;
+	}
+
+	ptr = songs[id]->next;
+	while(ptr){
+		event* e = ptr->item;
+		printf("(%d, %03x, %d, %d, %d)\n",
+			e->tick,
+			e->type,
+			e->chan,
+			e->val1,
+			e->val2
+		);
+		ptr = ptr->next;
+	}
+}
 
 void music_debug(){
 	int i;

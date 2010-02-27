@@ -198,7 +198,5 @@ void synth_init(){
 
 	//srate = sample_rate;
 
-	seq_init();
-
 	printf("OK\n");
 }

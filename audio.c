@@ -24,8 +24,10 @@
 
 #include <SDL/SDL.h>
 
+#include <list.h>
 #include <org.h>
 #include <synth.h>
+#include <seq.h>
 #include <util.h>
 #include <audio.h>
 
@@ -96,8 +98,9 @@ void audio_init(){
 
 	org_init();
 	synth_init();
+	seq_init();
 
-	printf("  sound on\n");
+	printf("  sound online\n");
 	SDL_PauseAudio(0);
 	
 

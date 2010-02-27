@@ -177,28 +177,8 @@ void seq_init(){
 	sequence = empty();
 
 
-
-	seq_enqueue(0, 0x90, 1, 0, 0);
-	seq_enqueue(384, 0x80, 1, 0, 0);
-	seq_enqueue(384, 0x90, 1, 2, 0);
-	seq_enqueue(384*2, 0x80, 1, 2, 0);
-	seq_enqueue(384*2, 0x90, 1, 4, 0);
-	seq_enqueue(384*3, 0x80, 1, 4, 0);
-	seq_enqueue(384*3, 0x90, 1, 0, 0);
-	seq_enqueue(384*4, 0x80, 1, 0, 0);
-	seq_enqueue(384*4, 0x90, 1, 0, 0);
-	seq_enqueue(384*5, 0x80, 1, 0, 0);
-	seq_enqueue(384*5, 0x90, 1, 2, 0);
-	seq_enqueue(384*6, 0x80, 1, 2, 0);
-	seq_enqueue(384*6, 0x90, 1, 4, 0);
-	seq_enqueue(384*7, 0x80, 1, 4, 0);
-	seq_enqueue(384*7, 0x90, 1, 0, 0);
-	seq_enqueue(384*8, 0x80, 1, 0, 0);
-	seq_enqueue(384*8, 0x100, 0, 0, 0);
-
-	looping = 1;
+	looping = 0;
 	loop_start = 0;
-	event_after_loop = sequence->next;
 
 	next_event = sequence->next;
 	printf("OK\n");

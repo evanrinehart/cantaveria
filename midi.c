@@ -52,9 +52,9 @@ int get_delta(reader* f){
 }
 
 list* midi_load(char* filename){
-
+return NULL;
 	int i;
-	reader* f = data_open("music", filename);
+	reader* f = data_open("music/", filename);
 	list* events = empty();
 
 	char buf[16];
