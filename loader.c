@@ -173,9 +173,26 @@ int loader_scanline(reader* rd, char* format, ...){
 
 
 /*binary i/o*/
+int read_bytes(reader* rd, unsigned char* buf, int count){
+	int n = loader_read(rd, buf, count);
+	if(n < 0){
+		error_msg("read_bytes: read error\n");
+		return -1;
+	}
+	else if(n != count){
+		error_msg("read_bytes: end of file reached prematurely (%d out of %d read)\n", n, count);
+		return -1;
+	}
+	else{
+		return 0;
+	}
+}
+
 int read_byte(reader* rd, int* out){
 	unsigned char c;
-	if(loader_read(rd, &c, 1) < 0){
+	int n = loader_read(rd, &c, 1);
+	if(n < 0){
+		error_msg("read_byte: read error\n");
 		return -1;
 	}
 	else{
@@ -186,7 +203,14 @@ int read_byte(reader* rd, int* out){
 
 int read_short(reader* rd, int* out){
 	unsigned char c[2];
-	if(loader_read(rd, c, 2) < 0){
+	int n = loader_read(rd, c, 2);
+
+	if(n < 0){
+		error_msg("read_byte: read error\n");
+		return -1;
+	}
+	else if(n != 2){
+		error_msg("read_short: end of file reached prematurely\n");
 		return -1;
 	}
 	else{
@@ -197,7 +221,14 @@ int read_short(reader* rd, int* out){
 
 int read_int(reader* rd, int* out){
 	unsigned char c[4];
-	if(loader_read(rd, c, 4) < 0){
+	int n = loader_read(rd, c, 4);
+
+	if(n < 0){
+		error_msg("read_byte: read error\n");
+		return -1;
+	}
+	else if(n != 4){
+		error_msg("read_int: end of file reached prematurely\n");
 		return -1;
 	}
 	else{
@@ -214,12 +245,13 @@ int read_string(reader* rd, char** out){
 
 	*out = xmalloc(L+1);
 	*out[L] = '\0';
-	if(loader_read(rd, *out, L) < 0){
+	if(read_bytes(rd, (unsigned char*)*out, L) < 0){
 		free(*out);
 		return -1;
 	}
-
-	return 0;
+	else{
+		return 0;
+	}
 }
 
 
