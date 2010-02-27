@@ -4,6 +4,7 @@
 #include <graphics.h>
 #include <console.h>
 #include <transfer.h>
+#include <list.h>
 #include <seq.h>
 #include <org.h>
 

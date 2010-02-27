@@ -24,9 +24,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <list.h>
 #include <seq.h>
 #include <org.h>
-#include <list.h>
 #include <audio.h>
 #include <util.h>
 
@@ -203,3 +203,24 @@ void seq_init(){
 	next_event = sequence->next;
 	printf("OK\n");
 }
+
+void seq_load(list* events){
+
+}
+
+void seq_seek(int tick){
+
+}
+
+int seq_tell(){
+	return 0;
+}
+
+void seq_enable(){
+
+}
+
+void seq_disable(){
+
+}
+

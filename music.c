@@ -22,16 +22,82 @@
    evanrinehart@gmail.com
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <list.h>
 #include <music.h>
+#include <seq.h>
+#include <midi.h>
+#include <util.h>
 
 mus_id current_id = MUS_NOTHING;
 
+list* songs[32] = {
+NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+};
+
+int positions[32];
+
+static char* mus_name(mus_id id){
+	switch(id){
+		case MUS_NOTHING: return "MUS_NOTHING";
+		case MUS_COOL: return "MUS_COOL";
+		default: return "?";
+	}
+}
+
+static int is_id_invalid(mus_id id){
+	if(id >= 32) return 1;
+	else return 0;
+}
+
+
 int music_load(char* filename, mus_id id){
-	return -1;
+	list* events;
+
+	if(id == MUS_NOTHING){
+		//error_msg("music_load: you can't load a song into MUS_NOTHING\n");
+		return -1;
+	}
+
+	if(is_id_invalid(id)){
+		//error_msg("music_load: music id out of range (%d)\n", id);
+		return -1;
+	}
+
+	if(songs[id] != NULL){
+		//error_msg("music_load: slot %s not empty\n", mus_name(id));
+		return -1;
+	}
+
+	events = midi_load(filename);
+	if(events == NULL){
+		//error_msg("music_load: unable to load \"%s\"\n", filename);
+		return -1;
+	}
+
+	songs[id] = events;
+	return 0;
 }
 
 void music_unload(mus_id id){
+	if(is_id_invalid(id)) return;
+	if(songs[id] == NULL) return;
 
+	if(music_current() == id) music_stop(id);
+
+	list* ptr = songs[id]->next;
+	while(ptr){
+		free(ptr->item);
+		ptr = ptr->next;
+	}
+
+	recycle(songs[id]->next);
+	songs[id] = NULL;
 }
 
 mus_id music_current(){
@@ -39,23 +105,55 @@ mus_id music_current(){
 }
 
 void music_play(mus_id id){
+	if(is_id_invalid(id)) return;
+	if(songs[id] == NULL) return;
+	if(music_current() == id) return;
 
+	music_stop(id);
+	seq_load(songs[id]);
+	seq_seek(positions[id]);
+	seq_enable();
+
+	current_id = id;
 }
 
 
 void music_stop(mus_id id){
+	if(is_id_invalid(id)) return;
+	if(songs[id] == NULL) return;
+	if(music_current() == id) seq_disable();
 
+	positions[id] = 0;
 }
 
 void music_pause(){
-
+	seq_disable();
+	positions[music_current()] = seq_tell();
 }
 
-void music_volume(int precent){
-
+void music_volume(int percent){
+	/* somehow enqueue a special event */
 }
 
 void music_fadeout(int seconds){
+	/* somehow enqueue a special event */
+}
 
+
+void music_debug(){
+	int i;
+	printf("music:\n");
+	for(i=0; i<32; i++){
+		char* name = mus_name(i);
+		int pos = positions[i];
+
+		if(songs[i]){
+			int count = length(songs[i]);
+			printf("(%15s, %7de, %11d)\n", name, count, pos);
+		}
+		else{
+			printf("(%15s, %7s, %11d)\n", name, "_", pos);
+		}
+	}
 }
 

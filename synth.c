@@ -26,10 +26,10 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <list.h>
 #include <org.h>
 #include <synth.h>
 #include <seq.h>
-#include <list.h>
 
 /*
 timing stuff
@@ -197,6 +197,8 @@ void synth_init(){
 	}
 
 	//srate = sample_rate;
+
+	seq_init();
 
 	printf("OK\n");
 }

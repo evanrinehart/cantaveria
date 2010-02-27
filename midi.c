@@ -140,10 +140,10 @@ list* midi_load(char* filename){
 							   loader_read(f,string,len);
 							   string[len] = '\0';
 							   if(strncmp(string,"LoopStart",len)==0){
-							   	push(events, make_event(tick, 0x100, 0, 1, 0));
+								push(events, make_event(tick, 0x100, 0, 1, 0));
 							   }
 							   else if(strncmp(string,"LoopEnd",len)==0){
-							   	push(events, make_event(tick, 0x100, 0, 0, 0));
+								push(events, make_event(tick, 0x100, 0, 0, 0));
 							   }
 						   }
 						   break;

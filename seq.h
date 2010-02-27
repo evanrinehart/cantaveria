@@ -43,4 +43,10 @@ event* seq_get_immediate();
 /***/
 void seq_instant(int type, int chan, int val1, int val2);
 void seq_clear();
+void seq_load(list* events);
+void seq_seek(int tick);
+int seq_tell();
+void seq_enable();
+void seq_disable();
 void seq_append(event* e);
+

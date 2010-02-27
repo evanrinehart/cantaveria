@@ -38,6 +38,8 @@ void music_pause();
 void music_volume(int precent);
 void music_fadeout(int seconds);
 
+void music_debug();
+
 /*
 the music player
 
