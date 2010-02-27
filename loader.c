@@ -173,35 +173,53 @@ int loader_scanline(reader* rd, char* format, ...){
 
 
 /*binary i/o*/
-int read_byte(reader* rd){
-	unsigned char c = 0;
-	loader_read(rd, &c, 1);
-	return c;
+int read_byte(reader* rd, int* out){
+	unsigned char c;
+	if(loader_read(rd, &c, 1) < 0){
+		return -1;
+	}
+	else{
+		*out = c;
+		return 0;
+	}
 }
 
-int read_short(reader* rd){
-	unsigned char c[2] = {0,0};
-	loader_read(rd, c+0, 1);
-	loader_read(rd, c+1, 1);
-	return (c[0]<<8) | c[1];
+int read_short(reader* rd, int* out){
+	unsigned char c[2];
+	if(loader_read(rd, c, 2) < 0){
+		return -1;
+	}
+	else{
+		*out = (c[0]<<8) | c[1];
+		return 0;
+	}
 }
 
-int read_int(reader* rd){
-	unsigned char c[4] = {0,0,0,0};
-	loader_read(rd, c+0, 1);
-	loader_read(rd, c+1, 1);
-	loader_read(rd, c+2, 1);
-	loader_read(rd, c+3, 1);
-	return (c[0]<<24) | (c[1]<<16) | (c[2]<<8) | c[3];
+int read_int(reader* rd, int* out){
+	unsigned char c[4];
+	if(loader_read(rd, c, 4) < 0){
+		return -1;
+	}
+	else{
+		*out = (c[0]<<24) | (c[1]<<16) | (c[2]<<8) | c[3];
+		return 0;
+	}
 }
 
-char* read_string(reader* rd){
-	unsigned int L = read_int(rd);
-	if(L==0) return NULL;
-	char* S = xmalloc(L+1);
-	S[L] = '\0';
-	loader_read(rd, S, L);
-	return S;
+int read_string(reader* rd, char** out){
+	unsigned L;
+	if(read_int(rd, (int*)&L) < 0){
+		return -1;
+	}
+
+	*out = xmalloc(L+1);
+	*out[L] = '\0';
+	if(loader_read(rd, *out, L) < 0){
+		free(*out);
+		return -1;
+	}
+
+	return 0;
 }
 
 

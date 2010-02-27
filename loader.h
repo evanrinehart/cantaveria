@@ -38,7 +38,7 @@ list* loader_readdir(char* path);
 void loader_freedirlist(list* dirs);
 
 /*binary i/o*/
-int read_byte(reader* rd);
-int read_short(reader* rd);
-int read_int(reader* rd);
-char* read_string(reader* rd);
+int read_byte(reader* rd, int* out);
+int read_short(reader* rd, int* out);
+int read_int(reader* rd, int* out);
+int read_string(reader* rd, char** out);
