@@ -327,7 +327,7 @@ list* midi_load(char* filename){
 		}
 	}
 
-	//sort(events, event_compare);
+	sort(events, compare_event);
 	return events;
 }
 
