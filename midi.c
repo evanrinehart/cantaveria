@@ -105,7 +105,7 @@ int conv_delta(unsigned char x[4], int count){
 	case 2:	return ((x[0] & 0x7f) << 7) | x[1];
 	case 3: return ((x[0] & 0x7f) << 14) | ((x[1] & 0x7f) << 7) | x[2];
 	case 4: return ((x[0] & 0x7f) << 21) | ((x[1] & 0x7f) << 14) | ((x[2] & 0x7f) << 7) | x[3];
-	default: printf("conv_delta: wrong count (%d)\n", count); return 0;
+	default: error_msg("conv_delta: wrong count (%d)\n", count); return 0;
 	}
 }
 
@@ -128,9 +128,10 @@ int read_delta(reader* r, int* out){
 
 event* meta_endoftrack(reader* r, int tick){
 	int zero;
-	read_delta(r, &zero);
+	if(read_delta(r, &zero)) return NULL;
 	if(zero != 0){
-		printf("end of track event not followed by zero\n");
+		error_msg("midi_load: end of track event not followed by zero\n");
+		return NULL;
 	}
 	return make_event(tick, EVX_ENDOFTRACK, 0, 0, 0);
 }
@@ -140,8 +141,8 @@ event* meta_tempochange(reader* r, int tick){
 	int three;
 	int uspqn;
 
-	read_delta(r, &three);
-	read_bytes(r, bytes, 3);
+	if(read_delta(r, &three)) return NULL;
+	if(read_bytes(r, bytes, 3)) return NULL;
 	uspqn = (bytes[0] << 16) | (bytes[1] << 8) | bytes[0];
 
 	return make_event(tick, EVX_TEMPOCHANGE, 0, uspqn, 0);
@@ -156,10 +157,11 @@ event* meta_dummy(reader* r, int tick){
 	int len;
 	int foo;
 
-	read_delta(r, &len);
+	if(read_delta(r, &len)) return NULL;
 
+	/* FIXME need a skip routine */
 	for(; len > 0; len--){
-		read_byte(r, &foo);
+		if(read_byte(r, &foo)) return NULL;
 	}
 
 	return make_event(tick, EVX_META, 0, 0, 0);
@@ -210,7 +212,7 @@ event* read_meta(reader* r, int tick){
 event* read_event(reader* r, int tick, int byte0){
 	if(byte0 >= 0x80 && byte0 <  0xf0)
 		return read_normal(r, tick, byte0);
-	else if(byte0 < 0x80) /* not really the status! */
+	else if(byte0 < 0x80)
 		return read_running(r, tick, byte0);
 	else if(byte0 == 0xff)
 		return read_meta(r, tick);
@@ -231,7 +233,7 @@ int read_track(reader* r, list* events){
 	}
 
 	if(memcmp(sig, "MTrk", 4) != 0){
-		printf("MTrk not found\n");
+		error_msg("midi_load: MTrk not found\n");
 		return -1;
 	}
 
@@ -276,17 +278,17 @@ int read_header(reader* r, int* format, int* track_count, int* divraw){
 	if(read_short(r, divraw)) return -1;
 
 	if(memcmp(sig, "MThd", 4) != 0){
-		printf("MThd not found\n");
+		error_msg("midi_load: MThd not found\n");
 		return -1;
 	}
 
 	if(six != 6){
-		printf("number six not found (%d)\n", six);
+		error_msg("midi_load: number six not found (%d)\n", six);
 		return -1;
 	}
 
 	if(*format != 0 && *format != 1){
-		printf("format not supported (%d)\n", *format);
+		error_msg("midi_load: format not supported (%d)\n", *format);
 		return -1;
 	}
 
