@@ -26,10 +26,11 @@
 
 enum {
 	EVX_ENDOFTRACK = 0x100,
-	EVX_TEMPOCHANGE ,
+	EVX_TEMPOCHANGE,
 	EVX_LOOPSTART,
 	EVX_LOOPEND,
-	EVX_META
+	EVX_META,
+	EVX_TICKSPERBEAT
 };
 
 typedef struct event event;
@@ -51,8 +52,8 @@ event* seq_get_immediate();
 void seq_instant(int type, int chan, int val1, int val2);
 void seq_clear();
 void seq_load(list* events);
-void seq_seek(int tick);
-int seq_tell();
+void seq_seek(list* target);
+list* seq_tell();
 void seq_enable();
 void seq_disable();
 void seq_append(event* e);

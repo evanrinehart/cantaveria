@@ -109,6 +109,16 @@ int conv_delta(unsigned char x[4], int count){
 	}
 }
 
+int conv_divisions(int divraw){
+	if(divraw > 0){
+		return divraw;
+	}
+	else{
+		printf("midi_load: time division is given in frames per second, expect breakage without further support\n");
+		return abs(divraw>>8);
+	}
+}
+
 /* read a midi variable length quantity from r */
 /* 0 for success, -1 for error. out is filled in with quantity */
 int read_delta(reader* r, int* out){
@@ -140,12 +150,14 @@ event* meta_tempochange(reader* r, int tick){
 	unsigned char bytes[3];
 	int three;
 	int uspqn;
+	int bpm;
 
 	if(read_delta(r, &three)) return NULL;
 	if(read_bytes(r, bytes, 3)) return NULL;
 	uspqn = (bytes[0] << 16) | (bytes[1] << 8) | bytes[0];
+	bpm = 60000000 / uspqn;
 
-	return make_event(tick, EVX_TEMPOCHANGE, 0, uspqn, 0);
+	return make_event(tick, EVX_TEMPOCHANGE, 0, bpm, 0);
 }
 
 event* meta_possibleloop(reader* r, int tick){
@@ -260,7 +272,13 @@ int read_track(reader* r, list* events){
 		else if(e->type == EVX_ENDOFTRACK){ /* end of track */
 			break;
 		}
-		else{
+
+		if(e->type == 0x90 && e->val2 == 0){
+			e->type = 0x80;
+		}
+
+		if(e->type == 0x80 || e->type == 0x90){
+			e->val1 -= 57;
 		}
 	}
 
@@ -316,8 +334,13 @@ list* midi_load(char* filename){
 		return NULL;
 	}
 
-	//insert an special event about divraw
-	//maybe fail if format == 2
+	push(events, make_event(
+		0,
+		EVX_TICKSPERBEAT,
+		0,
+		conv_divisions(divraw),
+		0
+	));
 
 	for(i=0; i<track_count; i++){
 		if(read_track(r, events) < 0){

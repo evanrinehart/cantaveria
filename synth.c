@@ -55,8 +55,6 @@ typedef struct {
 } channel;
 
 int srate;
-int bpm = 120;
-int tpb = 384;
 
 int serr = 0; // 1/1000 of a sample
 
@@ -71,7 +69,6 @@ channel channels[16];
 
 
 
-void set_bpm(int x){ bpm = x; }
 
 
 
@@ -127,6 +124,27 @@ void reduce(float buf[], int count, float factor){
 	}
 }
 
+void clip(float buf[], int count){
+	int i;
+	int clipped = 0;
+	float avg = 0;
+	for(i=0; i<count; i++){
+		avg += buf[i]*buf[i];
+		if(buf[i] > 1.0){
+			clipped = 1;
+			buf[i] = 1.0;
+		}
+		else if(buf[i] < -1.0) buf[i] = -1.0;
+	}
+
+	if(clipped){
+		printf("synth: out of range output was clipped in this buffer\n");
+	}
+
+	avg /= count?count:1;
+	avg = sqrt(avg);
+}
+
 void generate(float left[], float right[], int count){
 	float buf[4096];
 	int i;
@@ -142,6 +160,8 @@ void generate(float left[], float right[], int count){
 	}
 	reduce(left, count, 16.0f/V);
 	reduce(right, count, 16.0f/V);
+	clip(left, count);
+	clip(right, count);
 }
 
 void control(event* e){
@@ -190,11 +210,15 @@ void synth_init(){
 	int i;
 	printf("  synth: ... ");
 
-	channels[0] = make_channel_from_instrument(ORG_DEFAULT);
-	channels[1] = make_channel_from_instrument(ORG_KARPLUS);
-	for(i=2; i<16; i++){
+	for(i=0; i<16; i++){
 		channels[i] = make_dummy_channel();
 	}
+
+	channels[0] = make_channel_from_instrument(ORG_DEFAULT);
+	channels[1] = make_channel_from_instrument(ORG_DEFAULT);
+	channels[2] = make_channel_from_instrument(ORG_DEFAULT);
+	channels[3] = make_channel_from_instrument(ORG_DEFAULT);
+
 
 	//srate = sample_rate;
 

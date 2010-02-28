@@ -34,6 +34,10 @@ int tick;
 int terr;
 int loop_start;
 int looping;
+int enable = 0;
+
+int bpm = 120;
+int tpb = 384;
 
 //event lists
 list* sequence;
@@ -61,6 +65,18 @@ event* dequeue_event(){
 	event* e = next_event->item;
 	if(e->tick <= tick){
 		advance_event(e);
+
+		if(e->type == EVX_TEMPOCHANGE){
+//printf("tempo change to %d bpm\n", e->val1);
+			bpm = e->val1;
+		}
+
+		if(e->type == EVX_TICKSPERBEAT){
+//printf("setting tpb to %d\n", e->val1);
+			tpb = e->val1;
+		}
+//printf("event (%d, %03x, %d, %d, %d)\n", e->tick, e->type, e->chan, e->val1, e->val2);
+
 		return e;
 	}
 	else{
@@ -70,7 +86,7 @@ event* dequeue_event(){
 
 int samples_until_next(int max){
 	int N = 2646000;
-	int D = 46080;
+	int D = bpm*tpb;
 
 	if(next_event == NULL) return max;
 
@@ -82,10 +98,15 @@ int samples_until_next(int max){
 }
 
 event* seq_advance(int max, int* used){
-	int N = 46080;     // bpm * tpb
+	int N = bpm*tpb;     // bpm * tpb
 	int D = 2646000;   // srate * 60
 
 	int u = samples_until_next(max);
+
+	if(!enable){
+		*used = max;
+		return NULL;
+	}
 
 	terr += N * u;
 	tick += terr/D;
@@ -185,22 +206,35 @@ void seq_init(){
 }
 
 void seq_load(list* events){
-
+	audio_lock();
+		tick = 0;
+		terr = 0;
+		sequence = events;
+		next_event = sequence->next;
+		event_after_loop = next_event;
+		looping = 0; /* fixme */
+		loop_start = 0;
+	audio_unlock();
 }
 
-void seq_seek(int tick){
-
+void seq_seek(list* target){
+	event* e = target->item;
+	audio_lock();
+		next_event = target;
+		tick = e->tick;
+	audio_unlock();
 }
 
-int seq_tell(){
-	return 0;
+list* seq_tell(){
+	return next_event;
 }
 
 void seq_enable(){
-
+	enable = 1;
 }
 
 void seq_disable(){
-
+/* needs to enqueue an 'all off' instant event */
+	enable = 0;
 }
 

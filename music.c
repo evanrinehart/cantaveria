@@ -40,7 +40,8 @@ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 };
 
-int positions[32];
+list* positions[32];
+int playing = 0;
 
 static char* mus_name(mus_id id){
 	switch(id){
@@ -82,6 +83,7 @@ int music_load(char* filename, mus_id id){
 	}
 
 	songs[id] = events;
+	positions[id] = events->next;
 	return 0;
 }
 
@@ -108,26 +110,31 @@ mus_id music_current(){
 void music_play(mus_id id){
 	if(is_id_invalid(id)) return;
 	if(songs[id] == NULL) return;
-	if(music_current() == id) return;
+	if(music_current() == id && playing) return;
 
-	music_stop(id);
+	if(playing) music_pause();
 	seq_load(songs[id]);
 	seq_seek(positions[id]);
 	seq_enable();
 
 	current_id = id;
+	playing = 1;
 }
 
 
 void music_stop(mus_id id){
 	if(is_id_invalid(id)) return;
 	if(songs[id] == NULL) return;
-	if(music_current() == id) seq_disable();
+	if(music_current() == id){
+		seq_disable();
+		playing = 0;
+	}
 
 	positions[id] = 0;
 }
 
 void music_pause(){
+	playing = 0;
 	seq_disable();
 	positions[music_current()] = seq_tell();
 }
@@ -141,47 +148,8 @@ void music_fadeout(int seconds){
 }
 
 void music_print(mus_id id){
-	list* ptr;
-
-	if(is_id_invalid(id)){
-		printf("%d is an invalid id\n", id);
-		return;
-	}
-
-	if(songs[id] == NULL){
-		char* name = mus_name(id);
-		printf("%s is not loaded. use music_load(filename, %s)\n", name, name);
-		return;
-	}
-
-	ptr = songs[id]->next;
-	while(ptr){
-		event* e = ptr->item;
-		printf("(%d, %03x, %d, %d, %d)\n",
-			e->tick,
-			e->type,
-			e->chan,
-			e->val1,
-			e->val2
-		);
-		ptr = ptr->next;
-	}
 }
 
 void music_debug(){
-	int i;
-	printf("music:\n");
-	for(i=0; i<32; i++){
-		char* name = mus_name(i);
-		int pos = positions[i];
-
-		if(songs[i]){
-			int count = length(songs[i]);
-			printf("(%15s, %7de, %11d)\n", name, count, pos);
-		}
-		else{
-			printf("(%15s, %7s, %11d)\n", name, "_", pos);
-		}
-	}
 }
 

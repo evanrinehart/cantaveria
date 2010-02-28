@@ -112,7 +112,8 @@ void default_gen(struct defstate* data, int z, float out[], int count){
 		float factor = normalize(data->note[z] + data->bend) * data->release[z];
 		//float amp = sine_table[data->ptr[z]];
 		float amp = sine_table_interp(data->ptr[z]);
-		out[i] += amp * factor;
+	//	out[i] += amp * factor;
+		out[i] += amp / 16.0;
 		data->ptr[z] += step;
 		while(data->ptr[z] >= TABLE_SIZE){
 			data->ptr[z] -= TABLE_SIZE;
@@ -257,7 +258,11 @@ void karplus_control(void* ud, int type, int val1, int val2, int val){
 				data->buf[i] += ((double)rand())/RAND_MAX - 0.5;
 			}
 			return;
-//		case EV_NOTEOFF: default_turn_off(data, val1); break;
+		case EV_NOTEOFF:
+			for(i=0; i<KARF; i++){
+				data->buf[i] = 0;
+			}
+			return;
 //		case EV_PITCHBEND: default_bend(data, val); break;
 	}
 }
@@ -280,7 +285,6 @@ instrument make_karplus(){
 	ins.data = data;
 	return ins;
 }
-
 
 
 

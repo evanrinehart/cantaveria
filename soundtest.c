@@ -43,8 +43,6 @@ void setup_inner(){
 	set_handler(update, draw, press, release);
 	console_clear();
 
-	music_print(MUS_TEST1);
-
 	if(music_load("running_hell.mid", MUS_TEST1) < 0){
 		printf("open music failed\n");
 	}
@@ -52,6 +50,4 @@ void setup_inner(){
 		printf("open music worked\n");
 		music_play(MUS_TEST1);
 	}
-
-	music_print(MUS_TEST1);
 }
