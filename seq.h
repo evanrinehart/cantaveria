@@ -24,6 +24,13 @@
 
 
 
+enum {
+	EVX_ENDOFTRACK = 0x100,
+	EVX_TEMPOCHANGE ,
+	EVX_LOOPSTART,
+	EVX_LOOPEND,
+	EVX_META
+};
 
 typedef struct event event;
 struct event {
