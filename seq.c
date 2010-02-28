@@ -100,6 +100,7 @@ int samples_until_next(int max){
 event* seq_advance(int max, int* used){
 	int N = bpm*tpb;     // bpm * tpb
 	int D = 2646000;   // srate * 60
+	event* e;
 
 	int u = samples_until_next(max);
 
@@ -108,12 +109,14 @@ event* seq_advance(int max, int* used){
 		return NULL;
 	}
 
+	*used = u;
+	e = dequeue_event();
+
 	terr += N * u;
 	tick += terr/D;
 	terr %= D;
 
-	*used = u;
-	return dequeue_event();
+	return e;
 }
 
 
@@ -237,4 +240,5 @@ void seq_disable(){
 /* needs to enqueue an 'all off' instant event */
 	enable = 0;
 }
+
 
