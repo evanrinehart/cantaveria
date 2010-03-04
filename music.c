@@ -40,6 +40,8 @@ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 };
 
+
+
 list* positions[32];
 int playing = 0;
 
@@ -140,11 +142,11 @@ void music_pause(){
 }
 
 void music_volume(int percent){
-	/* somehow enqueue a special event */
+	seq_instant(EVX_MUSICVOLUME, 0, percent, 0);
 }
 
 void music_fadeout(int seconds){
-	/* somehow enqueue a special event */
+	seq_instant(EVX_FADEOUT, 0, seconds, 0);
 }
 
 void music_print(mus_id id){

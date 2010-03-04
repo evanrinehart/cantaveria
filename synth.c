@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <util.h>
 #include <list.h>
 #include <org.h>
 #include <synth.h>
@@ -102,6 +103,24 @@ channel make_channel_from_instrument(enum instrument_name name){
 
 
 
+void set_music_volume(int percent){
+
+}
+
+void cut_music(){
+
+}
+
+void fade_clear(){
+
+}
+
+void fadeout(int seconds){
+
+}
+
+
+
 void mix(channel* ch, float in[], float left[], float right[], int count){
 	int i;
 	for(i=0; i<count; i++){
@@ -138,7 +157,7 @@ void clip(float buf[], int count){
 	}
 
 	if(clipped){
-		printf("synth: out of range output was clipped in this buffer\n");
+		printf("synth: clipping distortion due to output overload\n");
 	}
 
 	avg /= count?count:1;
@@ -172,7 +191,14 @@ void control(event* e){
 	int val2 = e->val2;
 	int val  = (e->val2 << 7) | e->val1;
 	channel* ch = &(channels[chan]);
-	ch->control(ch->data, type, val1, val2, val);
+
+	switch(type){
+		case EVX_MUSICVOLUME: set_music_volume(val1); break;
+		case EVX_MUSICCUT: cut_music(); break;
+		case EVX_FADECLEAR: fade_clear(); break;
+		case EVX_FADEOUT: fadeout(val1); break;
+		default: ch->control(ch->data, type, val1, val2, val); break;
+	}
 }
 
 void immediate_control(){

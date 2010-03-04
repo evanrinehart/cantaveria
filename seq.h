@@ -25,12 +25,21 @@
 
 
 enum {
+	/* loader use */
 	EVX_ENDOFTRACK = 0x100,
+	EVX_META,
+
+	/* seq use */
+	EVX_TICKSPERBEAT,
 	EVX_TEMPOCHANGE,
 	EVX_LOOPSTART,
 	EVX_LOOPEND,
-	EVX_META,
-	EVX_TICKSPERBEAT
+
+	/* synth use */
+	EVX_MUSICVOLUME,
+	EVX_MUSICCUT,
+	EVX_FADEOUT,
+	EVX_FADECLEAR
 };
 
 typedef struct event event;

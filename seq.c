@@ -33,7 +33,6 @@
 int tick;
 int terr;
 int loop_start;
-int looping;
 int enable = 0;
 
 int bpm = 120;
@@ -50,7 +49,7 @@ list* event_after_loop;
 
 
 void advance_event(event* now){
-	if(now->type == 0x100 && looping){
+	if(now->type == EVX_LOOPEND){
 		next_event = event_after_loop;
 		tick = loop_start;
 	}
@@ -75,6 +74,13 @@ event* dequeue_event(){
 //printf("setting tpb to %d\n", e->val1);
 			tpb = e->val1;
 		}
+
+		if(e->type == EVX_LOOPSTART){
+			loop_start = e->tick;
+			event_after_loop = next_event;
+		}
+
+
 //printf("event (%d, %03x, %d, %d, %d)\n", e->tick, e->type, e->chan, e->val1, e->val2);
 
 		return e;
@@ -148,7 +154,7 @@ void recycle_event(event* e){
 void seq_instant(int type, int chan, int val1, int val2){
 	event* e = make_event(type, chan, val1, val2);
 	audio_lock();
-	append(immediate_events, e);
+		append(immediate_events, e);
 	audio_unlock();
 }
 
@@ -200,8 +206,6 @@ void seq_init(){
 	immediate_events = empty();
 	sequence = empty();
 
-
-	looping = 0;
 	loop_start = 0;
 
 	next_event = sequence->next;
@@ -215,7 +219,6 @@ void seq_load(list* events){
 		sequence = events;
 		next_event = sequence->next;
 		event_after_loop = next_event;
-		looping = 0; /* fixme */
 		loop_start = 0;
 	audio_unlock();
 }
@@ -237,7 +240,7 @@ void seq_enable(){
 }
 
 void seq_disable(){
-/* needs to enqueue an 'all off' instant event */
+	seq_instant(EVX_MUSICCUT, 0, 0, 0);
 	enable = 0;
 }
 
