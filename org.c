@@ -109,11 +109,11 @@ void default_gen(struct defstate* data, int z, float out[], int count){
 			}
 		}
 
-		//float factor = normalize(data->note[z] + data->bend) * data->release[z];
+	//	float factor = normalize(data->note[z] + data->bend) * data->release[z];
 		//float amp = sine_table[data->ptr[z]];
 		float amp = sine_table_interp(data->ptr[z]);
 	//	out[i] += amp * factor;
-		out[i] += amp / 16.0;
+		out[i] += amp / 16.0 * data->release[z];
 		data->ptr[z] += step;
 		while(data->ptr[z] >= TABLE_SIZE){
 			data->ptr[z] -= TABLE_SIZE;
