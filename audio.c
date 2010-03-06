@@ -59,7 +59,7 @@ void audio_callback(void *userdata, Uint8 *stream, int bytes){
 		*/
 
 		accum += out[j-1] * out[j-1];
-		if(abs(out[j]) > max){
+		if(abs(out[j-1]) > max){
 			max = abs(out[j-1]);
 		}
 	}
