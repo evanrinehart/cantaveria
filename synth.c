@@ -239,14 +239,14 @@ void synth_init(){
 		channels[i] = make_dummy_channel();
 	}
 
-	channels[0] = make_channel_from_instrument(ORG_KARPLUS);
-	channels[1] = make_channel_from_instrument(ORG_KARPLUS);
-	channels[2] = make_channel_from_instrument(ORG_KARPLUS);
-	channels[3] = make_channel_from_instrument(ORG_KARPLUS);
-	//channels[0] = make_channel_from_instrument(ORG_DEFAULT);
-	//channels[1] = make_channel_from_instrument(ORG_DEFAULT);
-	//channels[2] = make_channel_from_instrument(ORG_DEFAULT);
-	//channels[3] = make_channel_from_instrument(ORG_DEFAULT);
+	//channels[0] = make_channel_from_instrument(ORG_KARPLUS);
+	//channels[1] = make_channel_from_instrument(ORG_KARPLUS);
+	//channels[2] = make_channel_from_instrument(ORG_KARPLUS);
+	//channels[3] = make_channel_from_instrument(ORG_KARPLUS);
+	channels[0] = make_channel_from_instrument(ORG_DEFAULT);
+	channels[1] = make_channel_from_instrument(ORG_DEFAULT);
+	channels[2] = make_channel_from_instrument(ORG_DEFAULT);
+	channels[3] = make_channel_from_instrument(ORG_DEFAULT);
 
 
 	//srate = sample_rate;

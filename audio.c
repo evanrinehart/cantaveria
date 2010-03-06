@@ -45,11 +45,10 @@ void audio_callback(void *userdata, Uint8 *stream, int bytes){
 	int samples = buflen / 2;      /* 2 channels */
 
 	float accum = 0;
-	float max = 0;
+	int max = 0;
 	float db = 0;
 
 	synth_generate(lout, rout, samples);
-
 	for(i=0, j=0; i<samples; i++){
 		out[j] = (Sint16)(lout[i]*32767); j++;
 		out[j] = (Sint16)(rout[i]*32767); j++;
@@ -59,13 +58,15 @@ void audio_callback(void *userdata, Uint8 *stream, int bytes){
 		dB peak, 20log ( max ( x ) )
 		*/
 
-		accum += lout[i] * lout[i];
-		if(fabs(lout[i]) > max) max = fabs(lout[i]);
+		accum += out[j-1] * out[j-1];
+		if(abs(out[j]) > max){
+			max = abs(out[j-1]);
+		}
 	}
 
 	accum /= samples;
 	accum = sqrt(accum);
-	db = 20*log(accum);
+	db = 20*log10(accum/32767);
 	if(db > -9999){
 		rms_level = db;
 	}
@@ -73,7 +74,7 @@ void audio_callback(void *userdata, Uint8 *stream, int bytes){
 		rms_level = -9999;
 	}
 
-	db = 20*log(max);
+	db = 20*log10(max/32767.0);
 	if(db > -9999){
 		peak_level = db;
 	}
