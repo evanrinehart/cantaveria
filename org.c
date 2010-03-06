@@ -29,6 +29,7 @@ rendered ambient (PADsynth)
 
 */
 
+
 /* SINE TABLE */
 #define TABLE_SIZE (1<<8)
 #define RELEASE_STEPS (SAMPLE_RATE/333)
@@ -113,7 +114,7 @@ void default_gen(struct defstate* data, int z, float out[], int count){
 		//float amp = sine_table[data->ptr[z]];
 		float amp = sine_table_interp(data->ptr[z]);
 	//	out[i] += amp * factor;
-		out[i] += amp / 16.0 * data->release[z];
+		out[i] += 13*(amp / 16.0 * data->release[z]);
 		data->ptr[z] += step;
 		while(data->ptr[z] >= TABLE_SIZE){
 			data->ptr[z] -= TABLE_SIZE;

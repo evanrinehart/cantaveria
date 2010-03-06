@@ -31,3 +31,6 @@ void audio_quit();
 
 void audio_lock();
 void audio_unlock();
+
+int audio_peak_level();
+int audio_rms_level();

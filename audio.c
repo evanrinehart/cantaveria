@@ -21,6 +21,7 @@
 */
 
 #include <stdlib.h>
+#include <math.h>
 
 #include <SDL/SDL.h>
 
@@ -34,17 +35,50 @@
 float* lout;
 float* rout;
 
+static int rms_level;
+static int peak_level;
+
 void audio_callback(void *userdata, Uint8 *stream, int bytes){
 	int i, j;
 	Sint16* out = (Sint16*)stream;
 	int buflen = bytes / 2;        /* Sint16 = 2 bytes */
 	int samples = buflen / 2;      /* 2 channels */
 
+	float accum = 0;
+	float max = 0;
+	float db = 0;
+
 	synth_generate(lout, rout, samples);
 
 	for(i=0, j=0; i<samples; i++){
 		out[j] = (Sint16)(lout[i]*32767); j++;
 		out[j] = (Sint16)(rout[i]*32767); j++;
+
+		/* output level.
+		dB rms,  20log ( sqrt( avg( x^2 ) ) )
+		dB peak, 20log ( max ( x ) )
+		*/
+
+		accum += lout[i] * lout[i];
+		if(fabs(lout[i]) > max) max = fabs(lout[i]);
+	}
+
+	accum /= samples;
+	accum = sqrt(accum);
+	db = 20*log(accum);
+	if(db > -9999){
+		rms_level = db;
+	}
+	else{
+		rms_level = -9999;
+	}
+
+	db = 20*log(max);
+	if(db > -9999){
+		peak_level = db;
+	}
+	else{
+		peak_level = -9999;
 	}
 }
 
@@ -111,6 +145,13 @@ void audio_quit(){
 	free(rout);
 }
 
+int audio_peak_level(){
+	return peak_level;
+}
+
+int audio_rms_level(){
+	return rms_level;
+}
 
 
 void audio_lock(){

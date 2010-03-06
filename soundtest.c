@@ -7,6 +7,7 @@
 #include <list.h>
 
 #include <music.h>
+#include <audio.h>
 
 
 int x = 0;
@@ -16,6 +17,19 @@ static void press(input in){
 		game_is_over();
 	}
 
+	if(in.button == FIRE_BUTTON){
+		console_printf("peak %d dB, rms %d dB", audio_peak_level(), audio_rms_level());
+	}
+
+	if(in.button == UP_BUTTON){
+		//increase volume
+	}
+
+	if(in.button == DOWN_BUTTON){
+		//decrease volume
+	}
+
+/*
 	if(x){
 		console_printf("pausing music");
 		music_pause();
@@ -26,6 +40,7 @@ static void press(input in){
 		music_play(MUS_TEST1);
 		x = 1;
 	}
+*/
 }
 
 static void release(input in){
@@ -47,7 +62,6 @@ void setup_inner(){
 		printf("open music failed\n");
 	}
 	else{
-		printf("open music worked\n");
 		music_play(MUS_TEST1);
 	}
 }
