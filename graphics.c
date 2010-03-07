@@ -33,12 +33,10 @@
 
 #include <list.h>
 #include <util.h>
-#include <input.h>
 #include <kernel.h>
 #include <video.h>
 #include <graphics.h>
 #include <loader.h>
-#include <console.h>
 
 
 
@@ -151,8 +149,7 @@ void draw_sprites(){
 }
 
 void draw_final(){
-	fps_draw();
-	console_draw();
+	//fps_draw();
 	update_video();
 	clear_video();
 }

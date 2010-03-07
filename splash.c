@@ -24,7 +24,6 @@
 
 #include <stdlib.h>
 
-#include <root.h>
 #include <input.h>
 #include <graphics.h>
 
@@ -65,8 +64,8 @@ void setup_splash(){
 	set_handler(update, draw, press, release);
 
 	my.counter = 0;
-	my.t1 = 1000/dt;
-	my.t2 = 5000/dt;
-	my.t3 = 6000/dt;
+	my.t1 = 100;
+	my.t2 = 500;
+	my.t3 = 600;
 	my.gfx = load_bitmap("splash.tga");
 }

@@ -1,8 +1,7 @@
 #include <stdio.h>
 
 
-#include <root.h>
-#include <video.h>
+//#include <root.h>
 
 #include <list.h>
 

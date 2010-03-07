@@ -33,6 +33,7 @@
 #include <graphics.h>
 #include <text.h>
 #include <stage.h>
+#include <console.h>
 
 #include <util.h>
 
@@ -102,6 +103,7 @@ void update(){
 
 void draw(){
 	handler.draw();
+	console_draw();
 	draw_final();
 }
 
