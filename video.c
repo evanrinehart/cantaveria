@@ -509,13 +509,13 @@ void setup_video(){
 	} 
 
 	boot_msg("video:\n");
-	boot_msg(" resolution: %d x %d %s\n",W,H,fullscreen?"fullscreen":"windowed");
-	boot_msg(" pixel dimensions: %d x %d\n",screen_w,screen_h);
-	boot_msg(" aspect ratio: %g\n",((double)W)/H);
-	boot_msg(" opengl: %s\n",gl_flag?"yes":"no");
-	boot_msg(" x-offset: %d\n",screen_offset_x);
-	boot_msg(" y-offset: %d\n",screen_offset_y);
-	boot_msg(" video on\n");
+	boot_msg("  resolution: %d x %d %s\n",W,H,fullscreen?"fullscreen":"windowed");
+	boot_msg("  pixel dimensions: %d x %d\n",screen_w,screen_h);
+	boot_msg("  aspect ratio: %g\n",((double)W)/H);
+	boot_msg("  opengl: %s\n",gl_flag?"yes":"no");
+	boot_msg("  x-offset: %d\n",screen_offset_x);
+	boot_msg("  y-offset: %d\n",screen_offset_y);
+	boot_msg("  video on\n");
 
 }
 

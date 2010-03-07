@@ -21,100 +21,224 @@
 
    evanrinehart@gmail.com
 */
+#include <stdio.h>
 #include <stdlib.h>
 
+#include <list.h>
+#include <util.h>
+#include <audio.h>
+#include <midi.h>
 #include <seq.h>
 
-static struct {
-	int tick;
-	int terr; // number 1/1323000 ticks
+int tick;
+int terr;
+int loop_start;
+int enable = 0;
 
-	int loop_start;
-	int loop_end;
-	int looping;
+int bpm = 120;
+int tpb = 384;
 
-	event* next_event;
-	event* events;
-} my;
+//event lists
+list* sequence;
+list* blank_events;
+list* immediate_events;
+
+list* next_event;
+list* event_after_loop;
+
+
+
+void advance_event(event* now){
+	if(now->type == EVX_LOOPEND){
+		next_event = event_after_loop;
+		tick = loop_start;
+	}
+	else{
+		next_event = next_event->next;
+	}
+}
+
+event* dequeue_event(){
+	if(next_event == NULL) return NULL;
+
+	event* e = next_event->item;
+	if(e->tick <= tick){
+		advance_event(e);
+
+		if(e->type == EVX_TEMPOCHANGE){
+//printf("tempo change to %d bpm\n", e->val1);
+			bpm = e->val1;
+		}
+
+		if(e->type == EVX_TICKSPERBEAT){
+//printf("setting tpb to %d\n", e->val1);
+			tpb = e->val1;
+		}
+
+		if(e->type == EVX_LOOPSTART){
+			loop_start = e->tick;
+			event_after_loop = next_event;
+		}
+
+
+//printf("event (%d, %03x, %d, %d, %d)\n", e->tick, e->type, e->chan, e->val1, e->val2);
+
+		return e;
+	}
+	else{
+		return NULL;
+	}
+}
+
+int samples_until_next(int max){
+	int N = 2646000;
+	int D = bpm*tpb;
+
+	if(next_event == NULL) return max;
+
+	event* e = next_event->item;
+	if(e->tick - tick > max * D / N) return max;
+
+	int d = (e->tick-tick)*N/D;
+	return d < max ? d : max;
+}
+
+event* seq_advance(int max, int* used){
+	int N = bpm*tpb;     // bpm * tpb
+	int D = 2646000;   // srate * 60
+	event* e;
+
+	int u = samples_until_next(max);
+
+	if(!enable){
+		*used = max;
+		return NULL;
+	}
+
+	*used = u;
+	e = dequeue_event();
+
+	terr += N * u;
+	tick += terr/D;
+	terr %= D;
+
+	return e;
+}
+
+
+
+
+/* *** */
+static event* make_event(int type, int chan, int val1, int val2){
+	event* e;
+	if(blank_events->next){
+		e = pop(blank_events);
+	}
+	else{
+		e = xmalloc(sizeof(event));
+	}
+
+	e->type = type;
+	e->chan = chan;
+	e->val1= val1;
+	e->val2= val2;
+	e->tick = 0;
+	return e;
+}
+
+void recycle_event(event* e){
+	push(blank_events, e);
+}
+
+
+void seq_instant(int type, int chan, int val1, int val2){
+	event* e = make_event(type, chan, val1, val2);
+	audio_lock();
+		append(immediate_events, e);
+	audio_unlock();
+}
+
+
+void seq_play_sound(int id){
+	seq_instant(0x90, 15, id, 0);
+}
+
+
+
+event* seq_get_immediate(){
+	event* e = pop(immediate_events);
+	if(e != NULL){
+		recycle_event(e);
+		return e;
+	}
+	else{
+		return NULL;
+	}
+}
+
+
+
+void seq_enqueue(int when, int type, int chan, int val1, int val2){
+	event* e = make_event(type, chan, val1, val2);
+	e->tick = when;
+	seq_append(e);
+}
+
+void seq_clear(){
+	list* ptr = sequence->next;
+	while(ptr){
+		free(ptr->item);
+		ptr = ptr->next;
+	}
+	recycle(sequence);
+	sequence = empty();
+}
+
+
+void seq_append(event* e){
+	append(sequence, e);
+}
 
 void seq_init(){
+	blank_events = empty();
+	immediate_events = empty();
+	sequence = empty();
 
+	loop_start = 0;
+
+	next_event = sequence->next;
 }
 
-int would_loop(){
-	return my.looping && my.next_event->tick > my.loop_end;
+void seq_load(list* events){
+	audio_lock();
+		tick = 0;
+		terr = 0;
+		sequence = events;
+		next_event = sequence->next;
+		event_after_loop = next_event;
+		loop_start = 0;
+	audio_unlock();
 }
 
-event* get_event_after(int tick){
-	return NULL;
+void seq_seek(list* target){
+	event* e = target->item;
+	audio_lock();
+		next_event = target;
+		tick = e->tick;
+	audio_unlock();
 }
 
-event* get_next_event(){
-	if(would_loop()){
-		return get_event_after(my.loop_start);
-	}
-	else {
-		return my.next_event;
-	}
+list* seq_tell(){
+	return next_event;
 }
 
-
-
-int get_next_tick(){
-	event* e = get_next_event();
-	return e ? e->tick : -1;
+void seq_enable(){
+	enable = 1;
 }
 
-int distance_to_next(){
-	int next_tick = get_next_tick();
-	if(next_tick < 0) return -1;
-
-	return would_loop() ?
-		next_tick - my.loop_start + my.loop_end - my.tick :
-		next_tick - my.tick;
-
-}
-
-
-/* below are three functions that the synth uses to
-control the sequencer. it finds control events, advances
-the event pointer, and finally advances the tick count */
-
-//returns samples from now an event will occur
-//if no event will occur in sbound samples, returns -1
-int seq_lookahead(int sbound){
-return -1;
-	int tbound = sbound*46080/1323000;
-	int T = distance_to_next();
-	if(T < 0) return -1;
-	return T > tbound ?
-		-1 :
-		T*1 + 0;
-}
-
-//returns the next event that would play
-//if there is no such event, returns NULL
-event* seq_get_event(){
-return NULL;
-	//needs to handle looping
+void seq_disable(){
+	seq_instant(EVX_MUSICCUT, 0, 0, 0);
+	enable = 0;
 }
 
 
-//advance the tick position
-void seq_advance(int samples){
-return;
-	// 46080 1/1323000 ticks = 1 sample
-	int N = 46080 * samples;
-	int D = 1323000;
-	my.terr += N;
-	my.tick += N/D + my.terr/D;
-	my.terr %= D;
-//needs to handle looping
-}
-
-
-/* IMPORTANT
-it might well be simpler to implement looping as
-an event which exists at the loop point after all
-other events that occur at that time which sends
-the sequence to a specific tick */

@@ -18,25 +18,36 @@
    The Free Software Foundation, Inc.
    51 Franklin Street, Fifth Floor
    Boston, MA  02110-1301, USA
+
+   evanrinehart@gmail.com
 */
 
-typedef struct reader reader;
+enum {
+	/* loader use */
+	EVX_ENDOFTRACK = 0x100,
+	EVX_META,
 
-reader* data_open(char* dir, char* filename);
-reader* loader_open(char* filename);
+	/* seq use */
+	EVX_TICKSPERBEAT,
+	EVX_TEMPOCHANGE,
+	EVX_LOOPSTART,
+	EVX_LOOPEND,
 
-int loader_read(reader* rd, void* buf, int count);
-int loader_readline(reader* rd, char* buf, int size);
-int loader_scanline(reader* rd, char* format, ...);
-unsigned char* loader_readall(char* filename, int* size);
-void loader_close(reader* rd);
+	/* synth use */
+	EVX_MUSICVOLUME,
+	EVX_MUSICCUT,
+	EVX_FADEOUT,
+	EVX_FADECLEAR
+};
 
-list* loader_readdir(char* path);
-void loader_freedirlist(list* dirs);
+typedef struct event event;
+struct event {
+	int tick;
+	int type;
+	int chan;
+	int val1;
+	int val2;
+};
 
-/*binary i/o*/
-int read_bytes(reader* rd, unsigned char* out, int count);
-int read_byte(reader* rd, int* out);
-int read_short(reader* rd, int* out);
-int read_int(reader* rd, int* out);
-int read_string(reader* rd, char** out);
+list* midi_load(char* filename);
+

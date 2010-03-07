@@ -26,7 +26,6 @@ typedef struct {
 	int x, y;
 } location;
 
-void stage_init();
 int load_zone(char* filename);
 void print_zone(int id);
 void stage_draw_fg(int cx, int cy);

@@ -168,19 +168,21 @@ stage* find_stage(stage* home, int i, int j){
 
 stage* load_stage(reader* rd){
 	int i,j;
+	int dummy;
 	stage* s = xmalloc(sizeof(stage));
-	s->i = read_short(rd);
-	s->j = read_short(rd);
-	read_byte(rd); // flags ?
+	read_short(rd, &s->i);
+	read_short(rd, &s->j);
+	read_byte(rd, &dummy); // flags ?
 
 	for(i=0; i<4; i++){
-		char* str = read_string(rd);
+		char* str;
+		read_string(rd, &str);
 		free(str);
 	}
 
 	for(i=0; i<15; i++){
 		for(j=0; j<20; j++){
-			s->fg[i][j] = read_byte(rd);
+			read_byte(rd, (int*)&s->fg[i][j]);
 		}
 	}
 
@@ -301,7 +303,8 @@ void stage_init(){
 
 
 int load_zone_gfx(reader* rd){
-	char* filename = read_string(rd);
+	char* filename;
+	read_string(rd, &filename);
 	int id = load_bitmap(filename);
 	free(filename);
 	return id;
@@ -310,6 +313,7 @@ int load_zone_gfx(reader* rd){
 
 int load_zone(char* filename){
 	int i, j;
+	int N;
 
 	reader* rd = data_open("zones/", filename);
 	zone* z = xmalloc(sizeof(zone)); /* load routine */
@@ -322,13 +326,13 @@ int load_zone(char* filename){
 	z->bgimage = load_bitmap("background.tga");
 
 	for(i=0; i<256; i++){
-		z->shapes[i] = read_byte(rd);
+		read_byte(rd, (int*)&z->shapes[i]);
 	}
 
-	z->i = read_short(rd);
-	z->j = read_short(rd);
-	z->w = read_short(rd);
-	z->h = read_short(rd);
+	read_short(rd, &z->i);
+	read_short(rd, &z->j);
+	read_short(rd, &z->w);
+	read_short(rd, &z->h);
 	z->stages = xmalloc(z->w * z->h * sizeof(stage*));
 
 	for(i=0; i < z->w; i++){
@@ -337,7 +341,7 @@ int load_zone(char* filename){
 		}
 	}
 
-	int N = read_short(rd);
+	read_short(rd, &N);
 	for(i=0; i<N; i++){
 		stage* s = load_stage(rd);
 		z->stages[s->i + s->j * z->w] = s;

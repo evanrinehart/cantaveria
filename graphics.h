@@ -47,7 +47,6 @@ typedef struct {
   struct frame* frames;
 } animation;
 
-void graphics_init();
 
 void draw_final();
 void draw_sprites();

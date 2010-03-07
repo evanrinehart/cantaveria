@@ -23,32 +23,20 @@
 */
 
 
-typedef enum {
-	MUS_COOL
 
 
-} mus_id;
-
-
-typedef struct event event;
-struct event {
-	int tick;
-	char midi[4];
-	struct event* next;
-};
-
-void seq_init();
 
 /* use these from audio thread */
-int seq_lookahead(int samples);
-event* seq_get_event();
-void seq_advance(int samples);
+event* seq_advance(int samples, int* used);
+event* seq_get_immediate();
 
-
-/* use these from main thread */
-void music_play();
-void music_pause();
-void music_reset();
-int music_load(char* filename, mus_id id);
-void music_change(mus_id id);
+/***/
+void seq_instant(int type, int chan, int val1, int val2);
+void seq_clear();
+void seq_load(list* events);
+void seq_seek(list* target);
+list* seq_tell();
+void seq_enable();
+void seq_disable();
+void seq_append(event* e);
 

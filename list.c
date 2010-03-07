@@ -12,6 +12,10 @@ list* make_new(list* next, void* item){
 
 	if(freelist == NULL){
 		ptr = malloc(sizeof(struct list));
+		if(ptr == NULL){
+			fprintf(stderr, "list: OUT OF MEMORY");
+			exit(-2);
+		}
 	}
 	else{
 		ptr = freelist;
@@ -49,7 +53,6 @@ void* pop(list* L){
 	else{
 		return NULL;
 	}
-
 }
 
 void append(list* L, void* item){
@@ -70,8 +73,99 @@ void recycle(list* L){
 	freelist = L;
 }
 
+int length(list* L){
+	list* ptr = L->next;
+	int c = 0;
+	while(ptr){
+		c += 1;
+		ptr = ptr->next;
+	}
+	return c;
+}
 
 
+/* merge sort */
+static void split(list* L, list** left, list** right){
+	list* ptr = L;
+	int c = 0;
+
+	if(L == NULL){
+		*left = NULL;
+		*right = NULL;
+	}
+
+	while(ptr){
+		c++;
+		ptr = ptr->next;
+	}
+
+	ptr = L;
+	c /= 2;
+	c -= 1;
+	while(c > 0){
+		c--;
+		ptr = ptr->next;
+	}
+
+	*left = L;
+	*right = ptr->next;
+	ptr->next = NULL;
+}
+
+static list* merge(list* left, list* right, compare_func cmp){
+	/* merges right into left */
+	list* tmp;
+	list* ptr;
+
+	if(left == NULL) return right;
+
+	if(right && cmp(right->item, left->item) > 0){
+		tmp = right;
+		right = right->next;
+		tmp->next = left;
+		left = tmp;
+	}
+
+	ptr = left;
+	while(right && ptr->next){
+		if(cmp(right->item, ptr->next->item) > 0){
+			tmp = right;
+			right = right->next;
+			tmp->next = ptr->next;
+			ptr->next = tmp;
+			ptr = ptr->next;
+		}
+		else{
+			ptr = ptr->next;
+		}
+	}
+
+	if(ptr->next == NULL)
+		ptr->next = right;
+
+	return left;
+}
+
+static list* merge_sort(list* L, compare_func cmp){
+	list* left;
+	list* right;
+
+	if(L == NULL) return NULL;
+	if(L->next == NULL) return L;
+
+	split(L, &left, &right);
+
+	return merge(
+		merge_sort(left, cmp),
+		merge_sort(right, cmp),
+		cmp
+	);
+}
+
+void sort(list* L, compare_func cmp){
+	L->next = merge_sort(L->next, cmp);
+}
+/* end merge sort */
 
 
 void print_list(list* L, void (*print)(void* item)){
@@ -109,45 +203,3 @@ void print(void* item){
 	printf("%s", s);
 }
 
-void list_sanitytest(){
-	list* L = empty();
-	char* s;
-	printf("empty: ");
-	println_list(L, print);
-
-	printf("push a b c: ");
-	push(L, "a");
-	push(L, "b");
-	push(L, "c");
-	println_list(L, print);
-
-	printf("pop: ");
-	s = pop(L);
-	printf("%s ", s);
-	println_list(L, print);
-
-	printf("freelist: ");
-	list_print_free();
-	
-	printf("pop: ");
-	s = pop(L);
-	printf("%s ", s);
-	println_list(L, print);
-
-	printf("freelist: ");
-	list_print_free();
-
-	printf("append a b c: ");
-	append(L, "a");
-	append(L, "b");
-	append(L, "c");
-	println_list(L, print);
-	
-	printf("freelist: ");
-	list_print_free();
-
-	printf("recycle: ");
-	recycle(L);
-	list_print_free();
-	
-}

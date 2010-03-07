@@ -22,8 +22,16 @@
    evanrinehart@gmail.com
 */
 
-#include <synth.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#include <util.h>
+#include <list.h>
+#include <midi.h>
 #include <seq.h>
+#include <synth.h>
+#include <orc.h>
 
 /*
 timing stuff
@@ -40,10 +48,15 @@ which in the above example = 28 and 32760/46080
 
 */
 
+typedef struct {
+	float L, R, V;
+	mix_callback mix;
+	control_callback control;
+	cleanup_callback cleanup;
+	void* data;
+} channel;
 
 int srate;
-int bpm = 120;
-int tpb = 384;
 
 int serr = 0; // 1/1000 of a sample
 
@@ -51,86 +64,190 @@ int tick;
 int terr = 0; // 1/(bpm*tpb) of a sample
 int terrd = 46080; //bpm * tpb
 
-void set_sample_rate(int x){ srate = x; }
-void set_bpm(int x){ bpm = x; }
+
+channel channels[16];
 
 
-void synth_init(int sample_rate){
-	srate = sample_rate;
-	seq_init();
+
+
+
+
+
+
+
+
+void dummy_mix(void* v, float f[], int i){}
+void dummy_control(void* v, int a, int b, int c, int d){}
+void dummy_cleanup(void* v){}
+
+channel make_dummy_channel(){
+	channel ch;
+	ch.L = 1;
+	ch.R = 1;
+	ch.V = 1;
+	ch.mix = dummy_mix;
+	ch.cleanup = dummy_cleanup;
+	ch.control = dummy_control;
+	ch.data = NULL;
+	return ch;
+}
+
+channel make_channel_from_instrument(enum instrument_name name){
+	channel ch = make_dummy_channel();
+	instrument ins = orc_load(name);
+	ch.mix = ins.mix;
+	ch.control = ins.control;
+	ch.cleanup = ins.cleanup;
+	ch.data = ins.data;
+	return ch;
+}
+
+
+
+void set_music_volume(int percent){
+
+}
+
+void cut_music(){
+
+}
+
+void fade_clear(){
+
+}
+
+void fadeout(int seconds){
+
+}
+
+
+
+void mix(channel* ch, float in[], float left[], float right[], int count){
+	int i;
+	for(i=0; i<count; i++){
+		left[i] += in[i] * ch->L * ch->V;
+		right[i] += in[i] * ch->R * ch->V;
+	}
+}
+
+void zero(float buf[], int count){
+	int i;
+	for(i=0; i<count; i++){
+		buf[i] = 0;
+	}
+}
+
+void reduce(float buf[], int count, float factor){
+	int i;
+	for(i=0; i<count; i++){
+		buf[i] /= factor;
+	}
+}
+
+void clip(float buf[], int count){
+	int i;
+	int clipped = 0;
+	float avg = 0;
+	for(i=0; i<count; i++){
+		avg += buf[i]*buf[i];
+		if(buf[i] > 1.0){
+			clipped = 1;
+			buf[i] = 1.0;
+		}
+		else if(buf[i] < -1.0) buf[i] = -1.0;
+	}
+
+	if(clipped){
+		printf("synth: clipping distortion due to output overload\n");
+	}
+
+	avg /= count?count:1;
+	avg = sqrt(avg);
 }
 
 void generate(float left[], float right[], int count){
+	float buf[4096];
 	int i;
+	float V = 1.0f;
 
-/* supposed to mix all generators for count samples
-this includes synthesizers and sample generators */
-/* this loop is unsuitable as an inner loop */
-	for(i=0; i<count; i++){
-		left[i] = 0;
-		right[i] = 0;
+	zero(left, count);
+	zero(right, count);
+	for(i=0; i<16; i++){
+		channel* ch = &(channels[i]);
+		zero(buf, count);
+		ch->mix(ch->data, buf, count);
+		mix(ch, buf, left, right, count);
 	}
-
-
-/* instead zero them and pass them to each generator
-which will accumulate their output into left and right
-
-in the end divide by maximum number of generators
-
-the final stage is master volume, which will be increased if
-the result is too quiet */
+	reduce(left, count, 16.0f/V);
+	reduce(right, count, 16.0f/V);
+	clip(left, count);
+	clip(right, count);
 }
 
 void control(event* e){
-/* we decided on polyphonic synth (and multiple instances of
-a playing samlple). important to remember that all controller
-events affect entire instrument channels. this means it affects
-all generators for that intrument */
+	if(e == NULL) return;
+	int chan = e->chan;
+	int type = e->type;
+	int val1 = e->val1;
+	int val2 = e->val2;
+	int val  = (e->val2 << 7) | e->val1;
+	channel* ch = &(channels[chan]);
+
+	switch(type){
+		case EVX_MUSICVOLUME: set_music_volume(val1); break;
+		case EVX_MUSICCUT: cut_music(); break;
+		case EVX_FADECLEAR: fade_clear(); break;
+		case EVX_FADEOUT: fadeout(val1); break;
+		default: ch->control(ch->data, type, val1, val2, val); break;
+	}
+}
+
+void immediate_control(){
+	event* e = seq_get_immediate();
+	while(e){
+		control(e);
+		e = seq_get_immediate();
+	}
 }
 
 void synth_generate(float left[], float right[], int samples){
 	int i=0;
-	for(;;){
-		int next = seq_lookahead(samples);
-		if(next < 0) break;
-		generate(left+i, right+i, next-i);
-		control(seq_get_event());
-		i = next;
+	int remaining = samples;
+	int used = 0;
+	event* e = NULL;
+
+	immediate_control();
+
+	while(remaining > 0){
+		e = seq_advance(remaining, &used);
+		generate(left+i, right+i, used);
+		control(e);
+		i += used;
+		remaining -= used;
+		if(e == NULL && used == 0){
+			error_msg("synth: sequencer failed to advance or provide a control event.");
+			break;
+		}
 	};
-	generate(left+i, right+i, samples-i);
-	seq_advance(samples);	
 }
 
 
+void synth_init(){
+	int i;
 
+	orc_init(SAMPLE_RATE);
 
-/* possible generators (scratch work)
+	for(i=0; i<16; i++){
+		channels[i] = make_dummy_channel();
+	}
 
-square wave
-saw wave
-triangle wave
-square saw produce a band limited signal
+	//channels[0] = make_channel_from_instrument(ORC_KARPLUS);
+	//channels[1] = make_channel_from_instrument(ORC_KARPLUS);
+	//channels[2] = make_channel_from_instrument(ORC_KARPLUS);
+	//channels[3] = make_channel_from_instrument(ORC_KARPLUS);
+	channels[0] = make_channel_from_instrument(ORC_DEFAULT);
+	channels[1] = make_channel_from_instrument(ORC_DEFAULT);
+	channels[2] = make_channel_from_instrument(ORC_DEFAULT);
+	channels[3] = make_channel_from_instrument(ORC_DEFAULT);
 
-string signal
-this uses a karplus strong algorithm
-noise -> variable delay (linear interpolating) -> first order low pass
-
-voice signal
-formant synthesis
-two or three gaussians (perhaps padded) -> IFFT
-also works for bell
-
-detuned oscillators
-
-samples on ch 10
-just samples
-
-effects
-portamento
-vibrato
-echo
-chorus
-reverb
-appegiator
-adsr envelope
-*/
+}

@@ -45,7 +45,7 @@ void loader_init(){
 	if(arc == NULL){
 		fatal_error("loader: unable to load data archive \"%s\" (%s)\n", filename, zip_geterror());
 	}
-	boot_msg("loader: ... OK\n");
+	boot_msg("loader: game data found\n");
 }
 
 void loader_quit(){
@@ -173,35 +173,85 @@ int loader_scanline(reader* rd, char* format, ...){
 
 
 /*binary i/o*/
-int read_byte(reader* rd){
-	unsigned char c = 0;
-	loader_read(rd, &c, 1);
-	return c;
+int read_bytes(reader* rd, unsigned char* buf, int count){
+	int n = loader_read(rd, buf, count);
+	if(n < 0){
+		error_msg("read_bytes: read error\n");
+		return -1;
+	}
+	else if(n != count){
+		error_msg("read_bytes: end of file reached prematurely (%d out of %d read)\n", n, count);
+		return -1;
+	}
+	else{
+		return 0;
+	}
 }
 
-int read_short(reader* rd){
-	unsigned char c[2] = {0,0};
-	loader_read(rd, c+0, 1);
-	loader_read(rd, c+1, 1);
-	return (c[0]<<8) | c[1];
+int read_byte(reader* rd, int* out){
+	unsigned char c;
+	int n = loader_read(rd, &c, 1);
+	if(n < 0){
+		error_msg("read_byte: read error\n");
+		return -1;
+	}
+	else{
+		*out = c;
+		return 0;
+	}
 }
 
-int read_int(reader* rd){
-	unsigned char c[4] = {0,0,0,0};
-	loader_read(rd, c+0, 1);
-	loader_read(rd, c+1, 1);
-	loader_read(rd, c+2, 1);
-	loader_read(rd, c+3, 1);
-	return (c[0]<<24) | (c[1]<<16) | (c[2]<<8) | c[3];
+int read_short(reader* rd, int* out){
+	unsigned char c[2];
+	int n = loader_read(rd, c, 2);
+
+	if(n < 0){
+		error_msg("read_byte: read error\n");
+		return -1;
+	}
+	else if(n != 2){
+		error_msg("read_short: end of file reached prematurely\n");
+		return -1;
+	}
+	else{
+		*out = (c[0]<<8) | c[1];
+		return 0;
+	}
 }
 
-char* read_string(reader* rd){
-	unsigned int L = read_int(rd);
-	if(L==0) return NULL;
-	char* S = xmalloc(L+1);
-	S[L] = '\0';
-	loader_read(rd, S, L);
-	return S;
+int read_int(reader* rd, int* out){
+	unsigned char c[4];
+	int n = loader_read(rd, c, 4);
+
+	if(n < 0){
+		error_msg("read_byte: read error\n");
+		return -1;
+	}
+	else if(n != 4){
+		error_msg("read_int: end of file reached prematurely\n");
+		return -1;
+	}
+	else{
+		*out = (c[0]<<24) | (c[1]<<16) | (c[2]<<8) | c[3];
+		return 0;
+	}
+}
+
+int read_string(reader* rd, char** out){
+	unsigned L;
+	if(read_int(rd, (int*)&L) < 0){
+		return -1;
+	}
+
+	*out = xmalloc(L+1);
+	*out[L] = '\0';
+	if(read_bytes(rd, (unsigned char*)*out, L) < 0){
+		free(*out);
+		return -1;
+	}
+	else{
+		return 0;
+	}
 }
 
 
