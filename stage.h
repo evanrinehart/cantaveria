@@ -21,9 +21,9 @@
 */
 
 typedef struct {
-	int z;
-	int i, j;
-	int x, y;
+	int z;    /* which zone */
+	int i, j; /* which stage */
+	int x, y; /* absolute coords in 1024th of a pixel */
 } location;
 
 int load_zone(char* filename);

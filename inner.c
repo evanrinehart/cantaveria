@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 
 //#include <root.h>
 
 #include <list.h>
+#include <util.h>
 
 #include <input.h>
 //#include <entity.h>
@@ -11,6 +13,8 @@
 #include <gameover.h>
 
 #include <console.h>
+
+#include <stage.h>
 
 //int run(Y* y, int dt){
 /*
@@ -73,6 +77,18 @@ void setup_inner(){
 	// create entities
 	console_clear();
 	set_handler(update, draw, press, release);
+
+
+	int x = load_zone("myzone");
+	if(x < 0){
+		error_msg("inner: cannot load zone\n");
+		exit(-1);
+	}
+	else{
+		print_zone(x);
+	}
+
+
 }
 
 

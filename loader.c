@@ -239,12 +239,14 @@ int read_int(reader* rd, int* out){
 
 int read_string(reader* rd, char** out){
 	unsigned L;
+
 	if(read_int(rd, (int*)&L) < 0){
 		return -1;
 	}
 
 	*out = xmalloc(L+1);
-	*out[L] = '\0';
+	(*out)[L] = '\0';
+
 	if(read_bytes(rd, (unsigned char*)*out, L) < 0){
 		free(*out);
 		return -1;

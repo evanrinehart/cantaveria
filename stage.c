@@ -75,7 +75,7 @@ typedef struct {
 	char fg[20][15];
 	char bg[20][15];
 	list* decs;
-	enum cardinal snap[4];
+	char snap[4];
 	zoneport* exit;
 } stage;
 
@@ -91,8 +91,48 @@ typedef struct {
 	stage** stages; // w by h array
 } zone;
 
+/*
+how the above is stored in a binary file
+string    z->name
+byte[256] z->shapes
+short[4]  z->{i, j, w, h}
+short     [number of stages N]
+[N of the following
+	short[2]  s->{i, j}
+	byte      unknown
+	string[4] exits
+	byte[20x15] s->fg
+]
 
-
+new version
+byte[4]   0x0a 0x0b 0x0c 0x0d
+int       format version (1)
+int	  z->id
+string    z->name
+short[4]  z->{i, j, w, j}
+string    fgtiles file
+string    bgtiles file
+string    dectiles file
+string    bgimage file
+byte[256] z->shapes
+short     number of stages N
+[N of the following
+	short[2]  s->{i, j}
+	byte[4]   s->snap
+	byte[4]   'exit' or 'none'
+		a zone port is next if previous was 'exit'
+		string   zone
+		short[2] i, j
+		byte     'L' 'U' 'D' or 'R'
+	short     number of decorations M
+	[M of the following
+		short[2] i, j
+		short    tile
+	]
+	byte[20x15] fg
+	byte[20x15] bg
+]
+*/
 
 typedef struct {
 	int x, y;
@@ -166,28 +206,7 @@ stage* find_stage(stage* home, int i, int j){
 		return stage_lookup(z, si - z->w, sj - z->h);
 }
 
-stage* load_stage(reader* rd){
-	int i,j;
-	int dummy;
-	stage* s = xmalloc(sizeof(stage));
-	read_short(rd, &s->i);
-	read_short(rd, &s->j);
-	read_byte(rd, &dummy); // flags ?
 
-	for(i=0; i<4; i++){
-		char* str;
-		read_string(rd, &str);
-		free(str);
-	}
-
-	for(i=0; i<15; i++){
-		for(j=0; j<20; j++){
-			read_byte(rd, (int*)&s->fg[i][j]);
-		}
-	}
-
-	return s;
-}
 
 /* collision computations */
 /*FIXME*/
@@ -301,38 +320,116 @@ void stage_init(){
 	zones = empty();
 }
 
-
-int load_zone_gfx(reader* rd){
-	char* filename;
-	read_string(rd, &filename);
-	int id = load_bitmap(filename);
-	free(filename);
-	return id;
+static int load_stage_dimensions(stage* s, reader* rd){
+	int dummy;
+	return
+		read_short(rd, &s->i) ||
+		read_short(rd, &s->j) ||
+		read_byte(rd, &dummy);
+	return 0;
 }
 
+static int load_stage_exits(stage* s, reader* rd){
+	int i;
+	for(i=0; i<4; i++){
+		char* str;
+		if(read_string(rd, &str)) return -1;
+		free(str);
+	}
+	return 0;
+}
 
-int load_zone(char* filename){
+static int load_stage_data(stage* s, reader* rd){
 	int i, j;
-	int N;
+	for(i=0; i<15; i++){
+		for(j=0; j<20; j++){
+			if(read_byte(rd, (int*)&s->fg[i][j])) return -1;
+		}
+	}
+	return 0;
+}
 
-	reader* rd = data_open("zones/", filename);
-	zone* z = xmalloc(sizeof(zone)); /* load routine */
+static stage* load_stage(reader* rd){
+	stage* s = xmalloc(sizeof(stage));
+	s->decs = empty();
+	s->exit = NULL;
+	s->snap[NORTH] = 0;
+	s->snap[WEST] = 0;
+	s->snap[EAST] = 0;
+	s->snap[SOUTH] = 0;
 
-	strncpy(z->name, filename, 32);
-	z->id = 0;
-	z->fgtiles = load_zone_gfx(rd);
-//	z->bgtiles = load_zone_gfx(rd);
-//	z->dectiles = load_zone_gfx(rd);;
-	z->bgimage = load_bitmap("background.tga");
+	if(
+		load_stage_dimensions(s, rd) ||
+		load_stage_exits(s, rd) ||
+		load_stage_data(s, rd)
+	)
+	{
+		recycle(s->decs);
+		free(s);
+		return NULL;
+	}
+	return s;
+}
 
-	for(i=0; i<256; i++){
-		read_byte(rd, (int*)&z->shapes[i]);
+static int load_zone_bitmap(reader* rd, int* out){
+	char* filename;
+	if(read_string(rd, &filename)){
+		error_msg("load_zone: read error (graphics list)\n");
+		return -1;
+	}
+	*out = load_bitmap(filename);
+	free(filename);
+	if(*out < 0){
+		error_msg("load_zone: can't load graphics %s\n", filename);
+		return -1;
+	}
+	else{
+		return 0;
+	}
+}
+
+static int load_zone_gfx(zone* z, reader* rd){
+	if(
+		load_zone_bitmap(rd, &z->fgtiles) ||
+		//load_zone_bitmap(rd, &z->bgtiles) ||
+		//load_zone_bitmap(rd, &z->dectiles) ||
+		0
+	)
+	{
+		return -1;
 	}
 
-	read_short(rd, &z->i);
-	read_short(rd, &z->j);
-	read_short(rd, &z->w);
-	read_short(rd, &z->h);
+	/* this should be in the file too */
+	z->bgimage = load_bitmap("background.tga");
+	if(z->bgimage < 0){
+		error_msg("load_zone: can't load background\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+static int load_zone_shapes(zone* z, reader* rd){
+	int i;
+	for(i=0; i<256; i++){
+		if(read_byte(rd, (int*)&z->shapes[i])){
+			return -1;
+		}
+	}
+	return 0;
+}
+
+static int load_zone_dimensions(zone* z, reader* rd){
+	return
+		read_short(rd, &z->i) ||
+		read_short(rd, &z->j) ||
+		read_short(rd, &z->w) ||
+		read_short(rd, &z->h);
+}
+
+static int load_zone_stages(zone* z, reader* rd){
+	int i, j, N;
+
 	z->stages = xmalloc(z->w * z->h * sizeof(stage*));
 
 	for(i=0; i < z->w; i++){
@@ -341,10 +438,42 @@ int load_zone(char* filename){
 		}
 	}
 
-	read_short(rd, &N);
+	if(read_short(rd, &N)) return -1;
+
 	for(i=0; i<N; i++){
 		stage* s = load_stage(rd);
+		if(s == NULL) return -1;
 		z->stages[s->i + s->j * z->w] = s;
+	}
+
+	return 0;
+}
+
+int load_zone(char* filename){
+	reader* rd = data_open("zones/", filename);
+	if(rd == NULL){
+		error_msg("load_zone: error opening \"%s\"\n", filename);
+		return -1;
+	}
+
+	zone* z = xmalloc(sizeof(zone));
+	strncpy(z->name, filename, 32);
+	z->id = 0; /* supposed to be in file */
+	z->fgtiles = -1;
+	z->bgtiles = -1;
+	z->dectiles = -1;
+	z->bgimage = -1;
+
+	if(
+		load_zone_gfx(z, rd) ||
+		load_zone_shapes(z, rd) ||
+		load_zone_dimensions(z, rd) ||
+		load_zone_stages(z, rd)
+	){
+		error_msg("load_zone: error reading \"%s\"\n", filename);
+		free(z);
+		loader_close(rd);
+		return -1;
 	}
 
 	push(zones, z);
@@ -352,10 +481,79 @@ int load_zone(char* filename){
 }
 
 
+void print_shapes(enum tile_shape shapes[256]){
+	int i, j;
+	for(i=0; i<16; i++){
+		printf("  ");
+		for(j=0; j<16; j++){
+			printf("%02x ", shapes[i*16 + j]);
+		}
+		printf("\n");
+	}
+}
+
+void print_dir(char snap[4], enum cardinal dir, char* c){
+	if(snap[dir]) printf("%s", c);
+	else printf(" ");
+}
+
+void print_snaps(char snap[4]){
+	printf("    snap: (");
+	print_dir(snap, WEST, "L");
+	print_dir(snap, NORTH, "U");
+	print_dir(snap, SOUTH, "D");
+	print_dir(snap, EAST, "R");
+	printf(")\n");
+}
+
+void print_stages(stage** stages, int w, int h){
+	int i, j;
+	for(j=0; j<h; j++){
+		printf("  ");
+		for(i=0; i<w; i++){
+			stage* s = stages[j*w + i];
+			if(s == NULL){
+				printf(" ");
+			}
+			else{
+				printf("O");
+			}
+		}
+		printf("\n");
+	}
+
+	for(j=0; j<h; j++){
+		for(i=0; i<w; i++){
+			stage* s = stages[j*w + i];
+			if(s == NULL) continue;
+
+			printf("  stage (%d, %d):\n", i, j);
+			printf("    decs: %d\n", length(s->decs));
+			print_snaps(s->snap);
+			printf("    exit: %p\n", s->exit);
+			printf("\n");
+		}
+	}
+}
+
+
 void print_zone(int id){
 	zone* z = find_zone_by_id(id);
-	printf("zone: %p\n", z);
+	printf("zone: %s\n", z->name);
+
+	printf("  id: %d\n", z->id);
+	printf("  dimensions: %d x %d\n", z->w, z->h);
+	printf("  position: (%d, %d)\n", z->i, z->j);
+	printf("  fg: %d\n", z->fgtiles);
+	printf("  bg: %d\n", z->bgtiles);
+	printf("  dec: %d\n", z->dectiles);
+	printf("  bgimage: %d\n", z->bgimage);
+	printf("  shapes:\n");
+	print_shapes(z->shapes);
+	printf("  stages:\n");
+	print_stages(z->stages, z->w, z->h);
 }
+
 
 
 void stage_bind_camera(location l, int* x, int* y){
