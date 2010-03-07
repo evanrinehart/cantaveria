@@ -70,11 +70,18 @@ typedef struct {
 } zoneport;
 
 typedef struct {
+	int i, j;
+	int w, h;
+	int flags;
+} water;
+
+typedef struct {
 	int zid;
 	int i, j;
 	char fg[20][15];
 	char bg[20][15];
 	list* decs;
+	list* waters;
 	char snap[4];
 	zoneport* exit;
 } stage;
@@ -108,8 +115,7 @@ new version
 byte[4]   0x0a 0x0b 0x0c 0x0d
 int       format version (1)
 int	  z->id
-string    z->name
-short[4]  z->{i, j, w, j}
+short[4]  z->{i, j, w, h}
 string    fgtiles file
 string    bgtiles file
 string    dectiles file
@@ -128,6 +134,11 @@ short     number of stages N
 	[M of the following
 		short[2] i, j
 		short    tile
+	]
+	short    number of waters W
+	[W of the following
+		short[4] i, j, w, h
+		int flags
 	]
 	byte[20x15] fg
 	byte[20x15] bg
@@ -315,27 +326,57 @@ block intersecting_block(stage* s, int left, int right, int top, int bottom){
 
 
 
-/* public methods */
-void stage_init(){
-	zones = empty();
-}
-
+/******** stage loading routines ********/
 static int load_stage_dimensions(stage* s, reader* rd){
-	int dummy;
 	return
 		read_short(rd, &s->i) ||
-		read_short(rd, &s->j) ||
-		read_byte(rd, &dummy);
+		read_short(rd, &s->j);
+}
+
+static int load_stage_snap(stage* s, reader* rd){
+	return read_bytes(rd, (unsigned char*)s->snap, 4);
+}
+
+static int load_stage_exit(stage* s, reader* rd){
+	char what[5] = {0,0,0,0,0};
+	if(read_bytes(rd, (unsigned char*)what, 4)) return -1;
+
+	if(strcmp(what, "none") == 0){
+		return 0;
+	}
+	if(strcmp(what, "exit") == 0){
+/* FIXME */
+printf("INCOMPLETE load_stage_exit doesnt work yet\n");
+		return -1;
+	}
+
+	error_msg("load_zone: invalid stage header (missing exit)\n");
+	return -1;
+}
+
+static int load_stage_decorations(stage* s, reader* rd){
+	int N;
+	if(read_short(rd, &N)) return -1;
+
+	if(N > 0){
+/* FIXME */
+printf("INCOMPLETE load_stage_decorations doesnt work yet\n");
+	return -1;
+	}
+
 	return 0;
 }
 
-static int load_stage_exits(stage* s, reader* rd){
-	int i;
-	for(i=0; i<4; i++){
-		char* str;
-		if(read_string(rd, &str)) return -1;
-		free(str);
+static int load_stage_waters(stage* s, reader* rd){
+	int N;
+	if(read_short(rd, &N)) return -1;
+
+	if(N > 0){
+/* FIXME */
+printf("INCOMPLETE load_stage_waters doesnt work yet\n");
+	return -1;
 	}
+
 	return 0;
 }
 
@@ -344,6 +385,11 @@ static int load_stage_data(stage* s, reader* rd){
 	for(i=0; i<15; i++){
 		for(j=0; j<20; j++){
 			if(read_byte(rd, (int*)&s->fg[i][j])) return -1;
+		}
+	}
+	for(i=0; i<15; i++){
+		for(j=0; j<20; j++){
+			if(read_byte(rd, (int*)&s->bg[i][j])) return -1;
 		}
 	}
 	return 0;
@@ -360,7 +406,10 @@ static stage* load_stage(reader* rd){
 
 	if(
 		load_stage_dimensions(s, rd) ||
-		load_stage_exits(s, rd) ||
+		load_stage_snap(s, rd) ||
+		load_stage_exit(s, rd) ||
+		load_stage_decorations(s, rd) ||
+		load_stage_waters(s, rd) ||
 		load_stage_data(s, rd)
 	)
 	{
@@ -377,6 +426,10 @@ static int load_zone_bitmap(reader* rd, int* out){
 		error_msg("load_zone: read error (graphics list)\n");
 		return -1;
 	}
+	if(strlen(filename) == 0){
+		*out = -1;
+		return 0;
+	}
 	*out = load_bitmap(filename);
 	free(filename);
 	if(*out < 0){
@@ -389,24 +442,11 @@ static int load_zone_bitmap(reader* rd, int* out){
 }
 
 static int load_zone_gfx(zone* z, reader* rd){
-	if(
+	return
 		load_zone_bitmap(rd, &z->fgtiles) ||
-		//load_zone_bitmap(rd, &z->bgtiles) ||
-		//load_zone_bitmap(rd, &z->dectiles) ||
-		0
-	)
-	{
-		return -1;
-	}
-
-	/* this should be in the file too */
-	z->bgimage = load_bitmap("background.tga");
-	if(z->bgimage < 0){
-		error_msg("load_zone: can't load background\n");
-		return -1;
-	}
-
-	return 0;
+		load_zone_bitmap(rd, &z->bgtiles) ||
+		load_zone_bitmap(rd, &z->dectiles) ||
+		load_zone_bitmap(rd, &z->bgimage);
 }
 
 static int load_zone_shapes(zone* z, reader* rd){
@@ -440,6 +480,7 @@ static int load_zone_stages(zone* z, reader* rd){
 
 	if(read_short(rd, &N)) return -1;
 
+printf("number of stages %d\n", N);
 	for(i=0; i<N; i++){
 		stage* s = load_stage(rd);
 		if(s == NULL) return -1;
@@ -448,6 +489,32 @@ static int load_zone_stages(zone* z, reader* rd){
 
 	return 0;
 }
+
+int load_zone_header(zone* z, reader* rd){
+	unsigned char magic1[4];
+	unsigned char magic2[4] = {0x0a, 0x0b, 0x0c, 0x0d};
+	int format;
+
+	if(
+		read_bytes(rd, magic1, 4) ||
+		read_int(rd, &format) ||
+		read_int(rd, &z->id)
+	)
+		return -1;
+
+	if(memcmp(magic1, magic2, 4) != 0){
+		error_msg("load_zone: wrong file type (missing magic)\n");
+		return -1;
+	}
+
+	if(format != 1){
+		error_msg("load_zone: wrong format version\n");
+		return -1;
+	}
+
+	return 0;
+}
+
 
 int load_zone(char* filename){
 	reader* rd = data_open("zones/", filename);
@@ -465,9 +532,10 @@ int load_zone(char* filename){
 	z->bgimage = -1;
 
 	if(
+		load_zone_header(z, rd) ||
+		load_zone_dimensions(z, rd) ||
 		load_zone_gfx(z, rd) ||
 		load_zone_shapes(z, rd) ||
-		load_zone_dimensions(z, rd) ||
 		load_zone_stages(z, rd)
 	){
 		error_msg("load_zone: error reading \"%s\"\n", filename);
@@ -479,6 +547,10 @@ int load_zone(char* filename){
 	push(zones, z);
 	return z->id;
 }
+/**************************************/
+
+
+
 
 
 void print_shapes(enum tile_shape shapes[256]){
@@ -592,4 +664,11 @@ int stage_xcollide(location loc, int w, int h, int v, int* x){
 
 int stage_ycollide(location loc, int w, int h, int v, int* y){
 	return 0;
+}
+
+
+
+
+void stage_init(){
+	zones = empty();
 }

@@ -79,7 +79,7 @@ void setup_inner(){
 	set_handler(update, draw, press, release);
 
 
-	int x = load_zone("myzone");
+	int x = load_zone("2zone");
 	if(x < 0){
 		error_msg("inner: cannot load zone\n");
 		exit(-1);
