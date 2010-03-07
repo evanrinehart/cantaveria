@@ -64,23 +64,23 @@ int music_load(char* filename, mus_id id){
 	list* events;
 
 	if(id == MUS_NOTHING){
-		printf("music_load: you can't load a song into MUS_NOTHING\n");
+		error_msg("music_load: you can't load a song into MUS_NOTHING\n");
 		return -1;
 	}
 
 	if(is_id_invalid(id)){
-		printf("music_load: music id out of range (%d)\n", id);
+		error_msg("music_load: music id out of range (%d)\n", id);
 		return -1;
 	}
 
 	if(songs[id] != NULL){
-		printf("music_load: slot %s not empty\n", mus_name(id));
+		error_msg("music_load: slot %s not empty\n", mus_name(id));
 		return -1;
 	}
 
 	events = midi_load(filename);
 	if(events == NULL){
-		printf("music_load: unable to load \"%s\"\n", filename);
+		error_msg("music_load: unable to load \"%s\"\n", filename);
 		return -1;
 	}
 

@@ -111,16 +111,16 @@ void audio_init(){
 		fatal_error("sdl: cannot open audio (%s)\n", SDL_GetError());
 	}
 
-	printf("audio:\n");
-	printf("  sample rate: %d\n", got.freq);
-	printf("  channels: %d\n", got.channels);
-	printf("  samples: %d\n", got.samples);
-	printf("  format: %s\n", sample_format_str(got.format));
+	boot_msg("audio:\n");
+	boot_msg("  sample rate: %d\n", got.freq);
+	boot_msg("  channels: %d\n", got.channels);
+	boot_msg("  samples: %d\n", got.samples);
+	boot_msg("  format: %s\n", sample_format_str(got.format));
 
 	if(got.format != AUDIO_S16){
-		printf("    WARNING: audio format not AUDIO_S16 :(\n");
+		boot_msg("    WARNING: audio format not AUDIO_S16 :(\n");
 		SDL_CloseAudio();
-		printf("  *no sound*\n");
+		boot_msg("  *no sound*\n");
 		return;
 	}
 	lout = xmalloc(got.samples*sizeof(float));
@@ -130,7 +130,6 @@ void audio_init(){
 
 	printf("  sound online\n");
 	SDL_PauseAudio(0);
-	
 
 }
 
