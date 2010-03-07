@@ -24,6 +24,5 @@
 
 #define SAMPLE_RATE 44100
 
-void synth_init();
 void synth_generate(float lout[], float rout[], int count);
 

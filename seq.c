@@ -25,9 +25,10 @@
 #include <stdlib.h>
 
 #include <list.h>
-#include <seq.h>
-#include <audio.h>
 #include <util.h>
+#include <audio.h>
+#include <midi.h>
+#include <seq.h>
 
 int tick;
 int terr;
@@ -199,8 +200,6 @@ void seq_append(event* e){
 }
 
 void seq_init(){
-	printf("  sequencer: ... ");
-
 	blank_events = empty();
 	immediate_events = empty();
 	sequence = empty();
@@ -208,7 +207,6 @@ void seq_init(){
 	loop_start = 0;
 
 	next_event = sequence->next;
-	printf("OK\n");
 }
 
 void seq_load(list* events){

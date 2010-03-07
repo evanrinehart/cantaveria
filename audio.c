@@ -27,7 +27,6 @@
 
 #include <list.h>
 #include <synth.h>
-#include <seq.h>
 #include <util.h>
 #include <audio.h>
 
@@ -128,9 +127,6 @@ void audio_init(){
 	rout = xmalloc(got.samples*sizeof(float));
 	memset(lout, 0, got.samples*sizeof(float));
 	memset(rout, 0, got.samples*sizeof(float));
-
-	synth_init();
-	seq_init();
 
 	printf("  sound online\n");
 	SDL_PauseAudio(0);

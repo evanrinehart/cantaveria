@@ -26,10 +26,10 @@
 #include <stdlib.h>
 
 #include <list.h>
-#include <music.h>
-#include <seq.h>
-#include <midi.h>
 #include <util.h>
+#include <midi.h>
+#include <seq.h>
+#include <music.h>
 
 mus_id current_id = MUS_NOTHING;
 

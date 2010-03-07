@@ -22,5 +22,32 @@
    evanrinehart@gmail.com
 */
 
+enum {
+	/* loader use */
+	EVX_ENDOFTRACK = 0x100,
+	EVX_META,
+
+	/* seq use */
+	EVX_TICKSPERBEAT,
+	EVX_TEMPOCHANGE,
+	EVX_LOOPSTART,
+	EVX_LOOPEND,
+
+	/* synth use */
+	EVX_MUSICVOLUME,
+	EVX_MUSICCUT,
+	EVX_FADEOUT,
+	EVX_FADECLEAR
+};
+
+typedef struct event event;
+struct event {
+	int tick;
+	int type;
+	int chan;
+	int val1;
+	int val2;
+};
+
 list* midi_load(char* filename);
 

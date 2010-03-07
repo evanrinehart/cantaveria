@@ -26,9 +26,6 @@
 
 #define BUFFER_SIZE 1024
 
-void audio_init();
-void audio_quit();
-
 void audio_lock();
 void audio_unlock();
 

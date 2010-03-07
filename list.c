@@ -12,6 +12,10 @@ list* make_new(list* next, void* item){
 
 	if(freelist == NULL){
 		ptr = malloc(sizeof(struct list));
+		if(ptr == NULL){
+			fprintf(stderr, "list: OUT OF MEMORY");
+			exit(-2);
+		}
 	}
 	else{
 		ptr = freelist;

@@ -27,9 +27,9 @@
 #include <string.h>
 
 #include <list.h>
-#include <loader.h>
-#include <seq.h>
 #include <util.h>
+#include <loader.h>
+#include <midi.h>
 
 
 static event* make_event(int tick, int type, int chan, int val1, int val2){

@@ -28,9 +28,10 @@
 
 #include <util.h>
 #include <list.h>
-#include <orc.h>
-#include <synth.h>
+#include <midi.h>
 #include <seq.h>
+#include <synth.h>
+#include <orc.h>
 
 /*
 timing stuff
@@ -233,11 +234,8 @@ void synth_generate(float left[], float right[], int samples){
 
 void synth_init(){
 	int i;
-	boot_msg("orc: ... ");
-	orc_init(SAMPLE_RATE);
-	boot_msg("OK\n");
 
-	boot_msg("  synth: ... ");
+	orc_init(SAMPLE_RATE);
 
 	for(i=0; i<16; i++){
 		channels[i] = make_dummy_channel();
@@ -251,10 +249,5 @@ void synth_init(){
 	channels[1] = make_channel_from_instrument(ORC_DEFAULT);
 	channels[2] = make_channel_from_instrument(ORC_DEFAULT);
 	channels[3] = make_channel_from_instrument(ORC_DEFAULT);
-
-
-	//srate = sample_rate;
-
-	boot_msg("OK\n");
 
 }

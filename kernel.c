@@ -24,22 +24,20 @@
 #include <stdlib.h>
 
 #include <list.h>
+#include <util.h>
 #include <root.h>
+#include <boot.h>
+
 #include <video.h>
-#include <audio.h>
 #include <input.h>
 
-#include <loader.h>
-#include <graphics.h>
-#include <text.h>
+#include <graphics.h> // ?
 
-#include <util.h>
-
-#include <kernel.h>
 #include <transfer.h>
+#include <kernel.h>
 
-int game_over = false;
-int dt = QUANTUM;
+static int game_over = false;
+int dt = QUANTUM; /* this is a global variable */
 
 static struct {
 	void (*update)();
@@ -79,12 +77,15 @@ static void dispatch_input(){
 
 void initialize(int argc, char* argv[]){
 	video_init(argc, argv);
+	seq_init();
+	synth_init();
 	audio_init();
 	input_init("FIXME");
 	loader_init();
 	graphics_init();
 	text_init();
 	rand_reset(RANDOM_SEED);
+
 	atexit(terminate);
 
 	setup_splash();

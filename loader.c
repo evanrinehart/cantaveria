@@ -45,7 +45,7 @@ void loader_init(){
 	if(arc == NULL){
 		fatal_error("loader: unable to load data archive \"%s\" (%s)\n", filename, zip_geterror());
 	}
-	boot_msg("loader: ... OK\n");
+	boot_msg("loader: game data found\n");
 }
 
 void loader_quit(){
