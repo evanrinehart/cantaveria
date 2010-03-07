@@ -117,7 +117,7 @@ static void hash_insert(zip_archive* arc, struct record* rec){
 	struct record* ptr = arc->table[i];
 
 	if(get_record(arc, rec->filename)){
-		printf("cant insert %s twice\n", rec->filename);
+		fprintf(stderr, "zip: can't insert %s twice\n", rec->filename);
 		return;
 	}
 

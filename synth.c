@@ -158,7 +158,7 @@ void clip(float buf[], int count){
 	}
 
 	if(clipped){
-		printf("synth: clipping distortion due to output overload\n");
+		error_msg("synth: clipping distortion due to output overload\n");
 	}
 
 	avg /= count?count:1;

@@ -8,6 +8,7 @@
 #include <input.h>
 //#include <entity.h>
 #include <transfer.h>
+#include <gameover.h>
 
 #include <console.h>
 
@@ -52,6 +53,10 @@ static void draw(){
 }
 
 static void press(input in){
+	if(in.button == ESCAPE_KEY){
+		game_is_over();
+		return;
+	}
 	printf("press: %s\n", input_str(in));
 	/*
 check global keys

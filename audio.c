@@ -128,7 +128,7 @@ void audio_init(){
 	memset(lout, 0, got.samples*sizeof(float));
 	memset(rout, 0, got.samples*sizeof(float));
 
-	printf("  sound online\n");
+	boot_msg("  sound online\n");
 	SDL_PauseAudio(0);
 
 }

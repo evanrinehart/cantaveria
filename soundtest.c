@@ -59,7 +59,7 @@ void setup_inner(){
 	console_clear();
 
 	if(music_load("last_battle.mid", MUS_TEST1) < 0){
-		printf("open music failed\n");
+		error_msg("open music failed\n");
 	}
 	else{
 		music_play(MUS_TEST1);

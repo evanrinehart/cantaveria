@@ -66,12 +66,10 @@ event* dequeue_event(){
 		advance_event(e);
 
 		if(e->type == EVX_TEMPOCHANGE){
-//printf("tempo change to %d bpm\n", e->val1);
 			bpm = e->val1;
 		}
 
 		if(e->type == EVX_TICKSPERBEAT){
-//printf("setting tpb to %d\n", e->val1);
 			tpb = e->val1;
 		}
 
@@ -79,9 +77,6 @@ event* dequeue_event(){
 			loop_start = e->tick;
 			event_after_loop = next_event;
 		}
-
-
-//printf("event (%d, %03x, %d, %d, %d)\n", e->tick, e->type, e->chan, e->val1, e->val2);
 
 		return e;
 	}

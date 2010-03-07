@@ -196,7 +196,7 @@ void animate_sprites(){
 int load_sprite(char* filename, int id){
 	int i;
 
-	printf("loading %s\n",filename);
+	//printf("loading %s\n",filename);
 
 	char path[1024] = "sprites/";
 	strncat(path, filename, 1023 - strlen(filename));

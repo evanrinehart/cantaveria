@@ -114,7 +114,7 @@ int conv_divisions(int divraw){
 		return divraw;
 	}
 	else{
-		printf("midi_load: time division is given in frames per second, expect breakage without further support\n");
+		error_msg("midi_load: time division is given in frames per second, expect breakage without further support\n");
 		return abs(divraw>>8);
 	}
 }
@@ -161,7 +161,7 @@ event* meta_tempochange(reader* r, int tick){
 }
 
 event* meta_possibleloop(reader* r, int tick){
-printf("ERR meta_possibleloop not done\n");
+error_msg("ERR meta_possibleloop not done\n");
 	return NULL;
 }
 
@@ -180,7 +180,7 @@ event* meta_dummy(reader* r, int tick){
 }
 
 event* skip_sys(reader* r, int tick){
-printf("ERR skip_sys not done\n");
+error_msg("ERR skip_sys not done\n");
 	return NULL;
 }
 

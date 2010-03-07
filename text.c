@@ -58,7 +58,6 @@ void set_message(char* str){
    if the current word is longer than a whole line
    then just break here (would happen with japanese).
  */
-      //printf("%04lx[%lc] ",u, C->u);
     }
     else{
 /*
@@ -66,11 +65,9 @@ character not found, so use a rectangle or something
 use four tiny numbers to indicate the character
 do the same as above
 */
-     //printf("%04lx[???] ", u);
     }
     N += unicode_getc(str+N, &u);
   };
-  printf("\n");
 }
 
 
@@ -160,7 +157,7 @@ void randomly_insert(vwchar* C[], int count){
 
 
 int load_font(char* filename){
-	printf("load_font: loading %s\n",filename);
+	//printf("load_font: loading %s\n",filename);
 	char buf[256] = "fonts/";
 	strmcat(buf, filename, 256);
 	reader* rd = loader_open(buf);
@@ -191,12 +188,12 @@ int load_font(char* filename){
 	}
 
 	randomly_insert(C, ptr);
-
+/*
 	printf("  loaded %d characters\n",N);
 
 	printf("  character tree is the following\n");
 	print_tree(chartree);
 	printf("\n");
-
+*/
 	return 0;
 }
