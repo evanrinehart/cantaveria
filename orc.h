@@ -1,5 +1,5 @@
 /*
-org.c
+orc.c
 various software synths and samples
 
 Copyright (C) 2009 Evan Rinehart
@@ -9,7 +9,6 @@ This software comes with no warranty.
 2. Modifications must retain this license, at least in spirit.
 */
 
-#define SAMPLE_RATE 44100
 #define PI 3.1415926535897931
 #define PI2 2*PI
 
@@ -32,12 +31,12 @@ typedef struct {
 } instrument;
 
 enum instrument_name {
-ORG_DEFAULT,
-ORG_KARPLUS,
-ORG_UNKNOWN
+ORC_DEFAULT,
+ORC_KARPLUS,
+ORC_UNKNOWN
 };
 
 
 
-instrument load_instrument(enum instrument_name name);
-void org_init();
+instrument orc_load(enum instrument_name name);
+void orc_init(int sample_rate);

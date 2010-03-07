@@ -28,7 +28,7 @@
 
 #include <util.h>
 #include <list.h>
-#include <org.h>
+#include <orc.h>
 #include <synth.h>
 #include <seq.h>
 
@@ -93,7 +93,7 @@ channel make_dummy_channel(){
 
 channel make_channel_from_instrument(enum instrument_name name){
 	channel ch = make_dummy_channel();
-	instrument ins = load_instrument(name);
+	instrument ins = orc_load(name);
 	ch.mix = ins.mix;
 	ch.control = ins.control;
 	ch.cleanup = ins.cleanup;
@@ -233,23 +233,28 @@ void synth_generate(float left[], float right[], int samples){
 
 void synth_init(){
 	int i;
-	printf("  synth: ... ");
+	boot_msg("orc: ... ");
+	orc_init(SAMPLE_RATE);
+	boot_msg("OK\n");
+
+	boot_msg("  synth: ... ");
 
 	for(i=0; i<16; i++){
 		channels[i] = make_dummy_channel();
 	}
 
-	//channels[0] = make_channel_from_instrument(ORG_KARPLUS);
-	//channels[1] = make_channel_from_instrument(ORG_KARPLUS);
-	//channels[2] = make_channel_from_instrument(ORG_KARPLUS);
-	//channels[3] = make_channel_from_instrument(ORG_KARPLUS);
-	channels[0] = make_channel_from_instrument(ORG_DEFAULT);
-	channels[1] = make_channel_from_instrument(ORG_DEFAULT);
-	channels[2] = make_channel_from_instrument(ORG_DEFAULT);
-	channels[3] = make_channel_from_instrument(ORG_DEFAULT);
+	//channels[0] = make_channel_from_instrument(ORC_KARPLUS);
+	//channels[1] = make_channel_from_instrument(ORC_KARPLUS);
+	//channels[2] = make_channel_from_instrument(ORC_KARPLUS);
+	//channels[3] = make_channel_from_instrument(ORC_KARPLUS);
+	channels[0] = make_channel_from_instrument(ORC_DEFAULT);
+	channels[1] = make_channel_from_instrument(ORC_DEFAULT);
+	channels[2] = make_channel_from_instrument(ORC_DEFAULT);
+	channels[3] = make_channel_from_instrument(ORC_DEFAULT);
 
 
 	//srate = sample_rate;
 
-	printf("OK\n");
+	boot_msg("OK\n");
+
 }

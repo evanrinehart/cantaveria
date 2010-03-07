@@ -1,21 +1,35 @@
-PROJECT = cantaveria
-CFLAGS = -I. -g -O2 -Wall -Wextra -Wno-unused-parameter
-OBJ = video.o audio.o input.o kernel.o \
-      loader.o graphics.o sfx.o text.o console.o music.o \
-      intro.o title.o splash.o soundtest.o \
-      synth.o seq.o dsp.o org.o midi.o \
-      rng.o util.o list.o zip.o \
+PROJECT=cantaveria
+CFLAGS=-g -O2 -Wall -Wextra -Wno-unused-parameter
+SRC=video.c audio.c input.c kernel.c main.c \
+    loader.c graphics.c sfx.c text.c console.c music.c \
+    intro.c title.c splash.c soundtest.c \
+    synth.c seq.c midi.c orc.c \
+    rng.c util.c list.c zip.c
+OBJ:=$(SRC:.c=.o)
+CC=gcc
+LIBS=-lSDL -lGL -lm -lz
 
-CC = gcc
-LIBS = -lSDL -lGL -lm -lz
 
-$(PROJECT): main.o $(OBJ) data.zip
-	$(CC) -o $(PROJECT) $(LIBS) main.o $(OBJ)
+$(PROJECT): $(OBJ) data.zip
+	$(CC) -o $(PROJECT) $(LIBS) $(OBJ)
 
+$(OBJ): %o: %c
+	$(CC) -c -I. $(CFLAGS) -o $@ $<
 
 data.zip:
 	wget http://evanr.infinitymotel.net/cantaveria/data.zip
 
 clean:
-	$(RM) $(PROJECT) levedit main.o $(OBJ)
+	$(RM) $(PROJECT) *{.o,.a}
 
+tarball:
+	mkdir -p dist/cantaveria
+	cp --parents *{.c,.h} Makefile AUTHORS COPYING data.zip dist/cantaveria/
+	cd dist && tar cvzf ../cantaveria.tar.gz cantaveria
+	rm -rf dist
+
+depend:
+	gcc -MM -I. $(SRC) > depend
+
+
+include depend

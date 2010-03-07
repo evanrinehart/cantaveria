@@ -26,7 +26,6 @@
 #include <SDL/SDL.h>
 
 #include <list.h>
-#include <org.h>
 #include <synth.h>
 #include <seq.h>
 #include <util.h>
@@ -130,7 +129,6 @@ void audio_init(){
 	memset(lout, 0, got.samples*sizeof(float));
 	memset(rout, 0, got.samples*sizeof(float));
 
-	org_init();
 	synth_init();
 	seq_init();
 

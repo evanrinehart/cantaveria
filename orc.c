@@ -1,5 +1,5 @@
 /*
-org.c
+orc.c
 various software synths and samples
 
 Copyright (C) 2009 Evan Rinehart
@@ -12,7 +12,7 @@ This software comes with no warranty.
 #include <stdlib.h>
 #include <math.h>
 
-#include <org.h>
+#include <orc.h>
 
 /*
 heres a list of instrument ideas...
@@ -31,9 +31,13 @@ rendered ambient (PADsynth)
 
 
 /* SINE TABLE */
+static float SAMPLE_RATE = 44100;
+
 #define TABLE_SIZE (1<<8)
 #define RELEASE_STEPS (SAMPLE_RATE/333)
 #define RELEASE_RATE 0.999
+
+
 float sine_table[TABLE_SIZE];
 
 float note2tablestep(float note){
@@ -290,18 +294,19 @@ instrument make_karplus(){
 
 
 /*** exported methods ***/
-instrument load_instrument(enum instrument_name name){
+instrument orc_load(enum instrument_name name){
 	switch(name){
-		case ORG_DEFAULT: return make_default();
-		case ORG_KARPLUS: return make_karplus();
-//		case ORG_COOL: return make_cool();
+		case ORC_DEFAULT: return make_default();
+		case ORC_KARPLUS: return make_karplus();
+//		case ORC_COOL: return make_cool();
 		default: return make_default();
 	}
 }
 
 
-void org_init(){
+void orc_init(int sample_rate){
 	int i;
+	SAMPLE_RATE = sample_rate;
 	for(i=0; i<TABLE_SIZE; i++){
 		sine_table[i] = sin( (PI2*i) / TABLE_SIZE);
 	}
