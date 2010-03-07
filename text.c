@@ -29,7 +29,7 @@
 
 #include <list.h>
 #include <util.h>
-#include <video.h>
+#include <graphics.h>
 #include <loader.h>
 
 typedef struct {
@@ -170,7 +170,7 @@ int load_font(char* filename){
 
 	char str[256];
 	loader_scanline(rd, "%256s", str);
-	int gfx = load_gfx(str);
+	int gfx = load_bitmap(str);
 
 	/* we read 64 characters at a time and insert them
 	   randomly into the binary search tree. this is supposed

@@ -28,7 +28,6 @@
 #include <list.h>
 #include <root.h>
 #include <util.h>
-#include <input.h>
 #include <video.h>
 #include <loader.h>
 
