@@ -20,7 +20,7 @@ data.zip:
 	wget http://evanr.infinitymotel.net/cantaveria/data.zip
 
 clean:
-	$(RM) $(PROJECT) *{.o,.a}
+	$(RM) $(PROJECT) *{.o,.a} depend
 
 tarball:
 	mkdir -p dist/cantaveria
