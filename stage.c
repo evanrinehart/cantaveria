@@ -426,10 +426,12 @@ static int load_zone_bitmap(reader* rd, int* out){
 		error_msg("load_zone: read error (graphics list)\n");
 		return -1;
 	}
+
 	if(strlen(filename) == 0){
-		*out = -1;
-		return 0;
+		error_msg("load_zone: no graphics file specified\n");
+		return -1;
 	}
+
 	*out = load_bitmap(filename);
 	free(filename);
 	if(*out < 0){
@@ -632,15 +634,17 @@ void stage_bind_camera(location l, int* x, int* y){
 	//for each snap, snap x y
 }
 
-void draw_stage_fg(location loc, int cx, int cy){
-	//draw decorations
-	//draw water
+void draw_stage_bg(location loc, int cx, int cy){
+	//draw background
+	//draw bg tiles
 }
 
-void draw_stage_bg(location loc, int cx, int cy){
-	//for each visible tile
-	//bg or bg tiles or fg tiles
+void draw_stage_fg(location loc, int cx, int cy){
+	//draw water
+	//fg tiles
+	//draw decorations
 }
+
 
 /* returns 1 if a collision will occur, 0 otherwise
    if 1 is returned, x will be set to the collision point */
