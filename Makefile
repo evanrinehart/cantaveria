@@ -4,7 +4,8 @@ SRC=video.c audio.c input.c kernel.c main.c gameover.c \
     loader.c graphics.c sfx.c text.c console.c music.c stage.c \
     intro.c title.c splash.c inner.c \
     synth.c seq.c midi.c orc.c dsp.c \
-    rng.c util.c list.c zip.c
+    rng.c util.c list.c zip.c \
+    hud.c camera.c
 OBJ:=$(SRC:.c=.o)
 CC=gcc
 LIBS=-lSDL -lGL -lm -lz

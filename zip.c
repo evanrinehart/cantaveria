@@ -9,6 +9,23 @@ This software comes with no warranty.
 2. Modifications must retain this license, at least in spirit.
 */
 
+/*
+read files from a zip file.
+
+*depends on zlib
+*zip archive may be in a file, or accessed using a reader struct
+*reader struct must support seeking
+*directory listing is supported
+*various errors with the archive and i/o are reported via zip_geterror()
+
+*files in the archive are accessed sequentially, no seek supported
+*writing is not supported
+*zip64 not supported
+*only inflate compression method supported
+
+*/
+
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

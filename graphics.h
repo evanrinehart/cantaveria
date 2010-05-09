@@ -61,7 +61,6 @@ void draw_bitmap(int id, int x, int y);
 sprite* enable_sprite(int sprnum);
 void disable_sprite(sprite* spr);
 sprite* copy_sprite(sprite* spr);
-void point_camera(int x, int y);
 
 void draw_small_text(char* str, int x, int y);
 void printf_small(int x, int y, char* format, ...);

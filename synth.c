@@ -22,6 +22,15 @@
    evanrinehart@gmail.com
 */
 
+/*
+the synth module exports a mixer callback for the audio output.
+it uses support from orc (instruments) and seq (sequencer) to
+generate that output.
+* generate N samples of stereo output
+*/
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

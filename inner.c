@@ -15,45 +15,25 @@
 #include <console.h>
 
 #include <stage.h>
+#include <camera.h>
+#include <hud.h>
 
-//int run(Y* y, int dt){
-/*
-	motion move = get(y->pc);
-	int passed = move(y->m, dt);
-	if(passed < dt){
-		advance(y);
-	return passed;
-*/
-//return dt;
-//}
-/*
-void move(Y* y){
-	int t = QUANTUM;
-	while(t > 0){
-		int dt = QUANTUM;
-		dt = run(y, dt);
-		t -= dt;
-		//collision here
-	}
-}
-*/
-/*
-void show(Y* y){
-	y->draw(y);
-}
-*/
 static void update(){
-/*	list* ents = get_active_entities();
-	foreach(ents, move);*/
+	/* 
+	update camera
+	update every entity in the update list
+	dispatch collision events
+	execute spawn and delete events
+	*/
 }
 
 static void draw(){
-	//int x = camera_x();
-	//int y = camera_y();
-	//int w = screen_w();
-	//int h = screen_h();
-/*	list* ents = find_entities_in(x,y,w,h);
-	foreach(ents, show);*/
+	int cx = camera_x();
+	int cy = camera_y();
+	//stage_draw_bg(cx, cy);
+	//entity_draw_visible(cx, cy);
+	//stage_draw_fg(cx, cy);
+	hud_draw(cx, cy);
 }
 
 static void press(input in){
@@ -62,30 +42,35 @@ static void press(input in){
 		return;
 	}
 	printf("press: %s\n", input_str(in));
-	/*
-check global keys
 
-do player specific side effects
+	/*
+	send input events
 	*/
 }
 
 static void release(input in){
 	printf("release: %s\n", input_str(in));
+
+	/*
+	send input events
+	*/
 }
 
 void setup_inner(){
-	// create entities
+	/* create entities */
 	console_clear();
 	set_handler(update, draw, press, release);
 
 
-	int x = load_zone("2zone");
+	unload_zone();
+	int x = load_zone("3ztest/");
 	if(x < 0){
 		error_msg("inner: cannot load zone\n");
 		exit(-1);
 	}
 	else{
-		print_zone(x);
+		//print_zone(x);
+		unload_zone();
 	}
 
 

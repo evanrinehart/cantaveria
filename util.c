@@ -234,6 +234,14 @@ double randf(){
 }
 
 
+
+char* path_ending(char* path){
+	char* c = path + strlen(path);
+	while(*(c-1) != '/' && c > path) c--;
+	return c;
+}
+
+
 /* Copyright 300BC Euclid */
 int gcd(int a, int b){
 	while(b){

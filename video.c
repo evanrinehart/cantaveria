@@ -20,6 +20,22 @@
    Boston, MA  02110-1301, USA
 */
 
+
+/*
+video module is the low level interface to video output.
+it has several low level functions.
+* initialize the video system for a certain video mode
+* load graphics data into the abstract graphics pool
+* draw a portion of some graphics somewhere on screen
+* millisecond time delta generator
+* screen clear
+* screen flip
+* process suspend
+*/
+
+
+
+
 #include <math.h>
 
 #include <SDL/SDL.h>

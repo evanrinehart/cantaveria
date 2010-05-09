@@ -37,6 +37,8 @@ void rand_reset(unsigned s);
 int randi(int a, int b);
 double randf();
 
+char* path_ending(char* path);
+
 int gcd(int u, int v);
 
 typedef struct treenode treenode;

@@ -37,7 +37,7 @@
 #include <video.h>
 #include <graphics.h>
 #include <loader.h>
-
+#include <camera.h>
 
 
 /* graphics data */
@@ -55,11 +55,6 @@ int stage_enabled = 0;
 
 
 
-struct {
-	int x, y;
-} camera;
-
-
 void graphics_init(){
 	int i;
 	minifont_gfx = load_gfx("smallfont.tga");
@@ -72,8 +67,8 @@ void graphics_init(){
 /* drawing */
 
 void draw_sprite(sprite* spr){
-	int x = spr->x - camera.x;
-	int y = spr->y - camera.y;
+	int x = spr->x - camera_x();
+	int y = spr->y - camera_y();
 	int W = spr->w;
 	int H = spr->h;
 	int X = spr->frame.x;
@@ -156,11 +151,6 @@ void draw_final(){
 
 
 
-
-void point_camera(int x, int y){
-	camera.x = x;
-	camera.y = y;
-}
 
 
 

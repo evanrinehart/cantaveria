@@ -20,6 +20,15 @@
    Boston, MA  02110-1301, USA
 */
 
+/*
+audio module is the low level audio output support.
+the audio thread operates independently of the rest of the
+game and is backwards from the rest of the modules. After
+initializing the audio system, it will periodically use a
+callback to generate needed audio output. This callback is
+basically defined in synth.c which mixes music and sound.
+*/
+
 #include <stdlib.h>
 #include <math.h>
 

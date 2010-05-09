@@ -21,6 +21,19 @@
 
    evanrinehart@gmail.com
 */
+
+
+/*
+the input module is an interface to the low level input system
+plus a mapper from low level input events to abstract game inputs.
+it has several functions:
+* generate the next available input, if possible
+* save and load input maps
+* remap abstract event to last low level event
+* convert abstract input to string form
+*/
+
+
 #include <SDL/SDL.h>
 
 

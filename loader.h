@@ -30,6 +30,7 @@ int loader_readline(reader* rd, char* buf, int size);
 int loader_scanline(reader* rd, char* format, ...);
 unsigned char* loader_readall(char* filename, int* size);
 void loader_close(reader* rd);
+int loader_feof(reader* rd);
 
 list* loader_readdir(char* path);
 void loader_freedirlist(list* dirs);

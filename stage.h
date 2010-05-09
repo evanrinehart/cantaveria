@@ -20,15 +20,15 @@
    Boston, MA  02110-1301, USA
 */
 
-typedef struct {
-	int z;    /* which zone */
-	int i, j; /* which stage */
-	int x, y; /* absolute coords in 1024th of a pixel */
-} location;
 
 int load_zone(char* filename);
-void print_zone(int id);
-void stage_draw_fg(int cx, int cy);
-void stage_draw_bg(int cx, int cy);
-int stage_xcollide(location loc, int w, int h, int v, int* x);
-int stage_ycollide(location loc, int w, int h, int v, int* y);
+void unload_zone();
+
+void switch_stage(char* id);
+
+void stage_draw_fg(int cx, int cy, int x, int y, int w, int h);
+void stage_draw_bg(int cx, int cy, int x, int y, int w, int h);
+
+int stage_xcollide(int x, int y, int w, int h, int v, int* xx);
+int stage_ycollide(int x, int y, int w, int h, int v, int* yy);
+

@@ -169,7 +169,9 @@ int loader_scanline(reader* rd, char* format, ...){
 	return ret;
 }
 
-
+int loader_feof(reader* rd){
+	return zip_feof(rd->f);
+}
 
 
 /*binary i/o*/
