@@ -1,0 +1,3 @@
+
+void hud_draw();
+
