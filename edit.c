@@ -48,10 +48,11 @@ int origin_y = 0;
 static int camera_x = 0;
 static int camera_y = 0;
 
-char* my_filename = "";
-char* bgimage_file = "";
-char* fgtiles_file = "";
-char* bgtiles_file = "";
+char my_file[256] = "";
+char my_file_old[256] = "";
+char bgimage_file[256] = "";
+char fgtiles_file[256] = "";
+char bgtiles_file[256] = "";
 int bgimage = 0;
 int fgtiles = 0;
 int bgtiles = 0;
@@ -82,6 +83,12 @@ int tileset_dialog = 0;
 int quit_dialog = 0;
 int save_as_dialog = 0;
 int open_dialog = 0;
+int confirm_save_dialog = 0;
+
+
+
+char save_as_buf[256] = "";
+int save_as_ptr = 0;
 /* *** */
 
 
@@ -217,6 +224,15 @@ void draw_raw(){
 
 
 
+void update_window_name(){
+	if(my_file[0] == 0){
+		SDL_WM_SetCaption("unnamed", NULL);
+	}
+	else{
+		SDL_WM_SetCaption(my_file, NULL);
+	}
+}
+
 
 
 struct undo_step* undo_stack;
@@ -340,8 +356,13 @@ void redraw_all(){
 	}
 
 	//dialogs
+	if(save_as_dialog){
+		console_printf("save as: %s", save_as_buf);
+	}
+		
 
 	console_draw();
+	console_clear();
 
 	update_video();
 }
@@ -353,25 +374,108 @@ char* onoff(int b){
 
 
 
-void save(){
-	printf("save code here\n");
+void save(char* path){
+	/* save current stage to a stage file */
+	/* overwrites if already exists, no confirmation */
+	FILE* f = fopen(path, "w");
+	if(f == NULL){
+		console_printf("error saving file");
+		return;
+	}
+
+	fprintf(f, "HELLO WORLD\n");
+
+	fclose(f);
+
 }
 /* *** */
 
 
 
 
+/* dialog input handlers */
+void confirm_save_press(SDLKey key, Uint16 c){
+	if(c == 'y' || c == 'Y'){
+		save(my_file);
+		update_window_name();
+		console_printf("You're the boss. %s was overwritten", my_file);
+	}
+	else{
+		strcpy(my_file, my_file_old); /* ! */
+		console_printf("Operation cancelled");
+	}
+
+	confirm_save_dialog = 0;
+}
+
+void save_as_press(SDLKey key, Uint16 c){
+	FILE* f;
+	if(c == 0){
+	}	
+	else if(c == '\r'){
+		if(save_as_buf[0] == 0){
+			console_printf("No name? Nevermind then.");
+		}
+		else{
+			strcpy(my_file_old, my_file); /* ! */
+			strcpy(my_file, save_as_buf); /* ! */
+
+			/* see if file exists */
+			f = fopen(my_file, "r");
+			if(f != NULL){
+				console_printf("ALERT: really overwrite %s? (Y/N)", my_file);
+				confirm_save_dialog = 1;
+				fclose(f);
+			}
+			else{
+				update_window_name();
+				console_printf("%s saved", my_file);
+				save(my_file);
+			}
+		}
+		save_as_buf[0] = 0;
+		save_as_ptr = 0;
+		save_as_dialog = 0;
+	}
+	else if(c == 0x1b){
+		save_as_buf[0] = 0;
+		save_as_ptr = 0;
+		save_as_dialog = 0;
+	}
+	else if(c == '\b'){
+		if(save_as_ptr > 0){
+			save_as_ptr--;
+			save_as_buf[save_as_ptr] = 0;
+		}
+	}
+	else{
+		if(save_as_ptr < 255){
+			save_as_buf[save_as_ptr] = c;
+			save_as_ptr++;
+			save_as_buf[save_as_ptr] = 0;
+		}
+	}
+}
 
 
 
 
 
 
+void keydown(SDLKey key, SDLMod mod, Uint16 c){
 
+	if(save_as_dialog){
+		save_as_press(key, c);
+		redraw_all();
+		return;
+	}
 
+	if(confirm_save_dialog){
+		confirm_save_press(key, c);
+		redraw_all();
+		return;
+	}
 
-
-void keydown(SDLKey key, SDLMod mod){
 	switch(key){
 		case SDLK_u:
 			undo();
@@ -397,12 +501,17 @@ void keydown(SDLKey key, SDLMod mod){
 			break;
 		case SDLK_s:
 			if(mod & (KMOD_LCTRL|KMOD_RCTRL)){
-				save();
-				console_printf("saved %s", my_filename);
+				if(my_file[0] == 0){
+					save_as_dialog = 1;
+				}
+				else{
+					save(my_file);
+					console_printf("saved %s", my_file);
+				}
 			}
 			break;
 		case SDLK_w:
-			console_printf("save as...");
+			save_as_dialog = 1;
 			break;
 		case SDLK_o:
 			console_printf("open...");
@@ -450,11 +559,16 @@ void keydown(SDLKey key, SDLMod mod){
 		case SDLK_RIGHT: camera_x++; break;
 		case SDLK_UP: camera_y--; break;
 		case SDLK_DOWN: camera_y++; break;
+
+		/* temporary controls */
+		case SDLK_9: brush_tile--; brush_tile %= 256; break;
+		case SDLK_0: brush_tile++; brush_tile %= 256; break;
+		case SDLK_8: brush_layer = 2; break;
+		case SDLK_7: brush_layer = 1; break;
 	}
 
 	redraw_all();
 
-	console_clear();
 /*
 U - undo
 R - redo
@@ -560,7 +674,7 @@ int check_events(){
 
 	switch(e.type){
 		case SDL_QUIT: return 1;
-		case SDL_KEYDOWN: keydown(e.key.keysym.sym, e.key.keysym.mod); return 0;
+		case SDL_KEYDOWN: keydown(e.key.keysym.sym, e.key.keysym.mod, e.key.keysym.unicode); return 0;
 		case SDL_MOUSEMOTION:			
 			mousemove(e.motion.x, e.motion.y, e.motion.xrel, e.motion.yrel);
 			return 0;
@@ -584,12 +698,14 @@ int main(int argc, char* argv[]){
 
 	raw_tiles = initialize_raw(raw_w, raw_h);
 
+	update_window_name();
+
 	loader_data_mode(0);
 	bgimage = load_bitmap("azone/gfx/background.tga");
 //	loader_data_mode(0);
 //	fgtiles = load_bitmap("barf.tga");
 //	loader_data_mode(1);
-	fgtiles = load_bitmap("azone/gfx/test.tga");
+	fgtiles = load_bitmap("azone/gfx/barf.tga");
 	bgtiles = load_bitmap("azone/gfx/test.tga");
 
 	raw_write(2, 2, 1, 3);
@@ -597,6 +713,7 @@ int main(int argc, char* argv[]){
 	redraw_all();
 
 	SDL_ShowCursor(1);
+	SDL_EnableUNICODE(1);
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 
 	atexit(terminate);
