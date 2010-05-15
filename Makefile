@@ -13,7 +13,7 @@ LIBS=-lSDL -lGL -lm -lz
 
 $(PROJECT): $(OBJ) data.zip
 	$(CC) -o $(PROJECT) $(LIBS) $(OBJ)
-editor: $(OBJ)
+editor: $(OBJ) edit.c
 	$(CC) -o editor -I. $(LIBS) console.o loader.o list.o \
 	video.o graphics.o util.o rng.o zip.o camera.o edit.c
 

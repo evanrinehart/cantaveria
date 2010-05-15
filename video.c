@@ -482,7 +482,7 @@ void setup_video(){
 	if(gl_flag){
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		//SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
+		//SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
 		flags |= SDL_OPENGL;
 	};
 
@@ -552,8 +552,8 @@ void setup_video(){
 }
 
 void map_pixel(int mx, int my, int *x, int *y){
-	*x = mx*SCREEN_W/W;
-	*y = my*SCREEN_H/H;
+	*x = mx*screen_w/W;
+	*y = my*screen_h/H;
 }
 
 

@@ -175,6 +175,12 @@ void raw_write(int x, int y, int layer, int value){
 	}
 }
 
+void draw_background(){
+	int W = gfx_width(bgimage);
+	int H = gfx_height(bgimage);
+	draw_gfx_raw(bgimage, 0, 0, 0, 0, W, H);
+}
+
 void draw_raw(){
 	int x0 = camera_x + origin_x;
 	int y0 = camera_y + origin_y;
@@ -187,11 +193,11 @@ void draw_raw(){
 	int gy;
 
 	if(toggle_background)
-		draw_bitmap(bgimage, 0, 0);
+		draw_background();
 
-	for(j=0; j<15; j++){
+	for(j=0; j<(15+5); j++){
 		y = y0 + j;
-		for(i=0; i<20; i++){
+		for(i=0; i<(20+8); i++){
 			x = x0 + i;
 			t = raw_read(x, y);
 			gy = 16*(t.bg / 16);
