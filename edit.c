@@ -85,7 +85,6 @@ int quit_dialog = 0;
 int save_as_dialog = 0;
 int open_dialog = 0;
 int confirm_save_dialog = 0;
-int unsaved_changes_dialog = 0;
 
 
 
@@ -236,7 +235,7 @@ void raw_optimize(int* ox, int* oy, int* ow, int* oh){
 
 	for(i=0; i<(raw_w*raw_h); i++){
 		x = i % raw_w;
-		y = i / raw_h;
+		y = i / raw_w;
 		fg = raw_tiles[i].fg;
 		bg = raw_tiles[i].bg;
 		shape = raw_tiles[i].shape;
@@ -248,11 +247,11 @@ void raw_optimize(int* ox, int* oy, int* ow, int* oh){
 		}
 	}
 
-	if(ymax - ymin < 15) *oh = 15;
-	else *oh = (ymax - ymin);
+	if(ymax - ymin + 1 <= 15) *oh = 15;
+	else *oh = (ymax - ymin + 1);
 
-	if(xmax - xmin < 20) *ow = 20;
-	else *ow = (xmax - xmin);
+	if(xmax - xmin + 1 <= 20) *ow = 20;
+	else *ow = (xmax - xmin + 1);
 
 	*ox = xmin;
 	*oy = ymin;
@@ -301,7 +300,68 @@ void raw_save(char* path){
 
 
 int raw_open(char* path){
-	
+	reader* r;
+	int w, h, ox, oy;
+	int x, y, fg, bg;
+	char shape;
+	char file1[256] = "";
+	char file2[256] = "";
+	char file3[256] = "";
+	struct tile* new_tiles = NULL;
+	struct tile* ptr;
+
+	r = loader_open(path);
+	if(loader_scanline(r, "%d %d %d %d", &w, &h, &ox, &oy) < 4){
+		printf("scan error\n");
+		loader_close(r);
+		return -1;
+	}
+
+	if(
+		loader_readline(r, file1, 256) ||
+		loader_readline(r, file2, 256) ||
+		loader_readline(r, file3, 256)
+	){
+		printf("scan error\n");
+		loader_close(r);
+		return -1;
+	}
+
+	new_tiles = initialize_raw(w, h);
+	while(!loader_feof(r)){
+		if(loader_scanline(r, "%d %d %d %d %c", &x, &y, &fg, &bg, &shape) < 5){
+			printf("scan error\n");
+			loader_close(r);
+			free(new_tiles);
+			return -1;
+		}
+
+		ptr = new_tiles + (x+ox) + (y+oy)*w;
+		ptr->fg = fg;
+		ptr->bg = bg;
+		ptr->shape = shape;
+
+	}
+
+	/* load the graphics */
+
+	/* finalize */
+	origin_x = ox;
+	origin_y = oy;
+	raw_w = w;
+	raw_h = h;
+	free(raw_tiles);
+	raw_tiles = new_tiles;
+
+	strcpy(bgimage_file, file1);
+	strcpy(bgtiles_file, file2);
+	strcpy(fgtiles_file, file3);
+
+	strcpy(my_file, path);
+
+	//camera_x = origin_x;
+	//camera_y = origin_y;
+
 
 	return 0;
 }
