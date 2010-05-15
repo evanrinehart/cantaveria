@@ -273,7 +273,7 @@ SDL_Surface* load_tga(char* filename){
 
 	SDL_SetAlpha(surf, 0, 0);
 	SDL_SetColorKey(surf, SDL_SRCCOLORKEY, key);
-	debug_surf(filename, surf);
+	//debug_surf(filename, surf);
 
 	return surf;
 }
