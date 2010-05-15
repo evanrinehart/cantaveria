@@ -67,5 +67,5 @@ void setup_splash(){
 	my.t1 = 100;
 	my.t2 = 500;
 	my.t3 = 600;
-	my.gfx = load_bitmap("splash.tga");
+	my.gfx = load_bitmap("gfx/splash.tga");
 }

@@ -22,8 +22,9 @@
 
 typedef struct reader reader;
 
-reader* data_open(char* dir, char* filename);
 reader* loader_open(char* filename);
+
+void loader_data_mode(int flag);
 
 int loader_read(reader* rd, void* buf, int count);
 int loader_readline(reader* rd, char* buf, int size);

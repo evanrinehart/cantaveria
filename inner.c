@@ -63,7 +63,7 @@ void setup_inner(){
 
 
 	unload_zone();
-	int x = load_zone("3ztest/");
+	int x = load_zone("3ztest");
 	if(x < 0){
 		error_msg("inner: cannot load zone\n");
 		exit(-1);

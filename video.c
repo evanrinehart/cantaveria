@@ -202,10 +202,8 @@ void debug_surf(char* msg, SDL_Surface* surf){
 
 
 
-SDL_Surface* load_tga(char* filename){
-	char path[256] = "gfx/";
+SDL_Surface* load_tga(char* path){
 	unsigned char header[18];
-	strmcat(path, filename, 256);
 	reader* rd = loader_open(path);
 	int w, h, bpp;
 	int mask;

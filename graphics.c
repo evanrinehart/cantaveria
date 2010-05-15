@@ -57,7 +57,7 @@ int stage_enabled = 0;
 
 void graphics_init(){
 	int i;
-	minifont_gfx = load_gfx("smallfont.tga");
+	minifont_gfx = load_gfx("gfx/smallfont.tga");
 	for(i=0; i<MAX_ANIMATIONS; i++){
 		animations[i] = NULL;
 	}
@@ -183,13 +183,8 @@ void animate_sprites(){
 
 
 
-int load_sprite(char* filename, int id){
+int load_sprite(char* path, int id){
 	int i;
-
-	//printf("loading %s\n",filename);
-
-	char path[1024] = "sprites/";
-	strncat(path, filename, 1023 - strlen(filename));
 
 	reader* rd = loader_open(path);
 	if(!rd){

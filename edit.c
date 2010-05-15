@@ -583,9 +583,14 @@ int main(int argc, char* argv[]){
 	graphics_init();
 
 	raw_tiles = initialize_raw(raw_w, raw_h);
-	bgimage = load_bitmap("bgimages/background.tga");
-	fgtiles = load_bitmap("tilesets/test.tga");
-	bgtiles = load_bitmap("tilesets/test.tga");
+
+	loader_data_mode(0);
+	bgimage = load_bitmap("azone/gfx/background.tga");
+//	loader_data_mode(0);
+//	fgtiles = load_bitmap("barf.tga");
+//	loader_data_mode(1);
+	fgtiles = load_bitmap("azone/gfx/test.tga");
+	bgtiles = load_bitmap("azone/gfx/test.tga");
 
 	raw_write(2, 2, 1, 3);
 

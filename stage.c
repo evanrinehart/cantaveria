@@ -114,7 +114,7 @@ static void initialize_tiles(int n, tile* tiles){
 }
 
 
-static int load_stage(char* path){
+static int load_stage(char* gfxpath, char* stagepath){
 /*
 [stage file]
 width height
@@ -127,9 +127,10 @@ x y fg bg shape
 ...
 */
 
-	reader* f = loader_open(path);
-	char* filename = path_ending(path);
+	reader* f = loader_open(stagepath);
+	char* filename = path_ending(stagepath);
 	char buf[256];
+	char gfx[256];
 	tile* tptr;
 	stage* s = malloc(sizeof(stage));
 	int w = 20;
@@ -137,12 +138,21 @@ x y fg bg shape
 	int x, y, ox, oy, fg, bg, shape;
 
 	loader_scanline(f, "%d %d %d %d", &w, &h, &ox, &oy);
+
 	loader_scanline(f, "%s", buf);
-	s->bgimage = load_bitmap(buf);
+	strcpy(gfx, gfxpath);
+	strcat(gfx, buf);
+	s->bgimage = load_bitmap(gfx);
+
 	loader_scanline(f, "%s", buf);
-	s->bgtiles = load_bitmap(buf);
+	strcpy(gfx, gfxpath);
+	strcat(gfx, buf);
+	s->bgtiles = load_bitmap(gfx);
+
 	loader_scanline(f, "%s", buf);
-	s->fgtiles = load_bitmap(buf);
+	strcpy(gfx, gfxpath);
+	strcat(gfx, buf);
+	s->fgtiles = load_bitmap(gfx);
 
 	s->tiles = malloc(w*h*sizeof(tile));
 	initialize_tiles(w*h, s->tiles);
@@ -183,16 +193,22 @@ the name of the file will be used as the id
 
 	list* dirs;
 	list* ptr;
-	char path[256] = "";
-	char* filename;
+	char stages[256] = "";
+	char gfxpath[256] = "";
+	char* stagepath;
 
-	/* "zones/" ++ filename */
-	strncat(path, "zones/", 256); /* check for correctness */
-	strncat(path, name, 256 - strlen("zones/"));
-	strncpy(zone_name, name, 32);
+	strcat(stages, "zones/");
+	strcat(stages, name);
+	strcat(stages, "/stages/");
+
+	strcat(gfxpath, "zones/");
+	strcat(gfxpath, name);
+	strcat(gfxpath, "/gfx/");
+
+	strcpy(zone_name, name);
 	zone_name[31] = '\0';
 
-	dirs = loader_readdir(path);
+	dirs = loader_readdir(stages);
 	if(dirs == NULL){
 		printf("ERROR cant read dirs\n");
 		return -1;
@@ -200,8 +216,8 @@ the name of the file will be used as the id
 
 	ptr = dirs->next;
 	while(ptr){
-		filename = ptr->item;
-		if(load_stage(filename) < 0){
+		stagepath = ptr->item;
+		if(load_stage(gfxpath, stagepath) < 0){
 			printf("ERROR cant load stage\n");
 			loader_freedirlist(dirs);
 			return -1;

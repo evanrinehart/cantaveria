@@ -156,13 +156,11 @@ void randomly_insert(vwchar* C[], int count){
 }
 
 
-int load_font(char* filename){
+int load_font(char* path){
 	//printf("load_font: loading %s\n",filename);
-	char buf[256] = "fonts/";
-	strmcat(buf, filename, 256);
-	reader* rd = loader_open(buf);
+	reader* rd = loader_open(path);
 	if(!rd){
-		fatal_error("load_font: cannot open %s\n",filename);
+		fatal_error("load_font: cannot open %s\n", path);
 	}
 
 	char str[256];

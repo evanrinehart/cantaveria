@@ -32,12 +32,19 @@
 #include <zip.h>
 
 struct reader {
-	zip_file* f;
+	zip_file* zf;
+	FILE* ff;
 	int next_c;
 };
 
 zip_archive* arc;
+int data_mode = 1;
 
+
+void loader_data_mode(int flag){
+	if(flag == 0) data_mode = 0;
+	if(flag == 1) data_mode = 1;
+}
 
 void loader_init(){
 	char* filename = "data.zip";
@@ -52,22 +59,16 @@ void loader_quit(){
 	zip_arclose(arc);
 }
 
-reader* data_open(char* dir, char* filename){
-	char buf[1024];
-	strcpy(buf, dir);
-	strcat(buf, filename);
-	return loader_open(buf);
-}
-
-reader* loader_open(char* filename){
+reader* loader_opend(char* filename){
 	char buf[1024] = "data/";
 	int L = strlen(buf);
 	strncpy(buf+L,filename,1024-L);
 	buf[1023] = 0;
 
 	reader* rd = xmalloc(sizeof(reader));
-	rd->f = zip_fopen(arc, filename);
-	if(!rd->f){
+	rd->ff = NULL;
+	rd->zf = zip_fopen(arc, filename);
+	if(!rd->zf){
 		error_msg("loader_open: can't open %s (%s)\n", filename, zip_geterror());
 		free(rd);
 		return NULL;
@@ -75,20 +76,59 @@ reader* loader_open(char* filename){
 	return rd;
 }
 
+reader* loader_openf(char* path){
+	reader* rd = xmalloc(sizeof(reader));
+	rd->zf = NULL;
+	rd->ff = fopen(path, "r");
+	if(rd->ff == NULL){
+		error_msg("loader_fopen: can't open %s\n", path);
+		free(rd);
+		return NULL;
+	}
+	return rd;
+}
+
+reader* loader_open(char* filename){
+	if(data_mode == 0){
+		return loader_openf(filename);
+	}
+	else if(data_mode == 1){
+		return loader_opend(filename);
+	}
+	else{
+		error_msg("loader_open: inconsistent data_mode\n");
+		return NULL;
+	}
+}
 
 void loader_close(reader* rd){
-	zip_fclose(rd->f);
+	if(rd->ff) fclose(rd->ff);
+	if(rd->zf) zip_fclose(rd->zf);
 	free(rd);
 }
 
 
 int loader_read(reader* rd, void* buf, int count){
-	int n = zip_fread(rd->f, buf, count);
-	if(n < 0){
-		error_msg("loader_read: %s\n", zip_geterror());
+	if(rd->zf){
+		int n = zip_fread(rd->zf, buf, count);
+		if(n < 0){
+			error_msg("loader_read: %s\n", zip_geterror());
+			return -1;
+		}
+		return n;
+	}
+	else if(rd->ff){
+		int n = fread(buf, 1, count, rd->ff);
+		if(n < 0){
+			error_msg("loader_read: read error\n");
+			return -1;
+		}
+		return n;
+	}
+	else{
+		error_msg("loader_read: inconsistent reader\n");
 		return -1;
 	}
-	return n;
 }
 
 unsigned char* loader_readall(char* filename, int* size){
@@ -170,7 +210,16 @@ int loader_scanline(reader* rd, char* format, ...){
 }
 
 int loader_feof(reader* rd){
-	return zip_feof(rd->f);
+	if(rd->zf){
+		return zip_feof(rd->zf);
+	}
+	else if(rd->ff){
+		return feof(rd->ff);
+	}
+	else{
+		error_msg("loader_feof: inconsistent reader\n");
+		return 1;
+	}
 }
 
 
