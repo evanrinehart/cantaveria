@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #include <SDL/SDL.h>
 
@@ -220,6 +221,81 @@ void draw_raw(){
 
 }
 
+/* determine an optimal size for the stage */
+void raw_optimize(int* ox, int* oy, int* ow, int* oh){
+	int i;
+	int xmax = 0;
+	int xmin = INT_MAX;
+	int ymax = 0;
+	int ymin = INT_MAX;
+	int x, y, fg, bg;
+	char shape;
+
+	for(i=0; i<(raw_w*raw_h); i++){
+		x = i % raw_w;
+		y = i / raw_h;
+		fg = raw_tiles[i].fg;
+		bg = raw_tiles[i].bg;
+		shape = raw_tiles[i].shape;
+		if((fg != 0 || bg != 0 || shape != '0')){
+			if(x > xmax) xmax = x;
+			if(x < xmin) xmin = x;
+			if(y > ymax) ymax = y;
+			if(y < ymin) ymin = y;
+		}
+	}
+
+	if(ymax - ymin < 15) *oh = 15;
+	else *oh = (ymax - ymin);
+
+	if(xmax - xmin < 20) *ow = 20;
+	else *ow = (xmax - xmin);
+
+	*ox = xmin;
+	*oy = ymin;
+}
+
+void raw_save(char* path){
+	/* save current stage to a stage file */
+	/* overwrites if already exists, no confirmation */
+	int x, y, bg, fg;
+	char shape;
+	int i;
+	struct tile* ptr = raw_tiles;
+	int opt_ox, opt_oy;
+	int opt_x, opt_y, opt_w, opt_h;
+
+
+	FILE* f = fopen(path, "w");
+	if(f == NULL){
+		console_printf("error saving file");
+		return;
+	}
+
+	raw_optimize(&opt_x, &opt_y, &opt_w, &opt_h);
+
+	fprintf(f, "%d %d %d %d\n", opt_w, opt_h, origin_x-opt_x, origin_y-opt_y);
+	fprintf(f, "%s\n", bgimage_file);
+	fprintf(f, "%s\n", fgtiles_file);
+	fprintf(f, "%s\n", bgtiles_file);
+
+	for(i=0; i<(raw_w*raw_h); i++){
+		x = (i % raw_w) - origin_x;
+		y = (i / raw_w) - origin_y;
+		fg = ptr[i].fg;
+		bg = ptr[i].bg;
+		shape = ptr[i].shape;
+
+		if(fg != 0 || bg != 0 || shape != '0'){
+			fprintf(f, "%d %d %d %d %c\n", x, y, fg, bg, shape);
+		}
+	}
+
+
+	fclose(f);
+
+}
+
 /* *** */
 
 
@@ -373,22 +449,16 @@ char* onoff(int b){
 }
 
 
-
-void save(char* path){
-	/* save current stage to a stage file */
-	/* overwrites if already exists, no confirmation */
-	FILE* f = fopen(path, "w");
-	if(f == NULL){
-		console_printf("error saving file");
-		return;
-	}
-
-	fprintf(f, "HELLO WORLD\n");
-
-	fclose(f);
-
-}
 /* *** */
+
+
+/* utility */
+void select_bgfile(char* path){
+	strcpy(bgimage_file, path);
+}
+
+/* *** */
+
 
 
 
@@ -396,7 +466,7 @@ void save(char* path){
 /* dialog input handlers */
 void confirm_save_press(SDLKey key, Uint16 c){
 	if(c == 'y' || c == 'Y'){
-		save(my_file);
+		raw_save(my_file);
 		update_window_name();
 		console_printf("You're the boss. %s was overwritten", my_file);
 	}
@@ -430,7 +500,7 @@ void save_as_press(SDLKey key, Uint16 c){
 			else{
 				update_window_name();
 				console_printf("%s saved", my_file);
-				save(my_file);
+				raw_save(my_file);
 			}
 		}
 		save_as_buf[0] = 0;
@@ -505,7 +575,7 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 					save_as_dialog = 1;
 				}
 				else{
-					save(my_file);
+					raw_save(my_file);
 					console_printf("saved %s", my_file);
 				}
 			}

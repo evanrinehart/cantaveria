@@ -318,8 +318,8 @@ struct stage {
 
 		for(j=0; j<ptr->h; j++){
 			for(i=0; i<ptr->w; i++){
-				c = (ptr->tiles + i + ptr->w*j)->shape;
-				printf("%c", c);
+				c = (ptr->tiles + i + ptr->w*j)->bg;
+				printf("%d", c);
 			}
 			printf("\n");
 		}
