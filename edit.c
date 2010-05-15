@@ -85,11 +85,14 @@ int quit_dialog = 0;
 int save_as_dialog = 0;
 int open_dialog = 0;
 int confirm_save_dialog = 0;
+int unsaved_changes_dialog = 0;
 
 
 
 char save_as_buf[256] = "";
 int save_as_ptr = 0;
+char open_buf[256] = "";
+int open_ptr = 0;
 /* *** */
 
 
@@ -296,6 +299,13 @@ void raw_save(char* path){
 
 }
 
+
+int raw_open(char* path){
+	
+
+	return 0;
+}
+
 /* *** */
 
 
@@ -435,7 +445,10 @@ void redraw_all(){
 	if(save_as_dialog){
 		console_printf("save as: %s", save_as_buf);
 	}
-		
+
+	if(open_dialog){
+		console_printf("open file: %s", open_buf);
+	}
 
 	console_draw();
 	console_clear();
@@ -464,6 +477,46 @@ void select_bgfile(char* path){
 
 
 /* dialog input handlers */
+void open_press(SDLKey key, Uint16 c){
+	if(c == 0){
+	}	
+	else if(c == '\r'){
+		if(open_buf[0] == 0){
+			console_printf("No name? Nevermind then.");
+		}
+		else{
+			if(raw_open(open_buf) < 0){
+				console_printf("ERROR when opening %s", open_buf);
+				/* reset ? */
+			}
+
+			console_printf("%s opened\n", open_buf);
+		}
+		open_buf[0] = 0;
+		open_ptr = 0;
+		open_dialog = 0;
+	}
+	else if(c == 0x1b){
+		open_buf[0] = 0;
+		open_ptr = 0;
+		open_dialog = 0;
+	}
+	else if(c == '\b'){
+		if(open_ptr > 0){
+			open_ptr--;
+			open_buf[open_ptr] = 0;
+		}
+	}
+	else{
+		if(open_ptr < 255){
+			open_buf[open_ptr] = c;
+			open_ptr++;
+			open_buf[open_ptr] = 0;
+		}
+	}
+
+}
+
 void confirm_save_press(SDLKey key, Uint16 c){
 	if(c == 'y' || c == 'Y'){
 		raw_save(my_file);
@@ -546,6 +599,12 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 		return;
 	}
 
+	if(open_dialog){
+		open_press(key, c);
+		redraw_all();
+		return;
+	}
+
 	switch(key){
 		case SDLK_u:
 			undo();
@@ -584,26 +643,15 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 			save_as_dialog = 1;
 			break;
 		case SDLK_o:
-			console_printf("open...");
+			open_dialog = 1;
 			break;
 		case SDLK_b:
 			console_printf("change background...");
 			break;
 		case SDLK_q:
-			if(dialog_flag == 0){
-				dialog_flag = 1;
-				quit_dialog = 1;
-			}
-			break;
 		case SDLK_ESCAPE:
-			panic_flag = 1;
-			if(dialog_flag == 0){
-				dialog_flag = 1;
-				quit_dialog = 1;
-			}
-			else{
-				dialog_flag = 0;
-			}
+			console_printf("Really quit? (Y/N)");
+			quit_dialog = 1;
 			break;
 		case SDLK_RETURN: 
 			console_printf("OK");
