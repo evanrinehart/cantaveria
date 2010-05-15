@@ -1,5 +1,5 @@
 
-struct {
+static struct {
   int x;
   int y;
 } camera;

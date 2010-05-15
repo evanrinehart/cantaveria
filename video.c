@@ -94,7 +94,6 @@ int screen_offset_y = 0;
 /********************/
 
 void draw_gfx_raw(int gfxid, int x, int y, int X, int Y, int W, int H){
-	if(x > screen_w || y > screen_h || x+W < 0 || y+H < 0) return;
 	if(!gl_flag){
 		SDL_Surface* surf = gfx[gfxid].surf;
 		SDL_Rect r1 = {X,Y,W,H};
@@ -126,6 +125,23 @@ void draw_gfx_raw(int gfxid, int x, int y, int X, int Y, int W, int H){
 	}
 }
 
+void draw_test_rect(int x, int y, int w, int h){
+	if(!gl_flag){
+		SDL_Rect dst = {x, y, w, h};
+		SDL_FillRect(video, &dst, 0x00ff00ff);
+	}
+	else{
+		glColor3f(1.0, 0.0, 1.0);
+		glBegin( GL_QUADS );
+		glVertex3f(x, y, 0);
+		glVertex3f(x+w, y, 0);
+		glVertex3f(x+w, y+h, 0);
+		glVertex3f(x, y+h, 0);
+		glEnd();
+		glColor3f(1.0,1.0,1.0);
+	}
+}
+
 void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H){
 	draw_gfx_raw(gfxid, x+screen_offset_x, y+screen_offset_y, X, Y, W, H);
 }
@@ -148,8 +164,6 @@ void update_video(){
 		SDL_GL_SwapBuffers();
 	}
 }
-
-
 
 
 /********************/
@@ -175,56 +189,106 @@ SDL_Surface* SDL_NewSurface(int w, int h){
 	return surf;
 }
 
-SDL_Surface* load_pixmap(char* filename){
-	char path[256] = "gfx/";
-	strmcat(path, filename, 256);
+void debug_surf(char* msg, SDL_Surface* surf){
+	printf("%s\n", msg);
+	int i;
+	unsigned char* ptr = surf->pixels;
+	int bpp = surf->format->BytesPerPixel;
 
+	for(i=0; i<500; i+=bpp){
+		printf("%2x %2x %2x %2x\n", ptr[i], ptr[i+1], ptr[i+2], ptr[i+3]);
+	}
+}
+
+
+
+SDL_Surface* load_tga(char* filename){
+	char path[256] = "gfx/";
+	unsigned char header[18];
+	strmcat(path, filename, 256);
 	reader* rd = loader_open(path);
+	int w, h, bpp;
+	int mask;
+	unsigned char parts[4];
+	int key = 0;
+	int i;
+	int npix;
+	Uint32* pixels;
+
 	if(!rd){
 		error_msg("load_pixmap: error opening file\n");
 		return NULL;
 	}
 
-	unsigned char header[18];
 	if(loader_read(rd, header, 18) < 0){
 		error_msg("load_pixmap: error reading pixmap header\n");
 		loader_close(rd);
 		return NULL;
 	}
 
-	int w = header[12] + (header[13]<<8);
-	int h = header[14] + (header[15]<<8);
-	int bpp = header[16];
-	//printf("load_pixmap: %s has bpp=%d\n",filename, bpp);
-	SDL_Surface* surf = SDL_CreateRGBSurface(0,w,h,bpp,
+	w = header[12] + (header[13]<<8);
+	h = header[14] + (header[15]<<8);
+	bpp = header[16];
+
+	npix = w*h;
+
+	SDL_Surface* surf = SDL_CreateRGBSurface(0,w,h,32,
 			0x00ff0000,0x0000ff00,0x000000ff,0xff000000);
 	if(!surf){
 		out_of_memory("load_pixmap");
 	}
-	if(loader_read(rd, surf->pixels, w*(bpp/8)*h) < 0){
-		error_msg("load_pixmap: error reading pixmap data\n");
-		loader_close(rd);
-		SDL_FreeSurface(surf);
-		return NULL;
+
+	pixels = surf->pixels;
+	mask = surf->format->Amask;
+
+	for(i=0; i<npix; i++){
+		if(loader_read(rd, parts, bpp/8) < 0){
+			error_msg("load_pixmap: error reading pixmap data\n");
+			loader_close(rd);
+			SDL_FreeSurface(surf);
+			return NULL;
+		}
+
+		if(bpp == 24){
+			if(parts[0] == 0 && parts[1] == 0 && parts[2] == 0){
+				pixels[i] = 0;
+			}
+			else{
+				pixels[i] = parts[0] | (parts[1]<<8) | (parts[2]<<16);
+				pixels[i] |= mask;
+			}
+		}
+		else if(bpp == 32){
+			if(parts[1] == 0 && parts[2] == 0 && parts[3] == 0){
+				pixels[i] = 0;
+			}
+			else{
+				pixels[i] = parts[0] | (parts[1]<<8) | (parts[2]<<16);
+				pixels[i] |= mask;
+			}
+		}
 	}
+
 	loader_close(rd);
+
+	SDL_SetAlpha(surf, 0, 0);
+	SDL_SetColorKey(surf, SDL_SRCCOLORKEY, key);
+	debug_surf(filename, surf);
 
 	return surf;
 }
 
+
 int load_gfx(char* filename){
-	int i, j;
+	int i;
+	SDL_Surface* src;
 
 	if(gfx_count == MAX_GFX){
 		fatal_error(
-				"load_gfx: cannot load any more than %d graphics\n",
-				MAX_GFX
-			   );
-
+			"load_gfx: cannot load any more than %d graphics\n",
+			MAX_GFX
+		);
 	}
-
-	//printf("loading %s\n",filename);
-
 
 	for(i=0; i<gfx_count; i++){/*check for already loaded gfx*/
 		if(strcmp(gfx[i].filename, filename)==0){
@@ -232,66 +296,19 @@ int load_gfx(char* filename){
 		}
 	}
 
-	SDL_Surface* src = load_pixmap(filename);
+	src = load_tga(filename);
 	if(!src){
 		fatal_error("load_gfx: failed to load %s\n",filename);
 	}
 
 	if(!gl_flag){
-		SDL_Surface* surf = SDL_DisplayFormatAlpha(src);
-		SDL_SetAlpha(surf, 0, 0);
-
-		Uint32 key = SDL_MapRGB(
-				surf->format,
-				(COLOR_KEY&0xff0000)>>16,
-				(COLOR_KEY&0x00ff00)>>8,
-				(COLOR_KEY&0x0000ff)>>0
-				);
-		SDL_SetColorKey(surf, SDL_SRCCOLORKEY, key);
-
-		SDL_FreeSurface(src);
-
-
 		gfx[gfx_count].filename = strxcpy(filename);
-		gfx[gfx_count].surf = surf;
-		gfx[gfx_count].w = surf->w;
-		gfx[gfx_count].h = surf->h;
+		gfx[gfx_count].surf = src;
+		gfx[gfx_count].w = src->w;
+		gfx[gfx_count].h = src->h;
 	}
 	else {
 		GLuint texture;
-
-		//SDL_Surface* conv = SDL_CreateRGBSurface(0, pot(src->w), pot(src->h), 32,
-		//0xff<<16,0xff<<8,0xff<<0,0);
-
-		//SDL_Surface* tmp = SDL_
-		SDL_Surface* conv = SDL_DisplayFormatAlpha(src);
-		//SDL_SetAlpha(conv, 0, 0);
-		//SDL_BlitSurface(src, NULL, conv, NULL);
-
-		//printf("bpp = %d\n",conv->format->BitsPerPixel);
-		int N = 0;
-		int M = 3;
-		Uint8* conv_bytes = conv->pixels;
-		Uint32 key = SDL_MapRGB(
-				src->format,
-				(COLOR_KEY&0xff0000)>>16,
-				(COLOR_KEY&0x00ff00)>>8,
-				(COLOR_KEY&0x0000ff)>>0
-				);
-		for(i=0; i<src->w; i++){
-			for(j=0; j<src->h; j++){
-
-				//if(1){printf("M==%d totalbytes=%d\n",M,src->w*src->h*4);}
-
-				Uint32 pixel = *((Uint32*)(src->pixels+N));
-				conv_bytes[M] =
-					pixel==key ?
-					SDL_ALPHA_TRANSPARENT :
-					SDL_ALPHA_OPAQUE;
-				N += src->format->BytesPerPixel;
-				M += 4;
-			}
-		}
 
 		glGenTextures( 1, &texture );
 		glBindTexture( GL_TEXTURE_2D, texture );
@@ -323,10 +340,10 @@ int load_gfx(char* filename){
 		glTexImage2D(
 				GL_TEXTURE_2D,
 				0, 4,
-				conv->w, conv->h,
+				src->w, src->h,
 				0,
 				GL_BGRA, GL_UNSIGNED_BYTE,
-				conv->pixels
+				src->pixels
 			    );
 
 		gfx[gfx_count].filename = strxcpy(filename);
@@ -334,7 +351,6 @@ int load_gfx(char* filename){
 		gfx[gfx_count].w = src->w;
 		gfx[gfx_count].h = src->h;
 
-		SDL_FreeSurface(conv);
 		SDL_FreeSurface(src);
 	}
 
@@ -535,7 +551,10 @@ void setup_video(){
 
 }
 
-
+void map_pixel(int mx, int my, int *x, int *y){
+	*x = mx*SCREEN_W/W;
+	*y = my*SCREEN_H/H;
+}
 
 
 
@@ -547,7 +566,6 @@ void video_init(int argc, char* argv[]){
 	setup_joysticks();
 	setup_video();
 	time_last = SDL_GetTicks();
-
 }
 
 void video_quit(){

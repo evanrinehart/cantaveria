@@ -70,6 +70,7 @@ void setup_inner(){
 	}
 	else{
 		//print_zone(x);
+		stage_debug();
 		unload_zone();
 	}
 

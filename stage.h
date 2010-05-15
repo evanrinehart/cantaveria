@@ -23,6 +23,7 @@
 
 int load_zone(char* filename);
 void unload_zone();
+void stage_debug();
 
 void switch_stage(char* id);
 

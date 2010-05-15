@@ -52,3 +52,5 @@ int gfx_height(int gfxid);
 void fps_update();
 void fps_draw();
 int get_fps();
+
+void map_pixel(int mx, int my, int *x, int *y);

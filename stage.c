@@ -45,26 +45,25 @@ it has three main functions
 
 
 enum tile_shape {
-SHAPE_FREE, /* 'air' */
-SHAPE_SQUARE,
-SHAPE_NULL, /*does not exist*/
+SHAPE_FREE = '0', /* 'air' */
+SHAPE_SQUARE = 'M',
 
-SHAPE_TRI_NE,
-SHAPE_TRI_NW,
-SHAPE_TRI_SE,
-SHAPE_TRI_SW,
+SHAPE_TRI_NE = 'a',
+SHAPE_TRI_NW = 'b',
+SHAPE_TRI_SE = 'c',
+SHAPE_TRI_SW = 'd',
 
-SHAPE_LTRAP_FLOOR, /* trapezoid */
-SHAPE_RTRAP_FLOOR,
-SHAPE_LSLOPE_FLOOR,
-SHAPE_RSLOPE_FLOOR,
-SHAPE_LTRAP_CEIL,
-SHAPE_RTRAP_CEIL,
-SHAPE_LSLOPE_CEIL,
-SHAPE_RSLOPE_CEIL,
+SHAPE_LTRAP_FLOOR = '1', /* trapezoid */
+SHAPE_RTRAP_FLOOR = '2',
+SHAPE_LSLOPE_FLOOR = '3',
+SHAPE_RSLOPE_FLOOR = '4',
+SHAPE_LTRAP_CEIL = '5',
+SHAPE_RTRAP_CEIL = '6',
+SHAPE_LSLOPE_CEIL = '7',
+SHAPE_RSLOPE_CEIL = '8',
 
-SHAPE_HALF_FLOOR,
-SHAPE_HALF_CEIL
+SHAPE_HALF_FLOOR = 'm',
+SHAPE_HALF_CEIL = 'w'
 };
 
 typedef struct {
@@ -79,9 +78,9 @@ struct stage {
 	int w, h;
 	tile* tiles;
 	int bgimage;
-	int dectiles;
 	int bgtiles;
 	int fgtiles;
+	int ox, oy;
 	stage* next;
 };
 
@@ -98,13 +97,21 @@ STAGE MODULE
 DEADLINES AND MILESTONES
 
 load zones / stages from new format - May 15
-  this may be done.
-  needs testing (print out the stage after loading)
 display loaded stages - May 22
 collision algorithm - May 29
 
 */
 
+
+
+static void initialize_tiles(int n, tile* tiles){
+	int i;
+	for(i=0; i<n; i++){
+		tiles[i].shape = SHAPE_FREE;
+		tiles[i].fg = 0;
+		tiles[i].bg = 0;
+	}
+}
 
 
 static int load_stage(char* path){
@@ -127,25 +134,26 @@ x y fg bg shape
 	stage* s = malloc(sizeof(stage));
 	int w = 20;
 	int h = 15;
-	int x, y, fg, bg, shape;
+	int x, y, ox, oy, fg, bg, shape;
 
-	loader_scanline(f, "%d %d", &w, &h);
+	loader_scanline(f, "%d %d %d %d", &w, &h, &ox, &oy);
 	loader_scanline(f, "%s", buf);
 	s->bgimage = load_bitmap(buf);
-	loader_scanline(f, "%s", buf);
-	s->dectiles = load_bitmap(buf);
 	loader_scanline(f, "%s", buf);
 	s->bgtiles = load_bitmap(buf);
 	loader_scanline(f, "%s", buf);
 	s->fgtiles = load_bitmap(buf);
 
 	s->tiles = malloc(w*h*sizeof(tile));
+	initialize_tiles(w*h, s->tiles);
 	s->w = w;
 	s->h = h;
+	s->ox = ox;
+	s->oy = oy;
 	strcpy(s->id, filename);
 
 	while(!loader_feof(f)){
-		loader_scanline(f, "%d %d %d %d %d", &x, &y, &fg, &bg, &shape);
+		loader_scanline(f, "%d %d %d %d %c", &x, &y, &fg, &bg, &shape);
 		tptr = s->tiles + x + (s->w * y);
 		tptr->fg = fg;
 		tptr->bg = bg;
@@ -214,6 +222,8 @@ void unload_zone(){
 		ptr = ptr->next;
 		free(prev);
 	}
+
+	strcpy(zone_name, "NO ZONE");
 }
 
 void switch_stage(char* id){
@@ -259,3 +269,47 @@ void stage_init(){
 }
 
 
+
+
+
+/*** debug ***/
+
+void stage_debug(){
+	stage* ptr = stages;
+	int i, j;
+	char c;
+/*
+struct stage {
+	char id[32];
+	int w, h;
+	tile* tiles;
+	int bgimage;
+	int bgtiles;
+	int fgtiles;
+	stage* next;
+};*/
+	printf("stage debug:\n\n");
+	printf("zone: %s\n\n", zone_name);
+
+	while(ptr){
+		printf("stage: %s\n", ptr->id);
+		printf("size: %dx%d\n", ptr->w, ptr->h);
+		printf("origin: (%d, %d)\n", ptr->ox, ptr->oy);
+		printf("bgimage: %d\n", ptr->bgimage);
+		printf("bgtiles: %d\n", ptr->bgtiles);
+		printf("fgtiles: %d\n", ptr->fgtiles);
+		printf("tiles:\n");
+
+		for(j=0; j<ptr->h; j++){
+			for(i=0; i<ptr->w; i++){
+				c = (ptr->tiles + i + ptr->w*j)->shape;
+				printf("%c", c);
+			}
+			printf("\n");
+		}
+
+
+		printf("\n");
+		ptr = ptr->next;
+	}
+}
