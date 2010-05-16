@@ -257,7 +257,7 @@ SDL_Surface* load_tga(char* path){
 			}
 		}
 		else if(bpp == 32){
-			if(parts[1] == 0 && parts[2] == 0 && parts[3] == 0){
+			if(parts[0] == 0 && parts[1] == 0 && parts[2] == 0){
 				pixels[i] = 0;
 			}
 			else{

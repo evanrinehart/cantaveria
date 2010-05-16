@@ -696,6 +696,16 @@ void save_as_press(SDLKey key, Uint16 c){
 	}
 }
 
+void quit_press(SDLKey key, Uint16 c){
+	if(c == 'y' || c == 'Y'){
+		panic_flag = 1;
+	}
+	else{
+		console_printf("OK");
+	}
+
+	quit_dialog = 0;
+}
 
 
 
@@ -717,6 +727,12 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 
 	if(open_dialog){
 		open_press(key, c);
+		redraw_all();
+		return;
+	}
+
+	if(quit_dialog){
+		quit_press(key, c);
 		redraw_all();
 		return;
 	}
