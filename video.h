@@ -53,4 +53,5 @@ void fps_update();
 void fps_draw();
 int get_fps();
 
+void load_panic_gfx();
 void map_pixel(int mx, int my, int *x, int *y);

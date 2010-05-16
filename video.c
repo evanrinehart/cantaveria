@@ -281,7 +281,13 @@ int load_gfx(char* filename){
 	int i;
 	SDL_Surface* src;
 
+	if(filename[0] == '\0'){
+		printf("load_gfx: empty path\n");
+		return 0;
+	}
+
 	if(gfx_count == MAX_GFX){
+		printf("this error can easily be fixed\n");
 		fatal_error(
 			"load_gfx: cannot load any more than %d graphics\n",
 			MAX_GFX
@@ -355,6 +361,20 @@ int load_gfx(char* filename){
 	return gfx_count++;
 }
 
+void load_panic_gfx(){
+	if(gfx_count > 0){
+		printf("load_panic_gfx: must call this before loading graphics\n");
+	}
+	else{
+		load_gfx("gfx/panic.tga");
+		load_gfx("gfx/smallfont.tga");
+
+		gfx[0].filename[0] = 0;
+		gfx[1].filename[1] = 0;
+	}
+}
+
+
 int gfx_width(int gfxid){
 	return gfx[gfxid].w;
 }
@@ -378,6 +398,7 @@ void sdl_init(){
 		exit(-1);
 	}
 }
+
 
 
 

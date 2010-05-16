@@ -47,8 +47,8 @@ int sprite_count = 0;
 animation* animations[MAX_ANIMATIONS];
 int anim_count = 0;
 
-int minifont_gfx = 0;
-
+int minifont_gfx = 1;
+int panic_gfx = 0;
 
 
 int stage_enabled = 0;
@@ -57,7 +57,7 @@ int stage_enabled = 0;
 
 void graphics_init(){
 	int i;
-	minifont_gfx = load_gfx("gfx/smallfont.tga");
+	load_panic_gfx();
 	for(i=0; i<MAX_ANIMATIONS; i++){
 		animations[i] = NULL;
 	}

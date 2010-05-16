@@ -305,7 +305,7 @@ void raw_optimize(int* ox, int* oy, int* ow, int* oh){
 	*oy = ymin;
 }
 
-void raw_save(char* path){
+int raw_save(char* path){
 	/* save current stage to a stage file */
 	/* overwrites if already exists, no confirmation */
 	int x, y, bg, fg;
@@ -319,7 +319,7 @@ void raw_save(char* path){
 	FILE* f = fopen(path, "w");
 	if(f == NULL){
 		console_printf("error saving file");
-		return;
+		return -1;
 	}
 
 	raw_optimize(&opt_x, &opt_y, &opt_w, &opt_h);
@@ -343,12 +343,17 @@ void raw_save(char* path){
 
 
 	fclose(f);
-
+	return 0;
 }
 
 void save(char* stagename){
 	char* path = compute_stage_path(stagename);
-	raw_save(path);
+	if(raw_save(path) < 0){
+		console_printf("%s NOT saved", stagename);
+	}
+	else{
+		console_printf("%s saved", stagename);
+	}
 }
 
 
@@ -632,9 +637,9 @@ void open_press(SDLKey key, Uint16 c){
 
 void confirm_save_press(SDLKey key, Uint16 c){
 	if(c == 'y' || c == 'Y'){
+		console_printf("You're the boss. Overwriting %s", my_file);
 		save(my_file);
 		update_window_name();
-		console_printf("You're the boss. %s was overwritten", my_file);
 	}
 	else{
 		strcpy(my_file, my_file_old); /* ! */
@@ -664,7 +669,6 @@ void save_as_press(SDLKey key, Uint16 c){
 			}
 			else{
 				update_window_name();
-				console_printf("%s saved", my_file);
 				save(my_file);
 			}
 		}
@@ -747,7 +751,6 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 				}
 				else{
 					save(my_file);
-					console_printf("saved %s", my_file);
 				}
 			}
 			break;
@@ -931,16 +934,14 @@ int main(int argc, char* argv[]){
 	update_window_name();
 
 	loader_data_mode(0);
-	bgimage = load_bitmap("azone/gfx/background.tga");
+//	bgimage = load_bitmap("azone/gfx/background.tga");
 //	loader_data_mode(0);
 //	fgtiles = load_bitmap("barf.tga");
 //	loader_data_mode(1);
-	fgtiles = load_bitmap("azone/gfx/barf.tga");
-	bgtiles = load_bitmap("azone/gfx/test.tga");
+//	fgtiles = load_bitmap("azone/gfx/barf.tga");
+//	bgtiles = load_bitmap("azone/gfx/test.tga");
 
 	set_zone_path("azone");
-
-	raw_write(2, 2, 1, 3);
 
 	redraw_all();
 
