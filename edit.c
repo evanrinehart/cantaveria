@@ -98,6 +98,7 @@ int tile_panel = 0;
 
 int tile_panel_set = 0;
 int tile_panel_page = 0;
+int tile_panel_offset = 0;
 
 char save_as_buf[256] = "";
 int save_as_ptr = 0;
@@ -581,8 +582,32 @@ char* onoff(int b){
 /* dialog drawing */
 
 void draw_tile_panel(){
-	draw_black_rect(0,0,9*16,20*16);
+	int i;
+	int x, y;
+	int gx, gy;
+	int gfx;
 
+	draw_black_rect(0,0,9*16,20*16);
+	draw_gfx_raw(tools, 0, 14*16, 4*16, 0, 16, 16);
+	draw_gfx_raw(tools, 16, 14*16, 5*16, 0, 16, 16);
+	draw_gfx_raw(tools, 2*16, 14*16, 6*16, 0, 16, 16);
+	draw_gfx_raw(tools, 7*16, 14*16, 7*16, 0, 16, 16);
+
+	if(tile_panel_page == 0) tile_panel_offset = 0;
+	if(tile_panel_page == 1) tile_panel_offset = 112;
+	if(tile_panel_page == 2) tile_panel_offset = 144;
+
+	if(tile_panel_set == 0) gfx = fgtiles;
+	if(tile_panel_set == 1) gfx = bgtiles;
+
+	for(i=0; i<112; i++){
+		x = 16*(i % 8);
+		y = 16*(i / 8);
+		gx = 16*(i % 16);
+		gy = 16*(i / 16);
+
+		draw_gfx_raw(gfx, x, y, gx, gy+tile_panel_offset, 16, 16);
+	}
 }
 
 void draw_tools(){
@@ -660,24 +685,61 @@ void redraw_all(){
 
 
 /* dialog input handlers */
-void tile_panel_click(int mx, int my){
-	tile_panel = 0;
-	printf("ok\n");
-	redraw_all();
-}
-
-void tile_panel_press(SDLKey key, Uint16 c){
-	tile_panel = 0;
-}
-
-void tools_press(SDLKey key, Uint16 c){
-	tools_dialog = 0;
-}
-
 void pixel_to_tile(int mx, int my, int* x, int* y){
 	map_pixel(mx, my, x, y);
 	*x /= 16;
 	*y /= 16;
+}
+
+int tile_panel_click(int mx, int my){
+	int x, y;
+
+	pixel_to_tile(mx, my, &x, &y);
+
+	if(x >= 9){
+		return 0;
+	}
+
+	if(y == 14){
+		if(x == 0){
+			tile_panel_page = 0;
+		}
+		if(x == 1){
+			tile_panel_page = 1;
+		}
+		if(x == 2){
+			tile_panel_page = 2;
+		}
+		if(x == 7){
+			tile_panel = 0;
+		}
+	}
+
+	if(y >= 0 && y < 14){
+		if(x >= 0 && x <=7){
+			brush_tile = x + y*8 + tile_panel_offset;
+		}
+	}
+
+	redraw_all();
+	return 1;
+}
+
+void tile_panel_press(SDLKey key, Uint16 c){
+	switch(key){
+		case SDLK_LEFT:
+		case SDLK_RIGHT:
+		case SDLK_UP:
+		case SDLK_DOWN:
+			return;
+		default:
+			tile_panel = 0;
+			return;
+	}
+}
+
+void tools_press(SDLKey key, Uint16 c){
+	tools_dialog = 0;
 }
 
 void tools_click(int mx, int my){
@@ -690,6 +752,7 @@ void tools_click(int mx, int my){
 		if(x == 2){
 			tile_panel = 1;
 			tile_panel_set = 0;
+			brush_layer = 2;
 		}
 		if(x >= 4 && x <= 10){
 			brush_layer = 2;
@@ -703,6 +766,7 @@ void tools_click(int mx, int my){
 		if(x == 2){
 			tile_panel = 1;
 			tile_panel_set = 1;
+			brush_layer = 1;
 		}
 		if(x >= 4 && x <= 10){
 			brush_layer = 1;
@@ -881,7 +945,6 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 	if(tile_panel){
 		tile_panel_press(key, c);
 		redraw_all();
-		return;
 	}
 
 	switch(key){
@@ -1015,15 +1078,15 @@ hold MMB - choose where to paste (release to execute, esc to cancel)
 	int x, y;
 	translate_pointer(mx, my, &x, &y);
 
-
 	if(tools_dialog){
 		tools_click(mx, my);
 		return;
 	}
 
-	if(tile_panel && x < 9*16){
-		tile_panel_click(mx, my);
-		return;
+	if(tile_panel){
+		if(tile_panel_click(mx, my)){
+			return;
+		}
 	}
 
 
