@@ -54,6 +54,7 @@ char my_file_old[256] = "";
 char bgimage_file[256] = "";
 char fgtiles_file[256] = "";
 char bgtiles_file[256] = "";
+char zone_path[256] = "";
 int bgimage = 0;
 int fgtiles = 0;
 int bgtiles = 0;
@@ -92,7 +93,54 @@ char save_as_buf[256] = "";
 int save_as_ptr = 0;
 char open_buf[256] = "";
 int open_ptr = 0;
+
+char gfx_path_buf[256] = "";
+char stage_path_buf[256] = "";
 /* *** */
+
+
+
+/* utility */
+void select_bgfile(char* path){
+	strcpy(bgimage_file, path);
+}
+
+void set_zone_path(char* path){
+	strncpy(zone_path, path, 256);
+	zone_path[255] = 0;
+	if(zone_path[strlen(zone_path)-1] != '/'){
+		strncat(zone_path, "/", 256);
+		zone_path[255] = 0;
+	}
+}
+
+int file_exists(char* path){
+	FILE* f = fopen(path, "r");
+	if(f == NULL){
+		return 0;
+	}
+	else{
+		fclose(f);
+		return 1;
+	}
+}
+
+char* compute_stage_path(char* stage){
+	strcpy(stage_path_buf, zone_path);
+	strcat(stage_path_buf, "stages/");
+	strcat(stage_path_buf, stage);
+	return stage_path_buf;
+}
+
+char* compute_gfx_path(char* gfxfile){
+	strcpy(gfx_path_buf, zone_path);
+	strcat(gfx_path_buf, "gfx/");
+	strcat(gfx_path_buf, gfxfile);
+	return gfx_path_buf;
+}
+/* *** */
+
+
 
 
 /* base access methods */
@@ -298,8 +346,13 @@ void raw_save(char* path){
 
 }
 
+void save(char* stagename){
+	char* path = compute_stage_path(stagename);
+	raw_save(path);
+}
 
-int raw_open(char* path){
+
+int raw_open(char* stagename){
 	reader* r;
 	int w, h, ox, oy;
 	int x, y, fg, bg;
@@ -309,8 +362,14 @@ int raw_open(char* path){
 	char file3[256] = "";
 	struct tile* new_tiles = NULL;
 	struct tile* ptr;
+	char* path = compute_stage_path(stagename);
 
 	r = loader_open(path);
+	if(r == NULL){
+		console_printf("Can't open %s", path);
+		return -1;
+	}
+
 	if(loader_scanline(r, "%d %d %d %d", &w, &h, &ox, &oy) < 4){
 		printf("scan error\n");
 		loader_close(r);
@@ -328,22 +387,23 @@ int raw_open(char* path){
 	}
 
 	new_tiles = initialize_raw(w, h);
-	while(!loader_feof(r)){
-		if(loader_scanline(r, "%d %d %d %d %c", &x, &y, &fg, &bg, &shape) < 5){
-			printf("scan error\n");
-			loader_close(r);
-			free(new_tiles);
-			return -1;
-		}
-
+	while(loader_scanline(r, "%d %d %d %d %c", &x, &y, &fg, &bg, &shape) == 5){
 		ptr = new_tiles + (x+ox) + (y+oy)*w;
 		ptr->fg = fg;
 		ptr->bg = bg;
 		ptr->shape = shape;
-
 	}
 
 	/* load the graphics */
+	path = compute_gfx_path(file1);
+	if(file_exists(path)) bgimage = load_bitmap(path);
+
+	path = compute_gfx_path(file2);
+	if(file_exists(path)) bgtiles = load_bitmap(path);
+
+	path = compute_gfx_path(file3);
+	if(file_exists(path)) fgtiles = load_bitmap(path);
+
 
 	/* finalize */
 	origin_x = ox;
@@ -358,10 +418,6 @@ int raw_open(char* path){
 	strcpy(fgtiles_file, file3);
 
 	strcpy(my_file, path);
-
-	//camera_x = origin_x;
-	//camera_y = origin_y;
-
 
 	return 0;
 }
@@ -525,10 +581,6 @@ char* onoff(int b){
 /* *** */
 
 
-/* utility */
-void select_bgfile(char* path){
-	strcpy(bgimage_file, path);
-}
 
 /* *** */
 
@@ -547,10 +599,11 @@ void open_press(SDLKey key, Uint16 c){
 		else{
 			if(raw_open(open_buf) < 0){
 				console_printf("ERROR when opening %s", open_buf);
-				/* reset ? */
 			}
-
-			console_printf("%s opened\n", open_buf);
+			else {
+				console_printf("%s opened", open_buf);
+				update_window_name();
+			}
 		}
 		open_buf[0] = 0;
 		open_ptr = 0;
@@ -579,7 +632,7 @@ void open_press(SDLKey key, Uint16 c){
 
 void confirm_save_press(SDLKey key, Uint16 c){
 	if(c == 'y' || c == 'Y'){
-		raw_save(my_file);
+		save(my_file);
 		update_window_name();
 		console_printf("You're the boss. %s was overwritten", my_file);
 	}
@@ -592,7 +645,7 @@ void confirm_save_press(SDLKey key, Uint16 c){
 }
 
 void save_as_press(SDLKey key, Uint16 c){
-	FILE* f;
+	char* path;
 	if(c == 0){
 	}	
 	else if(c == '\r'){
@@ -604,16 +657,15 @@ void save_as_press(SDLKey key, Uint16 c){
 			strcpy(my_file, save_as_buf); /* ! */
 
 			/* see if file exists */
-			f = fopen(my_file, "r");
-			if(f != NULL){
+			path = compute_stage_path(save_as_buf);
+			if(file_exists(path)){
 				console_printf("ALERT: really overwrite %s? (Y/N)", my_file);
 				confirm_save_dialog = 1;
-				fclose(f);
 			}
 			else{
 				update_window_name();
 				console_printf("%s saved", my_file);
-				raw_save(my_file);
+				save(my_file);
 			}
 		}
 		save_as_buf[0] = 0;
@@ -694,7 +746,7 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 					save_as_dialog = 1;
 				}
 				else{
-					raw_save(my_file);
+					save(my_file);
 					console_printf("saved %s", my_file);
 				}
 			}
@@ -885,6 +937,8 @@ int main(int argc, char* argv[]){
 //	loader_data_mode(1);
 	fgtiles = load_bitmap("azone/gfx/barf.tga");
 	bgtiles = load_bitmap("azone/gfx/test.tga");
+
+	set_zone_path("azone");
 
 	raw_write(2, 2, 1, 3);
 
