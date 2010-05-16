@@ -616,3 +616,20 @@ int get_fps(){
 	return fps;
 }
 
+
+void draw_black_rect(int x, int y, int w, int h){
+	if(!gl_flag){
+		SDL_Rect r = {x, y, w, h};
+		SDL_FillRect(video, &r, 0);
+	}
+	else{
+		glBegin( GL_QUADS );
+		glColor3f(0.0, 0.0, 0.0);
+		glVertex3f(x, y, 0);
+		glVertex3f(x+w, y, 0);
+		glVertex3f(x+w, y+h, 0);
+		glVertex3f(x, y+h, 0);
+		glColor3f(1.0,1.0,1.0);
+		glEnd();
+	}
+}

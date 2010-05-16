@@ -49,6 +49,8 @@ int origin_y = 0;
 static int camera_x = 0;
 static int camera_y = 0;
 
+const char shapechars[20] = "Mmw12345678abcd";
+
 char my_file[256] = "";
 char my_file_old[256] = "";
 char bgimage_file[256] = "";
@@ -58,6 +60,8 @@ char zone_path[256] = "";
 int bgimage = 0;
 int fgtiles = 0;
 int bgtiles = 0;
+int shapes = 0;
+int tools = 0;
 
 int select_enable = 0;
 int select_x = 0;
@@ -70,24 +74,30 @@ int raw_w = 20;
 int raw_h = 15;
 
 int show_favorites = 0;
-int bg_favorites[7] = {0,0,0,0,0,0,0};
-int fg_favorites[7] = {0,0,0,0,0,0,0};
-int brush_tile = 1;
-int brush_layer = 1;
+int bg_favorites[7] = {1,4,3,4,2,2,2};
+int fg_favorites[7] = {5,4,17,18,19,20,1};
+int brush_tile = 'M';
+int brush_layer = 3;
 int brush_enable = 0;
+int erase_enable = 0;
+
 
 int panic_flag = 0;
 
 int dialog_flag = 0;
-int brush_dialog = 0;
 int background_dialog = 0;
 int tileset_dialog = 0;
 int quit_dialog = 0;
 int save_as_dialog = 0;
 int open_dialog = 0;
 int confirm_save_dialog = 0;
+int tools_dialog = 0;
+int tile_panel = 0;
 
 
+
+int tile_panel_set = 0;
+int tile_panel_page = 0;
 
 char save_as_buf[256] = "";
 int save_as_ptr = 0;
@@ -266,6 +276,10 @@ void draw_raw(){
 			gx = 16*(t.fg % 16);
 			if(toggle_fgtiles)
 				draw_gfx_raw(fgtiles, i*16, j*16, gx, gy, 16, 16);
+			gy = 16*(t.shape / 16);
+			gx = 16*(t.shape % 16);
+			if(toggle_shapes)
+				draw_gfx_raw(shapes, i*16, j*16, gx, gy, 16, 16);
 		}
 	}
 
@@ -401,14 +415,16 @@ int raw_open(char* stagename){
 
 	/* load the graphics */
 	path = compute_gfx_path(file1);
-	if(file_exists(path)) bgimage = load_bitmap(path);
+	if(file1[0] != 0 && file_exists(path)) bgimage = load_bitmap(path);
+	else bgimage = 0;
 
 	path = compute_gfx_path(file2);
-	if(file_exists(path)) bgtiles = load_bitmap(path);
+	if(file2[0] != 0 && file_exists(path)) bgtiles = load_bitmap(path);
+	else bgtiles = 0;
 
 	path = compute_gfx_path(file3);
-	if(file_exists(path)) fgtiles = load_bitmap(path);
-
+	if(file3[0] != 0 && file_exists(path)) fgtiles = load_bitmap(path);
+	else fgtiles = 0;
 
 	/* finalize */
 	origin_x = ox;
@@ -552,6 +568,59 @@ void do_paste(){
 }
 
 
+char* onoff(int b){
+	if(b) return "on";
+	else return "off";
+}
+
+
+/* *** */
+
+
+
+/* dialog drawing */
+
+void draw_tile_panel(){
+	draw_black_rect(0,0,9*16,20*16);
+
+}
+
+void draw_tools(){
+	int i;
+	int gx, gy;
+
+	draw_black_rect(16, 16, 17*16, 11*16);
+
+	/* fg tile tool and favorites */
+	draw_gfx_raw(tools, 2*16, 2*16, 0, 0, 16, 16);
+
+	for(i=0; i<7; i++){
+		gx = 16*(fg_favorites[i] % 16);
+		gy = 16*(fg_favorites[i] / 16);
+		draw_gfx_raw(fgtiles, 16*(i+4), 2*16, gx, gy, 16, 16);
+	}
+
+	/* bg tile tool and favorites */
+	draw_gfx_raw(tools, 2*16, 4*16, 16, 0, 16, 16);
+
+	for(i=0; i<7; i++){
+		gx = 16*(bg_favorites[i] % 16);
+		gy = 16*(bg_favorites[i] / 16);
+		draw_gfx_raw(bgtiles, 16*(i+4), 4*16, gx, gy, 16, 16);
+	}
+
+	/* shapes */
+	for(i=0; i<15; i++){
+		gx = 16*(shapechars[i] % 16);
+		gy = 16*(shapechars[i] / 16);
+		draw_gfx_raw(shapes, 16*(i+2), 6*16, gx, gy, 16, 16);
+	}
+
+	draw_gfx_raw(tools, 2*16, 8*16, 2*16, 0, 16, 16);
+	draw_gfx_raw(tools, 4*16, 8*16, 3*16, 0, 16, 16);
+}
+
+
 void redraw_all(){
 	clear_video();
 		
@@ -571,22 +640,19 @@ void redraw_all(){
 		console_printf("open file: %s", open_buf);
 	}
 
+	if(tools_dialog){
+		draw_tools();
+	}
+
+	if(tile_panel){
+		draw_tile_panel();
+	}
+
 	console_draw();
 	console_clear();
 
 	update_video();
 }
-
-char* onoff(int b){
-	if(b) return "on";
-	else return "off";
-}
-
-
-/* *** */
-
-
-
 /* *** */
 
 
@@ -594,6 +660,75 @@ char* onoff(int b){
 
 
 /* dialog input handlers */
+void tile_panel_click(int mx, int my){
+	tile_panel = 0;
+	printf("ok\n");
+	redraw_all();
+}
+
+void tile_panel_press(SDLKey key, Uint16 c){
+	tile_panel = 0;
+}
+
+void tools_press(SDLKey key, Uint16 c){
+	tools_dialog = 0;
+}
+
+void pixel_to_tile(int mx, int my, int* x, int* y){
+	map_pixel(mx, my, x, y);
+	*x /= 16;
+	*y /= 16;
+}
+
+void tools_click(int mx, int my){
+	int x;
+	int y;
+
+	pixel_to_tile(mx, my, &x, &y);
+
+	if(y == 2){
+		if(x == 2){
+			tile_panel = 1;
+			tile_panel_set = 0;
+		}
+		if(x >= 4 && x <= 10){
+			brush_layer = 2;
+			toggle_fgtiles = 1;
+			toggle_shapes = 0;
+			brush_tile = fg_favorites[x-4];
+		}
+	}
+
+	if(y == 4){
+		if(x == 2){
+			tile_panel = 1;
+			tile_panel_set = 1;
+		}
+		if(x >= 4 && x <= 10){
+			brush_layer = 1;
+			toggle_bgtiles = 1;
+			toggle_shapes = 0;
+			brush_tile = bg_favorites[x-4];
+		}
+	}
+
+	if(y == 6){
+		if(x >= 2 && x <= 16){
+			brush_layer = 3;
+			toggle_shapes = 1;
+			brush_tile = shapechars[x-2];
+		}
+	}
+
+	if(y == 8){
+		if(x == 2) printf("big eraser\n");
+		if(x == 4) printf("eye dropper\n");
+	}
+
+	tools_dialog = 0;
+	redraw_all();
+}
+
 void open_press(SDLKey key, Uint16 c){
 	if(c == 0){
 	}	
@@ -737,6 +872,18 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 		return;
 	}
 
+	if(tools_dialog){
+		tools_press(key, c);
+		redraw_all();
+		return;
+	}
+
+	if(tile_panel){
+		tile_panel_press(key, c);
+		redraw_all();
+		return;
+	}
+
 	switch(key){
 		case SDLK_u:
 			undo();
@@ -809,6 +956,10 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 		case SDLK_UP: camera_y--; break;
 		case SDLK_DOWN: camera_y++; break;
 
+		case SDLK_SPACE:
+			tools_dialog = 1;
+			break;
+
 		/* temporary controls */
 		case SDLK_9: brush_tile--; brush_tile %= 256; break;
 		case SDLK_0: brush_tile++; brush_tile %= 256; break;
@@ -864,13 +1015,16 @@ hold MMB - choose where to paste (release to execute, esc to cancel)
 	int x, y;
 	translate_pointer(mx, my, &x, &y);
 
-	if(brush_dialog){
-		//change brush, maybe
-		brush_dialog = 0;
+
+	if(tools_dialog){
+		tools_click(mx, my);
 		return;
 	}
 
-	
+	if(tile_panel && x < 9*16){
+		tile_panel_click(mx, my);
+		return;
+	}
 
 
 	if(button == 1){
@@ -879,7 +1033,13 @@ hold MMB - choose where to paste (release to execute, esc to cancel)
 		redraw_all();
 	}
 	else if(button == 3){
-		brush_dialog = 1;
+		erase_enable = 1;
+		if(brush_layer == 3){
+			raw_write(x, y, 3, '0');
+		}
+		else{
+			raw_write(x, y, brush_layer, 0);
+		}
 		redraw_all();
 	}
 
@@ -895,6 +1055,10 @@ MMB - execute paste
 	if(button == 1){
 		brush_enable = 0;
 	}
+
+	if(button == 3){
+		erase_enable = 0;
+	}
 }
 
 
@@ -909,6 +1073,15 @@ redraw paste box
 
 	if(brush_enable){
 		raw_write(x, y, brush_layer, brush_tile);
+		redraw_all();
+	}
+	if(erase_enable){
+		if(brush_layer == 3){
+			raw_write(x, y, 3, '0');
+		}
+		else{
+			raw_write(x, y, brush_layer, 0);
+		}
 		redraw_all();
 	}
 }
@@ -948,6 +1121,9 @@ int main(int argc, char* argv[]){
 	raw_tiles = initialize_raw(raw_w, raw_h);
 
 	update_window_name();
+
+	shapes = load_bitmap("gfx/shapes.tga");
+	tools = load_bitmap("gfx/tools.tga");
 
 	loader_data_mode(0);
 //	bgimage = load_bitmap("azone/gfx/background.tga");

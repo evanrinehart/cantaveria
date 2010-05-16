@@ -49,6 +49,8 @@ void draw_gfx_raw(int gfxid, int x, int y, int X, int Y, int W, int H);
 int gfx_width(int gfxid);
 int gfx_height(int gfxid);
 
+void draw_black_rect(int x, int y, int w, int h);
+
 void fps_update();
 void fps_draw();
 int get_fps();
