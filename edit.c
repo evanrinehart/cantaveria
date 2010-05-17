@@ -74,8 +74,8 @@ int raw_w = 20;
 int raw_h = 15;
 
 int show_favorites = 0;
-int bg_favorites[7] = {1,4,3,4,2,2,2};
-int fg_favorites[7] = {5,4,17,18,19,20,1};
+int bg_favorites[7] = {0,1,2,3,4,5,6};
+int fg_favorites[7] = {0,1,2,3,4,5,6};
 int brush_tile = 'M';
 int brush_layer = 3;
 int brush_enable = 0;
@@ -222,7 +222,6 @@ void detect_size(int* w, int* h){
 
 void raw_write(int x, int y, int layer, int value){
 	while(out_of_bounds(x, y)){
-		printf("expanding\n");
 		expand_raw();
 		x += raw_w / 3;
 		y += raw_h / 3;
@@ -527,8 +526,38 @@ struct tile* read_tile(int x, int y){
 
 
 /* high level gui commands */
-void select_brush(int layer, int value){
+void update_favs(){
+	int a, b, c, d, e;
+	int *favs;
+	int already = 0;
+	int x = 0;
+	int i = 0;
+	int tmp;
+	int value = brush_tile;
+	int layer = brush_layer;
 
+	if(layer == 1) favs = bg_favorites;
+	if(layer == 2) favs = fg_favorites;
+
+	for(i=0; i<7; i++){
+		if(favs[i] == value){
+			already = 1;
+			x = i;
+		}
+	}
+
+	if(already){
+		if(x > 0){
+			tmp = favs[x-1];
+			favs[x-1] = favs[x];
+			favs[x] = tmp;
+		}
+	}
+	else{
+		favs[6] = value;
+	}
+
+			
 }
 
 void start_box(int x, int y){
@@ -718,6 +747,7 @@ int tile_panel_click(int mx, int my){
 	if(y >= 0 && y < 14){
 		if(x >= 0 && x <=7){
 			brush_tile = x + y*8 + tile_panel_offset;
+			update_favs();
 		}
 	}
 
@@ -759,6 +789,7 @@ void tools_click(int mx, int my){
 			toggle_fgtiles = 1;
 			toggle_shapes = 0;
 			brush_tile = fg_favorites[x-4];
+			update_favs();
 		}
 	}
 
@@ -773,6 +804,7 @@ void tools_click(int mx, int my){
 			toggle_bgtiles = 1;
 			toggle_shapes = 0;
 			brush_tile = bg_favorites[x-4];
+			update_favs();
 		}
 	}
 
