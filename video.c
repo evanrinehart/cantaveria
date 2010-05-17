@@ -302,7 +302,8 @@ int load_gfx(char* filename){
 
 	src = load_tga(filename);
 	if(!src){
-		fatal_error("load_gfx: failed to load %s\n",filename);
+		//fatal_error("load_gfx: failed to load %s\n",filename);
+		return 0;
 	}
 
 	if(!gl_flag){

@@ -76,8 +76,8 @@ int raw_h = 15;
 int show_favorites = 0;
 int bg_favorites[7] = {0,1,2,3,4,5,6};
 int fg_favorites[7] = {0,1,2,3,4,5,6};
-int brush_tile = 'M';
-int brush_layer = 3;
+int brush_tile = 1;
+int brush_layer = 1;
 int brush_enable = 0;
 int erase_enable = 0;
 
@@ -104,6 +104,8 @@ char save_as_buf[256] = "";
 int save_as_ptr = 0;
 char open_buf[256] = "";
 int open_ptr = 0;
+char generic_buf[256] = "";
+int generic_ptr = 0;
 
 char gfx_path_buf[256] = "";
 char stage_path_buf[256] = "";
@@ -112,6 +114,16 @@ char stage_path_buf[256] = "";
 
 
 /* utility */
+void update_window_name(){
+	if(my_file[0] == 0){
+		SDL_WM_SetCaption("unnamed", NULL);
+	}
+	else{
+		SDL_WM_SetCaption(my_file, NULL);
+	}
+}
+
+
 void select_bgfile(char* path){
 	strcpy(bgimage_file, path);
 }
@@ -171,6 +183,22 @@ struct tile* initialize_raw(int w, int h){
 
 void unload_raw(){
 	free(raw_tiles);
+}
+
+void raw_new(){
+	unload_raw();
+	raw_tiles = initialize_raw(20, 15);
+	raw_w = 20;
+	raw_h = 15;
+	camera_x = 0;
+	camera_y = 0;
+	origin_x = 0;
+	origin_y = 0;
+	bgimage = 0;
+	fgtiles = 0;
+	bgtiles = 0;
+	strcpy(my_file, "");
+	update_window_name();
 }
 
 struct tile raw_read(int x, int y){
@@ -447,16 +475,6 @@ int raw_open(char* stagename){
 
 
 
-void update_window_name(){
-	if(my_file[0] == 0){
-		SDL_WM_SetCaption("unnamed", NULL);
-	}
-	else{
-		SDL_WM_SetCaption(my_file, NULL);
-	}
-}
-
-
 
 struct undo_step* undo_stack;
 struct undo_step* undo_ptr;
@@ -702,6 +720,19 @@ void redraw_all(){
 		draw_tile_panel();
 	}
 
+	if(tileset_dialog){
+		if(brush_layer == 1){
+			console_printf("bg tileset: %s", generic_buf);
+		}
+		else if(brush_layer == 2){
+			console_printf("fg tileset: %s", generic_buf);
+		}
+	}
+
+	if(background_dialog){
+		console_printf("background image: %s", generic_buf);
+	}
+
 	console_draw();
 	console_clear();
 
@@ -718,6 +749,97 @@ void pixel_to_tile(int mx, int my, int* x, int* y){
 	map_pixel(mx, my, x, y);
 	*x /= 16;
 	*y /= 16;
+}
+
+void tileset_press(SDLKey key, Uint16 c){
+	if(c == '\r'){
+		if(generic_buf[0] == 0){
+			console_printf("No name? Nevermind then.");
+		}
+		else{
+			char* path = compute_gfx_path(generic_buf);
+			int gfx = load_bitmap(path);
+			if(gfx == 0){
+				console_printf("file not found");
+			}
+			else{
+				if(brush_layer == 1){
+					strcpy(bgtiles_file, generic_buf);
+					bgtiles = load_bitmap(path);
+				}
+				else if(brush_layer == 2){
+					strcpy(fgtiles_file, generic_buf);
+					fgtiles = load_bitmap(path);
+				}
+			}
+		}
+		generic_buf[0] = 0;
+		generic_ptr = 0;
+		tileset_dialog = 0;
+	}
+	else if(c == 0x1b){
+		generic_buf[0] = 0;
+		generic_ptr = 0;
+		tileset_dialog = 0;
+	}
+	else if(c == '\b'){
+		if(generic_ptr > 0){
+			generic_ptr--;
+			generic_buf[generic_ptr] = 0;
+		}
+	}
+	else if(c == 0){
+	}
+	else{
+		if(generic_ptr < 255){
+			generic_buf[generic_ptr] = c;
+			generic_ptr++;
+			generic_buf[generic_ptr] = 0;
+		}
+	}
+}
+
+void background_press(SDLKey key, Uint16 c){
+	if(c == '\r'){
+		if(generic_buf[0] == 0){
+			console_printf("No name? Nevermind then.");
+		}
+		else{
+			char* path = compute_gfx_path(generic_buf);
+			int gfx = load_bitmap(path);
+			if(gfx == 0){
+				console_printf("file not found");
+			}
+			else{
+				strcpy(bgimage_file, generic_buf);
+				bgimage = load_bitmap(path);
+			}
+		}
+		generic_buf[0] = 0;
+		generic_ptr = 0;
+		background_dialog = 0;
+	}
+	else if(c == 0x1b){
+		generic_buf[0] = 0;
+		generic_ptr = 0;
+		background_dialog = 0;
+	}
+	else if(c == '\b'){
+		if(generic_ptr > 0){
+			generic_ptr--;
+			generic_buf[generic_ptr] = 0;
+		}
+	}
+	else if(c == 0){
+	}
+	else{
+		if(generic_ptr < 255){
+			generic_buf[generic_ptr] = c;
+			generic_ptr++;
+			generic_buf[generic_ptr] = 0;
+		}
+	}
+
 }
 
 int tile_panel_click(int mx, int my){
@@ -979,6 +1101,18 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 		redraw_all();
 	}
 
+	if(tileset_dialog){
+		tileset_press(key, c);
+		redraw_all();
+		return;
+	}
+
+	if(background_dialog){
+		background_press(key, c);
+		redraw_all();
+		return;
+	}
+
 	switch(key){
 		case SDLK_u:
 			undo();
@@ -1034,14 +1168,8 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 			console_printf("Really quit? (Y/N)");
 			quit_dialog = 1;
 			break;
-		case SDLK_RETURN: 
-			console_printf("OK");
-			break;
-		case SDLK_y:
-			console_printf("yes");
-			break;
 		case SDLK_n:
-			console_printf("no");
+			raw_new();
 			break;
 		case SDLK_h:
 		case SDLK_F1:
@@ -1065,11 +1193,16 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 			console_printf("e - choose eyedropper");
 			console_printf("x - choose eraser");
 			break;
-		case SDLK_F2:
-			console_printf("pick fg tileset...");
+		case SDLK_F5:
+			background_dialog = 1;
 			break;
-		case SDLK_F3:
-			console_printf("pick bg tileset...");
+		case SDLK_F6:
+			tileset_dialog = 1;
+			brush_layer = 1;
+			break;
+		case SDLK_F7:
+			tileset_dialog = 1;
+			brush_layer = 2;
 			break;
 		case SDLK_LEFT: camera_x--; break;
 		case SDLK_RIGHT: camera_x++; break;
