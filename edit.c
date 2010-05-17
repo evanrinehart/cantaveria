@@ -1046,7 +1046,24 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 		case SDLK_h:
 		case SDLK_F1:
 		case SDLK_SLASH:
-			console_printf("help...");
+			console_printf("arrow keys - move");
+			console_printf("left mouse - draw");
+			console_printf("right mouse - erase");
+			console_printf("space - open toolbox");
+			console_printf("ctrl+s - save");
+			console_printf("w - save as");
+			console_printf("o - open");
+			console_printf("n - new file");
+			console_printf("z - change zone");
+			console_printf("1 2 3 4 - toggle layers");
+			console_printf("i - file info");
+			console_printf("F1 h ? - this help");
+			console_printf("ESCAPE q - quit / cancel");
+			console_printf("F5 - select background");
+			console_printf("F6 - select bg tileset");
+			console_printf("F7 - select fg tileset");
+			console_printf("e - choose eyedropper");
+			console_printf("x - choose eraser");
 			break;
 		case SDLK_F2:
 			console_printf("pick fg tileset...");
