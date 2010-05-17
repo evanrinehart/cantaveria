@@ -93,6 +93,7 @@ int open_dialog = 0;
 int confirm_save_dialog = 0;
 int tools_dialog = 0;
 int tile_panel = 0;
+int zone_dialog = 0;
 
 
 
@@ -733,6 +734,10 @@ void redraw_all(){
 		console_printf("background image: %s", generic_buf);
 	}
 
+	if(zone_dialog){
+		console_printf("path to zone: %s", generic_buf);
+	}
+
 	console_draw();
 	console_clear();
 
@@ -749,6 +754,42 @@ void pixel_to_tile(int mx, int my, int* x, int* y){
 	map_pixel(mx, my, x, y);
 	*x /= 16;
 	*y /= 16;
+}
+
+void zone_press(SDLKey key, Uint16 c){
+	if(c == '\r'){
+		if(generic_buf[0] == 0){
+			console_printf("No name? Nevermind then.");
+		}
+		else{
+			set_zone_path(generic_buf);
+			console_printf("zone set to %s", zone_path);
+		}
+		generic_buf[0] = 0;
+		generic_ptr = 0;
+		zone_dialog = 0;
+	}
+	else if(c == 0x1b){
+		generic_buf[0] = 0;
+		generic_ptr = 0;
+		zone_dialog = 0;
+	}
+	else if(c == '\b'){
+		if(generic_ptr > 0){
+			generic_ptr--;
+			generic_buf[generic_ptr] = 0;
+		}
+	}
+	else if(c == 0){
+	}
+	else{
+		if(generic_ptr < 255){
+			generic_buf[generic_ptr] = c;
+			generic_ptr++;
+			generic_buf[generic_ptr] = 0;
+		}
+	}
+
 }
 
 void tileset_press(SDLKey key, Uint16 c){
@@ -1113,6 +1154,12 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 		return;
 	}
 
+	if(zone_dialog){
+		zone_press(key, c);
+		redraw_all();
+		return;
+	}
+
 	switch(key){
 		case SDLK_u:
 			undo();
@@ -1152,8 +1199,8 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 		case SDLK_o:
 			open_dialog = 1;
 			break;
-		case SDLK_b:
-			console_printf("change background...");
+		case SDLK_z:
+			zone_dialog = 1;
 			break;
 		case SDLK_i:
 			console_printf("name: %s", my_file);
