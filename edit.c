@@ -1453,14 +1453,8 @@ int main(int argc, char* argv[]){
 	tools = load_bitmap("gfx/tools.tga");
 
 	loader_data_mode(0);
-//	bgimage = load_bitmap("azone/gfx/background.tga");
-//	loader_data_mode(0);
-//	fgtiles = load_bitmap("barf.tga");
-//	loader_data_mode(1);
-//	fgtiles = load_bitmap("azone/gfx/barf.tga");
-//	bgtiles = load_bitmap("azone/gfx/test.tga");
 
-	set_zone_path("azone");
+	zone_dialog = 1;
 
 	redraw_all();
 
