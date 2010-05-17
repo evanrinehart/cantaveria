@@ -163,6 +163,38 @@ char* compute_gfx_path(char* gfxfile){
 	strcat(gfx_path_buf, gfxfile);
 	return gfx_path_buf;
 }
+
+
+void reload_graphics_work(char* what, int* var, char* filename){
+	char* path = compute_gfx_path(filename);
+	if(filename[0] == 0){
+		*var = 0;
+		console_printf("blank filename for %s", what);
+	}
+	else if(!file_exists(path)){
+		console_printf("file not found %s", path);
+		*var = 0;
+	}
+	else {
+		*var = load_bitmap(path);
+		if(*var == 0){
+			console_printf("error loading %s", path);
+		}
+	}
+}
+
+void reload_graphics(){
+	clear_gfx();
+
+	loader_data_mode(1);
+	shapes = load_bitmap("gfx/shapes.tga");
+	tools = load_bitmap("gfx/tools.tga");
+
+	loader_data_mode(0);
+	reload_graphics_work("background", &bgimage, bgimage_file);
+	reload_graphics_work("bg tileset", &bgtiles, bgtiles_file);
+	reload_graphics_work("fg tileset", &fgtiles, fgtiles_file);
+}
 /* *** */
 
 
@@ -324,6 +356,7 @@ void raw_optimize(int* ox, int* oy, int* ow, int* oh){
 	int ymin = INT_MAX;
 	int x, y, fg, bg;
 	char shape;
+	int zero = 0;
 
 	for(i=0; i<(raw_w*raw_h); i++){
 		x = i % raw_w;
@@ -332,6 +365,7 @@ void raw_optimize(int* ox, int* oy, int* ow, int* oh){
 		bg = raw_tiles[i].bg;
 		shape = raw_tiles[i].shape;
 		if((fg != 0 || bg != 0 || shape != '0')){
+			zero = 1;
 			if(x > xmax) xmax = x;
 			if(x < xmin) xmin = x;
 			if(y > ymax) ymax = y;
@@ -345,8 +379,14 @@ void raw_optimize(int* ox, int* oy, int* ow, int* oh){
 	if(xmax - xmin + 1 <= 20) *ow = 20;
 	else *ow = (xmax - xmin + 1);
 
-	*ox = xmin;
-	*oy = ymin;
+	if(zero != 0){
+		*ox = xmin;
+		*oy = ymin;
+	}
+	else{
+		*ox = 0;
+		*oy = 0;
+	}
 }
 
 int raw_save(char* path){
@@ -1212,10 +1252,15 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 			eyedrop_enable = 1;
 			console_printf("eyedropper");
 			break;
+		case SDLK_l:
+			reload_graphics();
+			console_printf("graphics reloaded");
+			break;
 		case SDLK_i:
 			console_printf("name: %s", my_file);
 			console_printf("zone: %s", zone_path);
 			console_printf("size: %d x %d", raw_w, raw_h);
+			console_printf("origin: %d x %d", origin_x, origin_y);
 			console_printf("background: %s", bgimage_file);
 			console_printf("bg tileset: %s", bgtiles_file);
 			console_printf("fg tileset: %s", fgtiles_file);
@@ -1240,6 +1285,7 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 			console_printf("o - open");
 			console_printf("n - new file");
 			console_printf("z - change zone");
+			console_printf("l - reload graphics");
 			console_printf("1 2 3 4 - toggle layers");
 			console_printf("i - file info");
 			console_printf("F1 h ? - this help");
@@ -1248,7 +1294,7 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 			console_printf("F6 - select bg tileset");
 			console_printf("F7 - select fg tileset");
 			console_printf("e - choose eyedropper");
-			console_printf("x - choose eraser");
+			console_printf("x - choose megaeraser (not yet)");
 			break;
 		case SDLK_F5:
 			background_dialog = 1;

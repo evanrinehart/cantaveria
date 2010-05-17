@@ -362,6 +362,20 @@ int load_gfx(char* filename){
 	return gfx_count++;
 }
 
+void clear_gfx(){
+	int i;
+	for(i=2; i<gfx_count; i++){
+		if(!gl_flag){
+			SDL_FreeSurface(gfx[i].surf);
+		}
+		else{
+			glDeleteTextures(1, &(gfx[i].texture));
+		}
+	}
+
+	gfx_count = 2;
+}
+
 void load_panic_gfx(){
 	if(gfx_count > 0){
 		printf("load_panic_gfx: must call this before loading graphics\n");
