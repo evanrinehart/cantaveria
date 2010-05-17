@@ -80,6 +80,7 @@ int brush_tile = 1;
 int brush_layer = 1;
 int brush_enable = 0;
 int erase_enable = 0;
+int eyedrop_enable = 0;
 
 
 int panic_flag = 0;
@@ -980,8 +981,13 @@ void tools_click(int mx, int my){
 	}
 
 	if(y == 8){
-		if(x == 2) printf("big eraser\n");
-		if(x == 4) printf("eye dropper\n");
+		if(x == 2){
+			printf("big eraser\n");
+		}
+		if(x == 4){
+			eyedrop_enable = 1;
+			console_printf("eyedropper\n");
+		}
 	}
 
 	tools_dialog = 0;
@@ -1202,6 +1208,10 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 		case SDLK_z:
 			zone_dialog = 1;
 			break;
+		case SDLK_e:
+			eyedrop_enable = 1;
+			console_printf("eyedropper");
+			break;
 		case SDLK_i:
 			console_printf("name: %s", my_file);
 			console_printf("zone: %s", zone_path);
@@ -1313,6 +1323,7 @@ hold MMB - choose where to paste (release to execute, esc to cancel)
 	SDLMod mod = SDL_GetModState();
 
 	int x, y;
+	struct tile t;
 	translate_pointer(mx, my, &x, &y);
 
 	if(tools_dialog){
@@ -1328,9 +1339,24 @@ hold MMB - choose where to paste (release to execute, esc to cancel)
 
 
 	if(button == 1){
-		raw_write(x, y, brush_layer, brush_tile);
-		brush_enable = 1;
-		redraw_all();
+		if(eyedrop_enable){
+			t = raw_read(x, y);
+			if(brush_layer == 1){
+				brush_tile = t.bg;
+			}
+			else if(brush_layer == 2){
+				brush_tile = t.fg;
+			}
+			else if(brush_layer == 3){
+				brush_tile = t.shape;
+			}
+			eyedrop_enable = 0;
+		}
+		else{
+			raw_write(x, y, brush_layer, brush_tile);
+			brush_enable = 1;
+			redraw_all();
+		}
 	}
 	else if(button == 3){
 		erase_enable = 1;
@@ -1402,6 +1428,7 @@ int check_events(){
 			return 0;
 		case SDL_MOUSEBUTTONDOWN: mousedown(e.button.x, e.button.y, e.button.button); return 0;
 		case SDL_MOUSEBUTTONUP: mouseup(e.button.x, e.button.y, e.button.button); return 0;
+		case SDL_VIDEOEXPOSE: redraw_all();
 		default: return 0;
 	}
 }
