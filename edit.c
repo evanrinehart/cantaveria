@@ -438,7 +438,7 @@ int raw_open(char* stagename){
 	strcpy(bgtiles_file, file2);
 	strcpy(fgtiles_file, file3);
 
-	strcpy(my_file, path);
+	strcpy(my_file, stagename);
 
 	return 0;
 }
@@ -1020,6 +1020,14 @@ void keydown(SDLKey key, SDLMod mod, Uint16 c){
 			break;
 		case SDLK_b:
 			console_printf("change background...");
+			break;
+		case SDLK_i:
+			console_printf("name: %s", my_file);
+			console_printf("zone: %s", zone_path);
+			console_printf("size: %d x %d", raw_w, raw_h);
+			console_printf("background: %s", bgimage_file);
+			console_printf("bg tileset: %s", bgtiles_file);
+			console_printf("fg tileset: %s", fgtiles_file);
 			break;
 		case SDLK_q:
 		case SDLK_ESCAPE:
