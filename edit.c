@@ -671,7 +671,7 @@ char* onoff(int b){
 /* dialog drawing */
 
 void draw_tile_panel(){
-	int i;
+	int i, j;
 	int x, y;
 	int gx, gy;
 	int gfx;
@@ -690,12 +690,13 @@ void draw_tile_panel(){
 	if(tile_panel_set == 1) gfx = bgtiles;
 
 	for(i=0; i<112; i++){
+		j = i + tile_panel_offset;
 		x = 16*(i % 8);
 		y = 16*(i / 8);
-		gx = 16*(i % 16);
-		gy = 16*(i / 16);
+		gx = 16*((j%8) + (j/128)*8);
+		gy = 16*((j/8) % (128/8));
 
-		draw_gfx_raw(gfx, x, y, gx, gy+tile_panel_offset, 16, 16);
+		draw_gfx_raw(gfx, x, y, gx, gy, 16, 16);
 	}
 }
 
@@ -925,7 +926,7 @@ void background_press(SDLKey key, Uint16 c){
 }
 
 int tile_panel_click(int mx, int my){
-	int x, y;
+	int x, y, i;
 
 	pixel_to_tile(mx, my, &x, &y);
 
@@ -950,7 +951,8 @@ int tile_panel_click(int mx, int my){
 
 	if(y >= 0 && y < 14){
 		if(x >= 0 && x <=7){
-			brush_tile = x + y*8 + tile_panel_offset;
+			i = x + y*8 + tile_panel_offset;
+			brush_tile = (i%8) + (i/8)*16 + (i/128)*8;
 			update_favs();
 		}
 	}
