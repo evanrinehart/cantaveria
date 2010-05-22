@@ -118,7 +118,9 @@ void zsrand(unsigned s){
 
 void zsrand_u(){
 	FILE* f = fopen("/dev/urandom", "r");
-	fread(x, 4, R, f);
+	if(fread(x, 4, R, f) < 4*R){
+		/* do nothing */
+	}
 	fclose(f);
 	c = 0;
 }
