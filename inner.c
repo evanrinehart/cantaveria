@@ -36,9 +36,9 @@ static void update(){
 }
 
 static void draw(){
-	stage_draw_bg(cx, cy, 0, 0, 320, 240);
+	stage_draw_bg(cx, cy);
 	//entity_draw_visible(cx, cy);
-	stage_draw_fg(cx, cy, 0, 0, 320, 240);
+	stage_draw_fg(cx, cy);
 	//hud_draw(cx, cy);
 }
 
@@ -94,7 +94,7 @@ void setup_inner(){
 	else{
 		//print_zone(x);
 		
-		stage_debug();
+		//stage_debug();
 		//unload_zone();
 		switch_stage("base");
 	}

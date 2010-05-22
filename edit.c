@@ -6,6 +6,7 @@
 
 
 
+#include <util.h>
 #include <list.h>
 #include <console.h>
 #include <stage.h>
@@ -306,8 +307,8 @@ void raw_write(int x, int y, int layer, int value){
 }
 
 void draw_background(){
-	int W = gfx_width(bgimage);
-	int H = gfx_height(bgimage);
+	int W, H;
+	gfx_dimensions(bgimage, &W, &H);
 	draw_gfx_raw(bgimage, 0, 0, 0, 0, W, H);
 }
 

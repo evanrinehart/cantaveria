@@ -27,8 +27,8 @@ void stage_debug();
 
 void switch_stage(string id);
 
-void stage_draw_fg(int cx, int cy, int x, int y, int w, int h);
-void stage_draw_bg(int cx, int cy, int x, int y, int w, int h);
+void stage_draw_fg(int cx, int cy);
+void stage_draw_bg(int cx, int cy);
 
 int stage_xcollide(int x, int y, int w, int h, int v, int* xx);
 int stage_ycollide(int x, int y, int w, int h, int v, int* yy);

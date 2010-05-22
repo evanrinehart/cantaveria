@@ -34,6 +34,7 @@ it has three main functions
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <util.h>
 #include <list.h>
@@ -262,7 +263,7 @@ static void draw_tiles(int gfx, char layer, int cx, int cy){
 	tile* tbase = this_stage->tiles;
 	tile* t;
 	int tw = this_stage->w;
-	//int th = this_stage->h;
+	int th = this_stage->h;
 	int id;
 	int gx, gy;
 
@@ -270,16 +271,42 @@ static void draw_tiles(int gfx, char layer, int cx, int cy){
 	int j;
 	int io = cx/16;
 	int jo = cy/16;
+	int i_ = io + 20;
+	int j_ = jo + 15;
 
-	for(j=jo; j<jo+20; j++){
-		for(i=io; i<io+15; i++){
+	int extra_x = 0;
+	int extra_y = 0;
+	int W, H;
+	screen_dimensions(&W, &H);
+	if(W>320){
+		extra_x = (W - 320)/16/2 + 2;
+	}
+	if(H>240){
+		extra_y = (H - 240)/16/2 + 2;
+	}
+
+	io -= extra_x;
+	jo -= extra_y;
+	i_ += extra_x;
+	j_ += extra_y+1;
+
+	if(io > tw-1) return;
+	if(jo > th-1) return;
+
+	if(io < 0) io = 0;
+	if(jo < 0) jo = 0;
+	if(i_ > tw) i_ = tw;
+	if(j_ > th) j_ = th;
+
+	for(j=jo; j<j_; j++){
+		for(i=io; i<i_; i++){
 			t = tbase + i + tw*j;
 			if(layer=='b') id = t->bg;
 			else if(layer=='f') id = t->fg;
 			else id = 0;
 			gx = 16*(id%16);
 			gy = 16*(id/16);
-			draw_gfx(gfx, 0, 0, gx, gx, 16, 16);
+			draw_gfx(gfx, i*16-cx, j*16-cy, gx, gy, 16, 16);
 		}
 	}
 }
@@ -289,12 +316,12 @@ cx, cy is the camera position
 x, y i think is the offset from 0,0 you should shift
 w, h i think is the width and height of the screen
 */
-void stage_draw_bg(int cx, int cy, int x, int y, int w, int h){
+void stage_draw_bg(int cx, int cy){
 	int i;
 	int bw, bh, screen_w, screen_h;
 	int bgimage;
 	int bgshift;
-	int parallax = 1;
+	int parallax = 2;
 
 	if(this_stage == NULL) return;
 
@@ -303,7 +330,7 @@ void stage_draw_bg(int cx, int cy, int x, int y, int w, int h){
 	bgimage = this_stage->bgimage;
 	gfx_dimensions(bgimage, &bw, &bh);
 	screen_dimensions(&screen_w, &screen_h);
-	bgshift = cx/bw;
+	bgshift = cx/parallax/bw;
 	for(i=-1; i<(screen_w/bw)+2; i++){
 		draw_gfx_raw(
 			bgimage,
@@ -313,11 +340,11 @@ void stage_draw_bg(int cx, int cy, int x, int y, int w, int h){
 		);
 	}
 
-	draw_tiles(this_stage->bgtiles, '0', cx, cy);
+	draw_tiles(this_stage->bgtiles, 'b', cx, cy);
 }
 
-void stage_draw_fg(int cx, int cy, int x, int y, int w, int h){
-	//draw 2 if not blank
+void stage_draw_fg(int cx, int cy){
+	draw_tiles(this_stage->bgtiles, 'f', cx, cy);
 }
 
 
@@ -368,8 +395,11 @@ struct stage {
 
 		for(j=0; j<ptr->h; j++){
 			for(i=0; i<ptr->w; i++){
-				c = (ptr->tiles + i + ptr->w*j)->bg;
-				printf("%d", c);
+				c = (ptr->tiles + i + ptr->w*j)->fg;
+				/*
+				if(isprint(c)) printf("%d", c);
+				else printf("?");*/
+				printf("[%02x]", c);
 			}
 			printf("\n");
 		}
