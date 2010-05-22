@@ -22,6 +22,8 @@
 
 #include <stdio.h>
 
+#include <util.h>
+
 #include <input.h>
 #include <transfer.h>
 #include <gameover.h>

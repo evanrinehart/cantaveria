@@ -21,6 +21,7 @@
 */
 
 typedef unsigned long utf32;
+typedef const char* string;
 
 void fatal_error(const char* format, ...);
 void out_of_memory(const char*);

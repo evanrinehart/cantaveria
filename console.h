@@ -25,6 +25,6 @@
 void console_clear();
 void console_update();
 void console_scroll(int n);
-void console_printf(char* format, ...);
+void console_printf(const char* format, ...);
 void console_draw();
 

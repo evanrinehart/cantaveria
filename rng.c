@@ -108,10 +108,10 @@ void zreset(){
 }
 
 void zsrand(unsigned s){
-	int i;
+	int j;
 	srand(s);
-	for(i=0; i<R; i++){
-		x[i] = rand();
+	for(j=0; j<R; j++){
+		x[j] = rand();
 	}
 	c = 0;
 }

@@ -313,7 +313,7 @@ int read_header(reader* r, int* format, int* track_count, int* divraw){
 	return 0;
 }
 
-list* midi_load(char* path){
+list* midi_load(string path){
 	reader* r;
 	list* events = empty();
 

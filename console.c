@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdarg.h>
 
+#include <util.h>
 #include <graphics.h>
 #include <console.h>
 
@@ -59,7 +60,7 @@ void console_update(){
 	}
 }
 
-void console_printf(char* format, ...){
+void console_printf(const char* format, ...){
 	if(console_ptr==25){
 		console_scroll(1);
 	}

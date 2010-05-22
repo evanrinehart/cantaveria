@@ -58,10 +58,11 @@ float sine_table_interp(float ptr){
 	int I1 = i1;
 	if(I0 < 0) I0 += TABLE_SIZE;
 	if(I1 >= TABLE_SIZE) I1 -= TABLE_SIZE;
-	float y0 = sine_table[I0];
-	float y1 = sine_table[I1];
+	float _y0 = sine_table[I0];
+	float _y1 = sine_table[I1];
 
-	float ans = (ptr-i0)*((y1-y0)/(i1-i0)) + y0;
+	float m = (ptr-i0);
+	float ans = m*((_y1-_y0)/(i1-i0)) + _y0;
 	return ans;
 }
 
@@ -253,6 +254,7 @@ void karplus_control(void* ud, int type, int val1, int val2, int val){
 	struct karplus* data = ud;
 	int i;
 	float f, L;
+	double r;
 	switch(type){
 		case EV_NOTEON:
 			data->note = val1;
@@ -260,7 +262,8 @@ void karplus_control(void* ud, int type, int val1, int val2, int val){
 			L = SAMPLE_RATE * 1.0 / f;
 			data->length = L*2;
 			for(i=0; i<100; i++){
-				data->buf[i] += ((double)rand())/RAND_MAX - 0.5;
+				r = rand();
+				data->buf[i] += r/RAND_MAX - 0.5;
 			}
 			return;
 		case EV_NOTEOFF:

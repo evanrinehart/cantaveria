@@ -45,7 +45,7 @@ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 list* positions[32];
 int playing = 0;
 
-static char* mus_name(mus_id id){
+static string mus_name(mus_id id){
 	switch(id){
 		case MUS_NOTHING: return "MUS_NOTHING";
 		case MUS_COOL: return "MUS_COOL";
@@ -60,7 +60,7 @@ static int is_id_invalid(mus_id id){
 }
 
 
-int music_load(char* filename, mus_id id){
+int music_load(string filename, mus_id id){
 	list* events;
 
 	if(id == MUS_NOTHING){

@@ -92,7 +92,7 @@ void audio_callback(void *userdata, Uint8 *stream, int bytes){
 
 
 
-char* sample_format_str(int format){
+const char* sample_format_str(int format){
 	switch(format){
 		case AUDIO_S16: return "signed 16-bit LE";
 		case AUDIO_U16: return "unsigned 16-bit LE";

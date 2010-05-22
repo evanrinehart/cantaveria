@@ -47,7 +47,7 @@ void loader_data_mode(int flag){
 }
 
 void loader_init(){
-	char* filename = "data.zip";
+	const char* filename = "data.zip";
 	arc = zip_aropenf(filename);
 	if(arc == NULL){
 		fatal_error("loader: unable to load data archive \"%s\" (%s)\n", filename, zip_geterror());
@@ -59,7 +59,7 @@ void loader_quit(){
 	zip_arclose(arc);
 }
 
-reader* loader_opend(char* filename){
+reader* loader_opend(const char* filename){
 	char buf[1024] = "data/";
 	int L = strlen(buf);
 	strncpy(buf+L,filename,1024-L);
@@ -76,7 +76,7 @@ reader* loader_opend(char* filename){
 	return rd;
 }
 
-reader* loader_openf(char* path){
+reader* loader_openf(const char* path){
 	reader* rd = xmalloc(sizeof(reader));
 	rd->zf = NULL;
 	rd->ff = fopen(path, "r");
@@ -88,7 +88,7 @@ reader* loader_openf(char* path){
 	return rd;
 }
 
-reader* loader_open(char* filename){
+reader* loader_open(const char* filename){
 	if(data_mode == 0){
 		return loader_openf(filename);
 	}
@@ -131,7 +131,7 @@ int loader_read(reader* rd, void* buf, int count){
 	}
 }
 
-unsigned char* loader_readall(char* filename, int* size){
+unsigned char* loader_readall(const char* filename, int* size){
 	reader* rd = loader_open(filename);
 	if(!rd) return NULL;
 
@@ -193,7 +193,7 @@ int loader_readline(reader* rd, char* buf, int size){
 	return 0;
 }
 
-int loader_scanline(reader* rd, char* format, ...){
+int loader_scanline(reader* rd, const char* format, ...){
 	char buf[256] = "";
 	va_list ap;
 	int ret;
@@ -309,7 +309,7 @@ int read_string(reader* rd, char** out){
 
 
 
-list* loader_readdir(char* path){
+list* loader_readdir(const char* path){
 	zip_dir* dir = zip_opendir(arc, path);
 	if(dir == NULL){
 		error_msg("loader_readdir: unable to open '%s' (%s)\n",

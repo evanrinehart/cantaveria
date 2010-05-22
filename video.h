@@ -43,12 +43,12 @@ void update_video();
 void clear_video();
 
 /* gfx control */
-int load_gfx(char* filename);
+int load_gfx(const char* filename);
 void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H);
 void draw_gfx_raw(int gfxid, int x, int y, int X, int Y, int W, int H);
 void clear_gfx();
-int gfx_width(int gfxid);
-int gfx_height(int gfxid);
+void gfx_dimensions(int gfxid, int* w, int* h);
+void screen_dimensions(int* w, int* h);
 
 void draw_black_rect(int x, int y, int w, int h);
 

@@ -39,6 +39,7 @@ it has three main functions
 #include <list.h>
 #include <loader.h>
 #include <graphics.h>
+#include <video.h>
 
 #include <stage.h>
 
@@ -74,7 +75,7 @@ typedef struct {
 
 typedef struct stage stage;
 struct stage {
-	char id[32];
+	char id[256];
 	int w, h;
 	tile* tiles;
 	int bgimage;
@@ -84,7 +85,7 @@ struct stage {
 	stage* next;
 };
 
-char zone_name[32] = "NO ZONE";
+char zone_name[256] = "NO ZONE";
 stage* stages = NULL;
 stage* this_stage = NULL;
 
@@ -160,7 +161,8 @@ x y fg bg shape
 	s->h = h;
 	s->ox = ox;
 	s->oy = oy;
-	strcpy(s->id, filename);
+	strncpy(s->id, filename, 256);
+	s->id[255] = '\0';
 
 	while(!loader_feof(f)){
 		loader_scanline(f, "%d %d %d %d %c", &x, &y, &fg, &bg, &shape);
@@ -180,7 +182,7 @@ x y fg bg shape
 /***/
 
 
-int load_zone(char* name){
+int load_zone(string name){
 	/*
 loading a zone from a file
 a zone consists of one or more stages
@@ -193,22 +195,22 @@ the name of the file will be used as the id
 
 	list* dirs;
 	list* ptr;
-	char stages[256] = "";
+	char stagesdir[256] = "";
 	char gfxpath[256] = "";
 	char* stagepath;
 
-	strcat(stages, "zones/");
-	strcat(stages, name);
-	strcat(stages, "/stages/");
+	strcat(stagesdir, "zones/");
+	strcat(stagesdir, name);
+	strcat(stagesdir, "/stages/");
 
 	strcat(gfxpath, "zones/");
 	strcat(gfxpath, name);
 	strcat(gfxpath, "/gfx/");
 
-	strcpy(zone_name, name);
-	zone_name[31] = '\0';
+	strncpy(zone_name, name, 256);
+	zone_name[255] = '\0';
 
-	dirs = loader_readdir(stages);
+	dirs = loader_readdir((string)stagesdir);
 	if(dirs == NULL){
 		printf("ERROR cant read dirs\n");
 		return -1;
@@ -242,7 +244,7 @@ void unload_zone(){
 	strcpy(zone_name, "NO ZONE");
 }
 
-void switch_stage(char* id){
+void switch_stage(string id){
 	stage* ptr = stages;
 	while(ptr){
 		if(strcmp(id, ptr->id) == 0){
@@ -255,22 +257,70 @@ void switch_stage(char* id){
 	printf("ERROR stage not found\n");
 }
 
-void stage_draw_fg(int cx, int cy, int x, int y, int w, int h){
-	//draw background
-		/* draw background on tiles where at least
-		the fg or bg tile is partial*/
-	//draw bg tiles
-		/* draw bg tile where fg is partial */
+
+static void draw_tiles(int gfx, char layer, int cx, int cy){
+	tile* tbase = this_stage->tiles;
+	tile* t;
+	int tw = this_stage->w;
+	//int th = this_stage->h;
+	int id;
+	int gx, gy;
+
+	int i;
+	int j;
+	int io = cx/16;
+	int jo = cy/16;
+
+	for(j=jo; j<jo+20; j++){
+		for(i=io; i<io+15; i++){
+			t = tbase + i + tw*j;
+			if(layer=='b') id = t->bg;
+			else if(layer=='f') id = t->fg;
+			else id = 0;
+			gx = 16*(id%16);
+			gy = 16*(id/16);
+			draw_gfx(gfx, 0, 0, gx, gx, 16, 16);
+		}
+	}
 }
 
+/*
+cx, cy is the camera position
+x, y i think is the offset from 0,0 you should shift
+w, h i think is the width and height of the screen
+*/
 void stage_draw_bg(int cx, int cy, int x, int y, int w, int h){
-	//draw water
-		/* calculate water surfaces, draw them  */
-	//fg tiles
-		/* draw all fg visible fg tiles */
-	//draw decorations
-		/* draw all decorations */
+	int i;
+	int bw, bh, screen_w, screen_h;
+	int bgimage;
+	int bgshift;
+	int parallax = 1;
+
+	if(this_stage == NULL) return;
+
+	/* draw background vertically centered
+	tile horizontally at fraction of camera x */
+	bgimage = this_stage->bgimage;
+	gfx_dimensions(bgimage, &bw, &bh);
+	screen_dimensions(&screen_w, &screen_h);
+	bgshift = cx/bw;
+	for(i=-1; i<(screen_w/bw)+2; i++){
+		draw_gfx_raw(
+			bgimage,
+			(i+bgshift)*bw-cx/parallax,
+			(screen_h-bh)/2,
+			0, 0, bw, bh
+		);
+	}
+
+	draw_tiles(this_stage->bgtiles, '0', cx, cy);
 }
+
+void stage_draw_fg(int cx, int cy, int x, int y, int w, int h){
+	//draw 2 if not blank
+}
+
+
 
 int stage_xcollide(int x, int y, int w, int h, int v, int* xx){
 	return 0;

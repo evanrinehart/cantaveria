@@ -24,6 +24,7 @@
 
 #include <stdlib.h>
 
+#include <util.h>
 #include <input.h>
 #include <graphics.h>
 

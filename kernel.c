@@ -108,13 +108,13 @@ void draw(){
 }
 
 void set_handler(
-	void (*update)(),
-	void (*draw)(),
-	void (*press)(input in),
-	void (*release)(input in)
+	void (*_update)(),
+	void (*_draw)(),
+	void (*_press)(input in),
+	void (*_release)(input in)
 ){
-	handler.update = update;
-	handler.draw = draw;
-	handler.press = press;
-	handler.release = release;
+	handler.update = _update;
+	handler.draw = _draw;
+	handler.press = _press;
+	handler.release = _release;
 }

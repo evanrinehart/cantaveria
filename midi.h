@@ -49,5 +49,5 @@ struct event {
 	int val2;
 };
 
-list* midi_load(char* filename);
+list* midi_load(string filename);
 

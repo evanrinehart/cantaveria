@@ -52,18 +52,17 @@ void draw_final();
 void draw_sprites();
 
 
-int load_sprite(char* filename, int id);
-int load_font(char* filename);
+int load_sprite(string filename, int id);
 
-int load_bitmap(char* filename);
+int load_bitmap(string filename);
 void draw_bitmap(int id, int x, int y);
 
 sprite* enable_sprite(int sprnum);
 void disable_sprite(sprite* spr);
 sprite* copy_sprite(sprite* spr);
 
-void draw_small_text(char* str, int x, int y);
-void printf_small(int x, int y, char* format, ...);
+void draw_small_text(string str, int x, int y);
+void printf_small(int x, int y, const char* format, ...);
 
 
 void set_message(char* str);
@@ -77,7 +76,7 @@ void resize_message(int w, int h);
 void animate_sprites();
 
 
-void enable_stage(int yn);
+void enable_stage(int en);
 
 
 

@@ -18,6 +18,11 @@
 #include <camera.h>
 #include <hud.h>
 
+int cx = 0;
+int cy = 0;
+int cvx = 0;
+int cvy = 0;
+
 static void update(){
 	/* 
 	update camera
@@ -25,16 +30,19 @@ static void update(){
 	dispatch collision events
 	execute spawn and delete events
 	*/
+	cx += cvx;
+	cy += cvy;
+	point_camera(cx, cy);
 }
 
 static void draw(){
-	int cx = camera_x();
-	int cy = camera_y();
 	stage_draw_bg(cx, cy, 0, 0, 320, 240);
 	//entity_draw_visible(cx, cy);
 	stage_draw_fg(cx, cy, 0, 0, 320, 240);
 	//hud_draw(cx, cy);
 }
+
+
 
 static void press(input in){
 	if(in.button == ESCAPE_KEY){
@@ -42,6 +50,14 @@ static void press(input in){
 		return;
 	}
 	printf("press: %s\n", input_str(in));
+
+	switch(in.button){
+		case LEFT_BUTTON: cvx += -1; break;
+		case RIGHT_BUTTON: cvx += 1; break;
+		case UP_BUTTON: cvy += -1; break;
+		case DOWN_BUTTON: cvy += 1; break;
+		default: break;
+	}
 
 	/*
 	send input events
@@ -54,6 +70,13 @@ static void release(input in){
 	/*
 	send input events
 	*/
+	switch(in.button){
+		case LEFT_BUTTON: cvx -= -1; break;
+		case RIGHT_BUTTON: cvx -= 1; break;
+		case UP_BUTTON: cvy -= -1; break;
+		case DOWN_BUTTON: cvy -= 1; break;
+		default: break;
+	}
 }
 
 void setup_inner(){
@@ -70,8 +93,10 @@ void setup_inner(){
 	}
 	else{
 		//print_zone(x);
+		
 		stage_debug();
-		unload_zone();
+		//unload_zone();
+		switch_stage("base");
 	}
 
 

@@ -23,3 +23,4 @@
 
 
 void text_init();
+int load_font(string filename);

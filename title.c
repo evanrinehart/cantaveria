@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 
+#include <util.h>
 #include <input.h>
 #include <graphics.h>
 #include <console.h>

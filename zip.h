@@ -21,16 +21,16 @@ typedef struct {
 	void* userdata;
 } zip_reader;
 
-zip_archive* zip_aropenf(char* filename);
+zip_archive* zip_aropenf(const char* filename);
 zip_archive* zip_aropen(zip_reader* rd);
 void zip_arclose(zip_archive* arc);
 
-zip_file* zip_fopen(zip_archive* arc, char* path);
+zip_file* zip_fopen(zip_archive* arc, const char* path);
 void zip_fclose(zip_file* f);
 int zip_fread(zip_file* f, byte buf[], int count);
 int zip_feof(zip_file* f);
 
-zip_dir* zip_opendir(zip_archive* arc, char* path);
+zip_dir* zip_opendir(zip_archive* arc, const char* path);
 char* zip_readdir(zip_dir* dir);
 void zip_closedir(zip_dir* dir);
 

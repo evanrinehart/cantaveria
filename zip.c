@@ -78,7 +78,7 @@ static char errbuf[EBUF_SIZE] = "";
 
 /* internal routines */
 
-static void set_error(char* msg){
+static void set_error(const char* msg){
 	strncpy(errbuf, msg, EBUF_SIZE);
 	errbuf[EBUF_SIZE-1] = '\0';
 }
@@ -88,13 +88,13 @@ static void out_of_memory(){
 }
 
 /* http://www.cse.yorku.ca/~oz/hash.html */
-static unsigned long hash(char* str){
+static unsigned long hash(const char* str){
 	unsigned char* ptr = (unsigned char*)str;
-	unsigned long hash = 5381;
+	unsigned long h = 5381;
 	int c;
 	while((c = *ptr++))
-		hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-	return hash;
+		h = ((h << 5) + h) + c; /* h * 33 + c */
+	return h;
 }
 
 
@@ -117,7 +117,7 @@ static struct record* copy_record(struct record* rec){
 	return make_record(rec->filename, rec->ulen, rec->clen, rec->offset, rec->method);
 }
 
-static struct record* get_record(zip_archive* arc, char* filename){
+static struct record* get_record(zip_archive* arc, const char* filename){
 	int i = hash(filename) % TABLE_SIZE;
 	struct record* ptr = arc->table[i];
 	while(ptr){
@@ -186,7 +186,7 @@ static void print_record(struct record* rec){
 	printf("(%s, %uB, %uB, +0x%x, method %u)\n", rec->filename, rec->clen, rec->ulen, rec->offset, rec->method);
 }
 */
-static char* method_str(unsigned method){
+static const char* method_str(unsigned method){
 	switch(method){
 		case 0: return "uncompressed";
 		case 1: return "shrink";
@@ -456,7 +456,7 @@ static void file_close(void* f){
 
 /* public methods */
 
-zip_archive* zip_aropenf(char* filename){
+zip_archive* zip_aropenf(const char* filename){
 	FILE* f = fopen(filename, "r");
 	if(f == NULL){
 		set_error("i/o error");
@@ -498,7 +498,7 @@ void zip_arclose(zip_archive* arc){
 	free(arc);
 }
 
-zip_file* zip_fopen(zip_archive* arc, char* path){
+zip_file* zip_fopen(zip_archive* arc, const char* path){
 	struct record* r = get_record(arc, path);
 	if(r == NULL){
 		set_error("file not found");
@@ -594,7 +594,7 @@ int zip_feof(zip_file* f){
 
 
 
-zip_dir* zip_opendir(zip_archive* arc, char* path){
+zip_dir* zip_opendir(zip_archive* arc, const char* path){
 	if(path[strlen(path)-1] != '/'){
 		set_error("path does not specify directory");
 		return NULL;

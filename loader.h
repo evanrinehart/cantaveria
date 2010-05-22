@@ -22,18 +22,18 @@
 
 typedef struct reader reader;
 
-reader* loader_open(char* filename);
+reader* loader_open(const char* filename);
 
 void loader_data_mode(int flag);
 
 int loader_read(reader* rd, void* buf, int count);
 int loader_readline(reader* rd, char* buf, int size);
-int loader_scanline(reader* rd, char* format, ...);
-unsigned char* loader_readall(char* filename, int* size);
+int loader_scanline(reader* rd, const char* format, ...);
+unsigned char* loader_readall(const char* filename, int* size);
 void loader_close(reader* rd);
 int loader_feof(reader* rd);
 
-list* loader_readdir(char* path);
+list* loader_readdir(const char* path);
 void loader_freedirlist(list* dirs);
 
 /*binary i/o*/

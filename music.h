@@ -28,7 +28,7 @@ typedef enum {
 	MUS_TEST1
 } mus_id;
 
-int music_load(char* filename, mus_id id);
+int music_load(string filename, mus_id id);
 void music_unload(mus_id id);
 mus_id music_current();
 

@@ -21,11 +21,11 @@
 */
 
 
-int load_zone(char* filename);
+int load_zone(string filename);
 void unload_zone();
 void stage_debug();
 
-void switch_stage(char* id);
+void switch_stage(string id);
 
 void stage_draw_fg(int cx, int cy, int x, int y, int w, int h);
 void stage_draw_bg(int cx, int cy, int x, int y, int w, int h);

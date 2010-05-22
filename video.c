@@ -50,7 +50,6 @@ it has several low level functions.
 SDL_Surface* video;
 int gl_flag = 0;
 int fullscreen = 0;
-int W, H;
 
 
 static int time_last; /* initialized by backend_init */
@@ -85,7 +84,8 @@ int screen_w = 320;
 int screen_h = 240;
 int screen_offset_x = 0;
 int screen_offset_y = 0;
-
+int screen_w_phys;
+int screen_h_phys;
 
 
 
@@ -202,7 +202,7 @@ void debug_surf(char* msg, SDL_Surface* surf){
 
 
 
-SDL_Surface* load_tga(char* path){
+SDL_Surface* load_tga(const char* path){
 	unsigned char header[18];
 	reader* rd = loader_open(path);
 	int w, h, bpp;
@@ -277,7 +277,7 @@ SDL_Surface* load_tga(char* path){
 }
 
 
-int load_gfx(char* filename){
+int load_gfx(const char* filename){
 	int i;
 	SDL_Surface* src;
 
@@ -390,15 +390,6 @@ void load_panic_gfx(){
 }
 
 
-int gfx_width(int gfxid){
-	return gfx[gfxid].w;
-}
-
-int gfx_height(int gfxid){
-	return gfx[gfxid].h;
-}
-
-
 
 
 
@@ -446,15 +437,15 @@ void print_help(){
 	printf("  -v    print version info\n");
 }
 
-void parse_options(int argc, char* argv[], int* fullscreen, int* gl_flag){
+void parse_options(int argc, char* argv[], int* _fullscreen, int* _gl_flag){
 	int i;
 	for(i=0; i<argc; i++){
 		if(!strcmp(argv[i], "-gl")){
-			*gl_flag = 1;
+			*_gl_flag = 1;
 			continue;
 		}
 		if(!strcmp(argv[i], "-f")){
-			*fullscreen = 1;
+			*_fullscreen = 1;
 		}
 		if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")){
 			print_help();
@@ -493,24 +484,24 @@ void setup_video(){
 
 
 	if(fullscreen && gl_flag){
-		W = vinfo->current_w;
-		H = vinfo->current_h;
+		screen_w_phys = vinfo->current_w;
+		screen_h_phys = vinfo->current_h;
 	}
 	else if(gl_flag){
 		//W = 320;
 		//H = 240;
-		W = 640;
-		H = 480;
+		screen_w_phys = 640;
+		screen_h_phys = 480;
 		//W = 960;
 		//H = 720;
 	}
 	else if(fullscreen){
-		W = 320;
-		H = 240;
+		screen_w_phys = 320;
+		screen_h_phys = 240;
 	}
 	else{
-		W = 320;
-		H = 240;
+		screen_w_phys = 320;
+		screen_h_phys = 240;
 	}
 
 	if(gl_flag){
@@ -526,7 +517,7 @@ void setup_video(){
 
 
 
-	video = SDL_SetVideoMode(W,H,32,flags);
+	video = SDL_SetVideoMode(screen_w_phys,screen_h_phys,32,flags);
 	if(video == NULL){
 		fatal_error("sdl: %s\n",SDL_GetError());
 	}
@@ -538,7 +529,7 @@ void setup_video(){
 		glEnable( GL_TEXTURE_2D );
 		glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 
-		glViewport( 0, 0, W, H );
+		glViewport( 0, 0, screen_w_phys, screen_h_phys );
 
 		glClear( GL_COLOR_BUFFER_BIT );
 
@@ -550,10 +541,12 @@ void setup_video(){
 			int min = 9999;
 			int n = 0;
 			for(i=1; i<10; i++){
-				if(abs(H/i - 240) < min){ min = H/i - 240; n = i; }
+				if(abs(screen_h_phys/i - 240) < min){
+					min = screen_h_phys/i - 240; n = i;
+				}
 			}
-			double new_w = ((double)W)/n;
-			double new_h = ((double)H)/n;
+			double new_w = ((double)screen_w_phys)/n;
+			double new_h = ((double)screen_h_phys)/n;
 			screen_offset_x = (new_w-320)/2;
 			screen_offset_y = (new_h-240)/2;
 			glOrtho(0.0f, new_w, new_h, 0.0f, -1.0f, 1.0f);
@@ -575,9 +568,9 @@ void setup_video(){
 	} 
 
 	boot_msg("video:\n");
-	boot_msg("  resolution: %d x %d %s\n",W,H,fullscreen?"fullscreen":"windowed");
+	boot_msg("  resolution: %d x %d %s\n",screen_w_phys,screen_h_phys,fullscreen?"fullscreen":"windowed");
 	boot_msg("  pixel dimensions: %d x %d\n",screen_w,screen_h);
-	boot_msg("  aspect ratio: %g\n",((double)W)/H);
+	boot_msg("  aspect ratio: %g\n",((double)screen_w_phys)/screen_h_phys);
 	boot_msg("  opengl: %s\n",gl_flag?"yes":"no");
 	boot_msg("  x-offset: %d\n",screen_offset_x);
 	boot_msg("  y-offset: %d\n",screen_offset_y);
@@ -586,8 +579,8 @@ void setup_video(){
 }
 
 void map_pixel(int mx, int my, int *x, int *y){
-	*x = mx*screen_w/W;
-	*y = my*screen_h/H;
+	*x = mx*screen_w/screen_w_phys;
+	*y = my*screen_h/screen_h_phys;
 }
 
 
@@ -648,3 +641,18 @@ void draw_black_rect(int x, int y, int w, int h){
 		glEnd();
 	}
 }
+
+
+void screen_dimensions(int* w, int * h){
+	*w = screen_w;
+	*h = screen_h;
+}
+
+
+
+
+void gfx_dimensions(int gfxid, int* w, int* h){
+	*w = gfx[gfxid].w;
+	*h = gfx[gfxid].h;
+}
+

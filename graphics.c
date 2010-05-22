@@ -111,8 +111,8 @@ y += 16;
 
 
 
-void draw_small_text(char* str, int x, int y){
-	char* c;
+void draw_small_text(string str, int x, int y){
+	const char* c;
 	for(c=str; *c; c++){
 		int X = *c & 0x0f;
 		int Y = *c >> 4;
@@ -123,7 +123,7 @@ void draw_small_text(char* str, int x, int y){
 
 
 
-void printf_small(int x, int y, char* format, ...){
+void printf_small(int x, int y, string format, ...){
 	char str[128];
 	va_list ap;
 	va_start(ap, format);
@@ -183,8 +183,9 @@ void animate_sprites(){
 
 
 
-int load_sprite(char* path, int id){
+int load_sprite(string path, int id){
 	int i;
+	int W, H;
 
 	reader* rd = loader_open(path);
 	if(!rd){
@@ -213,8 +214,7 @@ int load_sprite(char* path, int id){
 
 	//int W = gfx[g].w;
 	//int H = gfx[g].h;
-	int W = gfx_width(g);
-	int H = gfx_height(g);
+	gfx_dimensions(g, &W, &H);
 	ani->w = w;
 	ani->h = h;
 
@@ -291,19 +291,19 @@ sprite* copy_sprite(sprite* spr){
 
 
 
-void enable_stage(int yn){
-	stage_enabled = yn;
+void enable_stage(int _yn){
+	stage_enabled = _yn;
 }
 
 
 
-int load_bitmap(char* filename){
+int load_bitmap(string filename){
 	int g = load_gfx(filename);
 	return g;
 }
 
 void draw_bitmap(int id, int x, int y){
-	int W = gfx_width(id);
-	int H = gfx_height(id);
+	int W, H;
+	gfx_dimensions(id, &W, &H);
 	draw_gfx(id, x, y, 0, 0, W, H);
 }

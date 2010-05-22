@@ -156,7 +156,7 @@ void randomly_insert(vwchar* C[], int count){
 }
 
 
-int load_font(char* path){
+int load_font(string path){
 	//printf("load_font: loading %s\n",filename);
 	reader* rd = loader_open(path);
 	if(!rd){
