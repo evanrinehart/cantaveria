@@ -426,7 +426,7 @@ void print_version(){
 
 	printf("Cantaveria (v%d.%d)\n", VERSION_MAJOR, VERSION_MINOR);
 	printf("Copyright 2009 Evan Rinehart\n\n");
-	printf(message);
+	printf("%s\n", message);
 }
 
 void print_help(){
