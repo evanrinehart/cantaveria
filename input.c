@@ -377,7 +377,7 @@ void print_last_raw(char* buf, int size){
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
 			snprintf(
-				buf,size,
+				buf,size,"%s",
 				SDL_GetKeyName(e.key.keysym.sym)
 			);
 			break;
