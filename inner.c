@@ -30,10 +30,10 @@ static void update(){
 static void draw(){
 	int cx = camera_x();
 	int cy = camera_y();
-	//stage_draw_bg(cx, cy);
+	stage_draw_bg(cx, cy, 0, 0, 320, 240);
 	//entity_draw_visible(cx, cy);
-	//stage_draw_fg(cx, cy);
-	hud_draw(cx, cy);
+	stage_draw_fg(cx, cy, 0, 0, 320, 240);
+	//hud_draw(cx, cy);
 }
 
 static void press(input in){
@@ -63,7 +63,7 @@ void setup_inner(){
 
 
 	unload_zone();
-	int x = load_zone("3ztest");
+	int x = load_zone("woods");
 	if(x < 0){
 		error_msg("inner: cannot load zone\n");
 		exit(-1);

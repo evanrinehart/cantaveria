@@ -164,7 +164,7 @@ x y fg bg shape
 
 	while(!loader_feof(f)){
 		loader_scanline(f, "%d %d %d %d %c", &x, &y, &fg, &bg, &shape);
-		tptr = s->tiles + x + (s->w * y);
+		tptr = s->tiles + (x+ox) + (s->w * (y+oy));
 		tptr->fg = fg;
 		tptr->bg = bg;
 		tptr->shape = shape;
@@ -255,7 +255,7 @@ void switch_stage(char* id){
 	printf("ERROR stage not found\n");
 }
 
-void draw_stage_fg(int cx, int cy, int x, int y, int w, int h){
+void stage_draw_fg(int cx, int cy, int x, int y, int w, int h){
 	//draw background
 		/* draw background on tiles where at least
 		the fg or bg tile is partial*/
@@ -263,7 +263,7 @@ void draw_stage_fg(int cx, int cy, int x, int y, int w, int h){
 		/* draw bg tile where fg is partial */
 }
 
-void draw_stage_bg(int cx, int cy, int x, int y, int w, int h){
+void stage_draw_bg(int cx, int cy, int x, int y, int w, int h){
 	//draw water
 		/* calculate water surfaces, draw them  */
 	//fg tiles
