@@ -26,7 +26,7 @@ stage module is responsible for modelling the static world.
 it has three main functions
 * load zone files into world
 * draw world background and foreground layers
-* calculate if a moving rectangle will collide with world
+* calculate if and where a moving rectangle will collide with world
 */
 
 
@@ -110,9 +110,10 @@ collision algorithm - May 29
 
 #define UUU(x) (1024*(x))
 #define DDD(x) ((x)/1024)
-/* is the rectangle with corner x y overlapping shape
-xp yp determine which quadrant the rectangle is in.
-can be used for sides of a rect rather than the corner */
+
+/* does a corner test.
+x y is the point of the corner
+xp yp is the direction of the rectangle relative to the corner */
 static int corner_overlap(int x, int y, int xp, int yp, char shape){
 	const int L = UUU(16);
 	switch(shape){
@@ -167,6 +168,8 @@ static int corner_overlap(int x, int y, int xp, int yp, char shape){
 	}
 }
 
+/* calculate the collision point given a relevant cross
+section and direction of motion. */
 static int x_trace(int y, int v, int shape){
 	const int L = UUU(16);
 	switch(shape){
@@ -213,6 +216,9 @@ static int y_trace(int x, int v, int shape){
 	}
 }
 
+/* polarity functions
+these help the top level collision tests by determining
+which side of the rectangle needs to be traced. see x_trace. */
 static int y_polarity(int y_0, int y_1, int shape){
 	switch(shape){
 		case SHAPE_FREE: return y_0;
@@ -257,6 +263,13 @@ static int x_polarity(int x_0, int x_1, int shape){
 	}
 }
 
+/*
+return the corner tiles of the test rectangle in id.
+if all corners are the same, return 0
+if all corners are different, return 3
+if the top two (and bottom two) are the same, return 2
+if the left two (and right two) are the same, return 1
+*/
 static int calc_corners(int x, int y, int w, int h, int id[4]){
 	int W = this_stage->w;
 
@@ -281,6 +294,21 @@ static int calc_corners(int x, int y, int w, int h, int id[4]){
 	/* at least 4 tile tests */
 	return 1;
 }
+
+
+/* collision algorithm
+strategy: if the rectangle adjusted by v overlaps something in
+the stage, return 1 and set *xx or *yy to the collision point.
+
+current holes:
+for a large rectangle, it only tests the corners. it should
+also do edge test or middle test on none corner (but not inner)
+tiles.
+
+the x collide and y collide are almost the same thing. it might
+be possible to combine them into one function.
+
+*/
 
 int stage_xcollide(int x, int y, int w, int h, int v, int* xx){
 	int corners[4];
@@ -789,16 +817,7 @@ void stage_debug(){
 	stage* ptr = stages;
 	int i, j;
 	char c;
-/*
-struct stage {
-	char id[32];
-	int w, h;
-	tile* tiles;
-	int bgimage;
-	int bgtiles;
-	int fgtiles;
-	stage* next;
-};*/
+
 	printf("stage debug:\n\n");
 	printf("zone: %s\n\n", zone_name);
 
