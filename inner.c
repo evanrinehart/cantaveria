@@ -18,10 +18,19 @@
 #include <camera.h>
 #include <hud.h>
 
+#include <video.h>
+
 int cx = 0;
 int cy = 0;
 int cvx = 0;
 int cvy = 0;
+
+int dummy_gfx = 0;
+
+int px = 50;
+int py = 50;
+int pvx = 0;
+int pvy = 0;
 
 static void update(){
 	/* 
@@ -32,6 +41,24 @@ static void update(){
 	*/
 	cx += cvx;
 	cy += cvy;
+
+	int colxx;
+	int colyy;
+	int colx;
+	int coly;
+
+	px += pvx;
+	colx = stage_xcollide(px*1024, py*1024, 8*1024, 8*1024, pvx, &colxx);
+	if(colx){
+		px = pvx > 0 ? colxx/1024 - 8 - 1 : colxx/1024 + 1;
+	}
+	
+	py += pvy;
+	coly = stage_ycollide(px*1024, py*1024, 8*1024, 8*1024, pvy, &colyy);
+	if(coly){
+		py = pvy > 0 ? colyy/1024 - 8 - 1: colyy/1024 + 1;
+	}
+
 	point_camera(cx, cy);
 }
 
@@ -39,6 +66,7 @@ static void draw(){
 	stage_draw_bg(cx, cy);
 	//entity_draw_visible(cx, cy);
 	stage_draw_fg(cx, cy);
+	draw_gfx(dummy_gfx,px,py,16,0,8,8);
 	//hud_draw(cx, cy);
 }
 
@@ -49,13 +77,13 @@ static void press(input in){
 		game_is_over();
 		return;
 	}
-	printf("press: %s\n", input_str(in));
+	//printf("press: %s\n", input_str(in));
 
 	switch(in.button){
-		case LEFT_BUTTON: cvx += -1; break;
-		case RIGHT_BUTTON: cvx += 1; break;
-		case UP_BUTTON: cvy += -1; break;
-		case DOWN_BUTTON: cvy += 1; break;
+		case LEFT_BUTTON: pvx += -1; break;
+		case RIGHT_BUTTON: pvx += 1; break;
+		case UP_BUTTON: pvy += -1; break;
+		case DOWN_BUTTON: pvy += 1; break;
 		default: break;
 	}
 
@@ -65,16 +93,16 @@ static void press(input in){
 }
 
 static void release(input in){
-	printf("release: %s\n", input_str(in));
+	//printf("release: %s\n", input_str(in));
 
 	/*
 	send input events
 	*/
 	switch(in.button){
-		case LEFT_BUTTON: cvx -= -1; break;
-		case RIGHT_BUTTON: cvx -= 1; break;
-		case UP_BUTTON: cvy -= -1; break;
-		case DOWN_BUTTON: cvy -= 1; break;
+		case LEFT_BUTTON: pvx -= -1; break;
+		case RIGHT_BUTTON: pvx -= 1; break;
+		case UP_BUTTON: pvy -= -1; break;
+		case DOWN_BUTTON: pvy -= 1; break;
 		default: break;
 	}
 }

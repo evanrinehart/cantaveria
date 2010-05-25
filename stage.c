@@ -106,6 +106,431 @@ collision algorithm - May 29
 
 
 
+/*** collision stuff ***/
+
+#define UUU(x) (1024*(x))
+#define DDD(x) ((x)/1024)
+/* is the rectangle with corner x y overlapping shape
+xp yp determine which quadrant the rectangle is in.
+can be used for sides of a rect rather than the corner */
+static int corner_overlap(int x, int y, int xp, int yp, char shape){
+	const int L = UUU(16);
+	switch(shape){
+		case SHAPE_FREE: return 0;
+		case SHAPE_SQUARE: return 1;
+
+		case SHAPE_TRI_NE:
+			if(xp<0 && yp>0) return y<x;
+			else return 1;
+		case SHAPE_TRI_NW:
+			if(xp>0 && yp>0) return y<L-x;
+			else return 1;
+		case SHAPE_TRI_SE:
+			if(xp<0 && yp<0) return y>L-x;
+			else return 1;
+		case SHAPE_TRI_SW:
+			if(xp>0 && yp<0) return y>x;
+			else return 1;
+
+		case SHAPE_LTRAP_FLOOR:
+			if(xp>0 && yp<0) return y>(x/2);
+			else return 1;
+		case SHAPE_RTRAP_FLOOR:
+			if(xp<0 && yp<0) return y>(L/2-x/2);
+			else return 1;
+		case SHAPE_LSLOPE_FLOOR:
+			if(xp>0 && yp<0) return y>(L/2+x/2);
+			else if(xp<0 && yp<0) return y>L/2;
+			else return 1;
+		case SHAPE_RSLOPE_FLOOR:
+			if(xp<0 && yp<0) return y>(L-x/2);
+			else if(xp>0 && yp<0) return y>L/2;
+			else return 1;
+		case SHAPE_LTRAP_CEIL:
+			if(xp>0 && yp>0) return y<(L-x/2);
+			else return 1;
+		case SHAPE_RTRAP_CEIL:
+			if(xp<0 && yp>0) return y<(L/2+x/2);
+			else return 1;
+		case SHAPE_LSLOPE_CEIL:
+			if(xp>0 && yp>0) return y<(L/2-x/2);
+			else if(xp<0 && yp>0) return y<L/2;
+			else return 1;
+		case SHAPE_RSLOPE_CEIL:
+			if(xp<0 && yp>0) return y<(x/2);
+			else if(xp>0 && yp>0) return y<L/2;
+			else return 1;
+
+		case SHAPE_HALF_FLOOR: return yp > 0 || y > L/2;
+		case SHAPE_HALF_CEIL: return yp < 0 || y < L/2;
+		default: return 0;
+	}
+}
+
+static int x_trace(int y, int v, int shape){
+	const int L = UUU(16);
+	switch(shape){
+		case SHAPE_FREE: return 0; /* should not happen */
+		case SHAPE_SQUARE:
+		case SHAPE_HALF_FLOOR:
+		case SHAPE_HALF_CEIL: return v>0 ? 0 : L;
+		case SHAPE_TRI_NE: return v>0 ? y : L;
+		case SHAPE_TRI_NW: return v>0 ? 0 : L-y;
+		case SHAPE_TRI_SE: return v>0 ? L-y : L;
+		case SHAPE_TRI_SW: return v>0 ? 0 : y;
+		case SHAPE_LTRAP_FLOOR: return v>0 ? 0 : 2*y;
+		case SHAPE_RTRAP_FLOOR: return v>0 ? L - 2*y : 0;
+		case SHAPE_LSLOPE_FLOOR: return v>0 ? 0 : 2*y - L;
+		case SHAPE_RSLOPE_FLOOR: return v>0 ? 2*L -2*y : L;
+		case SHAPE_LTRAP_CEIL: return v<0 ? 2*L - 2*y : L;
+		case SHAPE_RTRAP_CEIL: return v>0 ? 2*y - L : L;
+		case SHAPE_LSLOPE_CEIL: return v>0 ? 0 : L - 2*y;
+		case SHAPE_RSLOPE_CEIL: return v>0 ? 2*y : L;
+		default: return 0;
+	}
+}
+
+static int y_trace(int x, int v, int shape){
+	const int L = UUU(16);
+	switch(shape){
+		case SHAPE_FREE: return 0; /* should not happen */
+		case SHAPE_SQUARE: return v>0 ? 0 : L;
+		case SHAPE_HALF_FLOOR: return v>0 ? L/2 : L;
+		case SHAPE_HALF_CEIL: return v>0 ? 0 : L/2;
+		case SHAPE_TRI_NE: return v>0 ? 0 : x;
+		case SHAPE_TRI_NW: return v>0 ? 0 : L-x;
+		case SHAPE_TRI_SE: return v>0 ? L-x : 0;
+		case SHAPE_TRI_SW: return v>0 ? x : 0;
+		case SHAPE_LTRAP_FLOOR: return v>0 ? x/2 : L;
+		case SHAPE_RTRAP_FLOOR: return v>0 ? L/2 - x/2 : L;
+		case SHAPE_LSLOPE_FLOOR: return v>0 ? L/2 + x/2 : L;
+		case SHAPE_RSLOPE_FLOOR: return v>0 ? L - x/2 : L;
+		case SHAPE_LTRAP_CEIL: return v>0 ? 0 : L - x/2;
+		case SHAPE_RTRAP_CEIL: return v>0 ? 0 : L/2 + x/2;
+		case SHAPE_LSLOPE_CEIL: return v>0 ? 0 : L/2 - x/2;
+		case SHAPE_RSLOPE_CEIL: return v>0 ? 0 : x/2;
+		default: return 0;
+	}
+}
+
+static int y_polarity(int y_0, int y_1, int shape){
+	switch(shape){
+		case SHAPE_FREE: return y_0;
+		case SHAPE_SQUARE: return y_0;
+		case SHAPE_TRI_NE: return y_0;
+		case SHAPE_TRI_NW: return y_0;
+		case SHAPE_TRI_SE: return y_1;
+		case SHAPE_TRI_SW: return y_1;
+		case SHAPE_LTRAP_FLOOR: return y_1;
+		case SHAPE_RTRAP_FLOOR: return y_1;
+		case SHAPE_LSLOPE_FLOOR: return y_1;
+		case SHAPE_RSLOPE_FLOOR: return y_1;
+		case SHAPE_LTRAP_CEIL: return y_0;
+		case SHAPE_RTRAP_CEIL: return y_0;
+		case SHAPE_LSLOPE_CEIL: return y_0;
+		case SHAPE_RSLOPE_CEIL: return y_0;
+		case SHAPE_HALF_FLOOR: return y_0;
+		case SHAPE_HALF_CEIL: return y_0;
+		default: return y_0;
+	}
+}
+
+static int x_polarity(int x_0, int x_1, int shape){
+	switch(shape){
+		case SHAPE_FREE: return x_0;
+		case SHAPE_SQUARE: return x_0;
+		case SHAPE_TRI_NE: return x_1;
+		case SHAPE_TRI_NW: return x_0;
+		case SHAPE_TRI_SE: return x_1;
+		case SHAPE_TRI_SW: return x_0;
+		case SHAPE_LTRAP_FLOOR: return x_0;
+		case SHAPE_RTRAP_FLOOR: return x_1;
+		case SHAPE_LSLOPE_FLOOR: return x_0;
+		case SHAPE_RSLOPE_FLOOR: return x_1;
+		case SHAPE_LTRAP_CEIL: return x_0;
+		case SHAPE_RTRAP_CEIL: return x_1;
+		case SHAPE_LSLOPE_CEIL: return x_0;
+		case SHAPE_RSLOPE_CEIL: return x_1;
+		case SHAPE_HALF_FLOOR: return x_0;
+		case SHAPE_HALF_CEIL: return x_0;
+		default: return x_0;
+	}
+}
+
+static int calc_corners(int x, int y, int w, int h, int id[4]){
+	int W = this_stage->w;
+
+	int x1 = DDD(x)/16;
+	int x2 = DDD(x+w)/16;
+	int y1 = DDD(y)/16;
+	int y2 = DDD(y+h)/16;
+
+	id[0] = x1+y1*W;
+	id[1] = x2+y1*W;
+	id[2] = x1+y2*W;
+	id[3] = x2+y2*W;
+
+	/* single tile test */
+	if(id[0] == id[1] && id[0] == id[2] &&
+	   id[0] == id[2] && id[0] == id[3]) return 0;
+
+	/* line of tile tests */
+	if(id[0] == id[1]) return 2;
+	if(id[1] == id[3]) return 3;
+
+	/* at least 4 tile tests */
+	return 1;
+}
+
+int stage_xcollide(int x, int y, int w, int h, int v, int* xx){
+	int corners[4];
+	int type = calc_corners(x+v,y,w,h,corners);
+//	int x_min = INT_MAX;
+//	int x_max = INT_MIN;
+	int L = UUU(16);
+	int xbase = (x+v) / L * L;
+	int x_ = (x+v) % L;
+	int y_ = y % L;
+	int yz;
+	tile* t = NULL;
+
+	if(v == 0) return 0;
+
+	if(type==0){
+		t = this_stage->tiles + corners[0];
+		if(corner_overlap(x_,y_,1,1,t->shape) &&
+		   corner_overlap(x_+w,y_,-1,1,t->shape) &&
+		   corner_overlap(x_,y_+h,1,-1,t->shape) &&
+		   corner_overlap(x_+w,y_+h,-1,-1,t->shape))
+		{
+			yz = y_polarity(y_,y_+h,t->shape);
+			*xx = xbase+x_trace(yz,v,t->shape);
+			return 1;
+		}
+		else{
+			return 0;
+		}
+	}
+	else if(type==2){
+		t = this_stage->tiles + corners[0]; /* and 1 */
+		if(corner_overlap(x_,y_,1,1,t->shape) &&
+		   corner_overlap(x_+w,y_,-1,1,t->shape))
+		{
+			yz = y_polarity(y_,L,t->shape);
+			*xx = xbase+x_trace(yz,v,t->shape);
+			return 1;
+		}
+
+		y_ = (y+h) % L;
+		t = this_stage->tiles + corners[2]; /* and 3 */
+		if(corner_overlap(x_,y_,1,-1,t->shape) &&
+		   corner_overlap(x_+w,y_,-1,-1,t->shape))
+		{
+			yz = y_polarity(0,y_,t->shape);
+			*xx = xbase+x_trace(yz,v,t->shape);
+			return 1;
+		}
+
+		/* also check middle edge */
+
+		return 0;
+	}
+	else if(type==3){
+		t = this_stage->tiles + corners[0]; /* and 2 */
+		if(corner_overlap(x_,y_,1,1,t->shape) &&
+		   corner_overlap(x_,y_+h,1,-1,t->shape))
+		{
+			yz = y_polarity(y_,y_+h,t->shape);
+			*xx = xbase+x_trace(yz,v,t->shape);
+			return 1;
+		}
+
+		xbase = (x+v+w) / L * L;
+		x_ = (x+v+w) % L;
+		t = this_stage->tiles + corners[1]; /* and 3 */
+		if(corner_overlap(x_,y_,-1,1,t->shape) &&
+		   corner_overlap(x_,y_+h,-1,-1,t->shape))
+		{
+			yz = y_polarity(y_,y_+h,t->shape);
+			*xx = xbase+x_trace(yz,v,t->shape);
+			return 1;
+		}
+
+		/* also check middle edge */
+
+		return 0;
+	}
+	else if(type==1){
+		t = this_stage->tiles + corners[0];
+		if(corner_overlap(x_,y_,1,1,t->shape)){
+			yz = y_polarity(y_,L,t->shape);
+			*xx = xbase+x_trace(yz,v,t->shape);
+			return 1;
+		}
+
+		y_ = (y+h)%L;
+		t = this_stage->tiles + corners[2];
+		if(corner_overlap(x_,y_,1,-1,t->shape)){
+			yz = y_polarity(0,y_,t->shape);
+			*xx = xbase+x_trace(yz,v,t->shape);
+			return 1;
+		}
+
+		xbase = (x+v+w) / L * L;
+		x_ = (x+v+w) % L;
+		y_ = y % L;
+		t = this_stage->tiles + corners[1];
+		if(corner_overlap(x_,y_,-1,1,t->shape)){
+			yz = y_polarity(y_,L,t->shape);
+			*xx = xbase+x_trace(yz,v,t->shape);
+			return 1;
+		}
+
+		y_ = (y+h)%L;
+		t = this_stage->tiles + corners[3];
+		if(corner_overlap(x_,y_,-1,-1,t->shape)){
+			yz = y_polarity(0,y_,t->shape);
+			*xx = xbase+x_trace(yz,v,t->shape);
+			return 1;
+		}
+		/* check all edges and inside */
+
+		return 0;
+	}
+	else{
+		return 0;
+	}
+}
+
+int stage_ycollide(int x, int y, int w, int h, int v, int* yy){
+	int corners[4];
+	int type = calc_corners(x,y+v,w,h,corners);
+//	int x_min = INT_MAX;
+//	int x_max = INT_MIN;
+	int L = UUU(16);
+	int ybase = (y+v) / L * L;
+	int y_ = (y+v) % L;
+	int x_ = x % L;
+	int xz;
+	tile* t = NULL;
+
+	if(v == 0) return 0;
+
+	if(type==0){
+		t = this_stage->tiles + corners[0];
+		if(corner_overlap(x_,y_,1,1,t->shape) &&
+		   corner_overlap(x_+w,y_,-1,1,t->shape) &&
+		   corner_overlap(x_,y_+h,1,-1,t->shape) &&
+		   corner_overlap(x_+w,y_+h,-1,-1,t->shape))
+		{
+			xz = x_polarity(x_,x_+w,t->shape);
+			*yy = ybase+y_trace(xz,v,t->shape);
+			return 1;
+		}
+		else{
+			return 0;
+		}
+	}
+	else if(type==2){
+		t = this_stage->tiles + corners[0]; /* and 1 */
+		if(corner_overlap(x_,y_,1,1,t->shape) &&
+		   corner_overlap(x_+w,y_,-1,1,t->shape))
+		{
+			xz = x_polarity(x_,x_+w,t->shape);
+			*yy = ybase+y_trace(xz,v,t->shape);
+			return 1;
+		}
+
+		ybase = (y+v+h) / L * L;
+		y_ = (y+v+h) % L;
+		t = this_stage->tiles + corners[2]; /* and 3 */
+		if(corner_overlap(x_,y_,1,-1,t->shape) &&
+		   corner_overlap(x_+w,y_,-1,-1,t->shape))
+		{
+			xz = x_polarity(x_,x_+w,t->shape);
+			*yy = ybase+y_trace(xz,v,t->shape);
+			return 1;
+		}
+
+		/* also check middle edge */
+
+		return 0;
+	}
+	else if(type==3){
+		t = this_stage->tiles + corners[0]; /* and 2 */
+		if(corner_overlap(x_,y_,1,1,t->shape) &&
+		   corner_overlap(x_,y_+h,1,-1,t->shape))
+		{
+			xz = x_polarity(x_,L,t->shape);
+			*yy = ybase+y_trace(xz,v,t->shape);
+			return 1;
+		}
+
+		x_ = (x+w) % L;
+		t = this_stage->tiles + corners[1]; /* and 3 */
+		if(corner_overlap(x_,y_,-1,1,t->shape) &&
+		   corner_overlap(x_,y_+h,-1,-1,t->shape))
+		{
+			xz = x_polarity(0,x_,t->shape);
+			*yy = ybase+y_trace(xz,v,t->shape);
+			return 1;
+		}
+
+		/* also check middle edge */
+
+		return 0;
+	}
+	else if(type==1){
+		t = this_stage->tiles + corners[0];
+		if(corner_overlap(x_,y_,1,1,t->shape)){
+			xz = x_polarity(x_,L,t->shape);
+			*yy = ybase+y_trace(xz,v,t->shape);
+			return 1;
+		}
+
+		x_ = (x+w)%L;
+		t = this_stage->tiles + corners[1];
+		if(corner_overlap(x_,y_,-1,1,t->shape)){
+			xz = x_polarity(0,x_,t->shape);
+			*yy = ybase+y_trace(xz,v,t->shape);
+			return 1;
+		}
+
+		ybase = (y+v+h) / L * L;
+		y_ = (y+v+h) % L;
+		x_ = x % L;
+		t = this_stage->tiles + corners[2];
+		if(corner_overlap(x_,y_,1,-1,t->shape)){
+			xz = x_polarity(x_,L,t->shape);
+			*yy = ybase+y_trace(xz,v,t->shape);
+			return 1;
+		}
+
+		x_ = (x+w)%L;
+		t = this_stage->tiles + corners[3];
+		if(corner_overlap(x_,y_,-1,-1,t->shape)){
+			xz = x_polarity(0,x_,t->shape);
+			*yy = ybase+y_trace(xz,v,t->shape);
+			return 1;
+		}
+
+		/* check all edges and inside */
+
+		return 0;
+	}
+	else{
+		return 0;
+	}
+}
+
+
+
+
+/*** end collision stuff ***/
+
+
+
+
 static void initialize_tiles(int n, tile* tiles){
 	int i;
 	for(i=0; i<n; i++){
@@ -349,13 +774,6 @@ void stage_draw_fg(int cx, int cy){
 
 
 
-int stage_xcollide(int x, int y, int w, int h, int v, int* xx){
-	return 0;
-}
-
-int stage_ycollide(int x, int y, int w, int h, int v, int* yy){
-	return 0;
-}
 
 void stage_init(){
 	/* does nothing */

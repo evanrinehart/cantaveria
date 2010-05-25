@@ -1,7 +1,7 @@
 PROJECT=cantaveria
 CFLAGS=-g -O2 -Wall -Wextra -Wno-unused-parameter -W -Wundef \
        -Wshadow -Wbad-function-cast -Wcast-align -Wwrite-strings \
-       -Wnested-externs -Werror
+       -Wnested-externs -Werror -Wno-unused-function -Wno-unused-variable
 SRC=video.c audio.c input.c kernel.c main.c gameover.c \
     loader.c graphics.c sfx.c text.c console.c music.c stage.c \
     intro.c title.c splash.c inner.c \
