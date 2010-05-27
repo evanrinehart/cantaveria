@@ -9,10 +9,10 @@ This software comes with no warranty.
 2. Modifications must retain this license, at least in spirit.
 */
 
-unsigned zrand();
+unsigned zrand(void);
 void zseed(unsigned data[], unsigned carry);
 void zread(unsigned data[], unsigned* carry);
-void zreset();
+void zreset(void);
 void zsrand(unsigned s);
-void zsrand_u();
+void zsrand_u(void);
 

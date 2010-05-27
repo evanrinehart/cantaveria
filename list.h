@@ -6,7 +6,7 @@ struct list {
 
 typedef int (*compare_func)(void* v1, void* v2);
 
-list* empty();
+list* empty(void);
 void push(list* L, void* item);
 void* pop(list* L);
 void append(list* L, void* item);

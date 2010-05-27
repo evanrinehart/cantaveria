@@ -30,17 +30,17 @@ typedef enum {
 
 int music_load(string filename, mus_id id);
 void music_unload(mus_id id);
-mus_id music_current();
+mus_id music_current(void);
 
 void music_play(mus_id id);
 void music_stop(mus_id id);
-void music_pause();
+void music_pause(void);
 
 void music_volume(int precent);
 void music_fadeout(int seconds);
 
 void music_print(mus_id id);
-void music_debug();
+void music_debug(void);
 
 /*
 the music player

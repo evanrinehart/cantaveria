@@ -22,9 +22,9 @@
    evanrinehart@gmail.com
 */
 
-void console_clear();
-void console_update();
+void console_clear(void);
+void console_update(void);
 void console_scroll(int n);
 void console_printf(const char* format, ...);
-void console_draw();
+void console_draw(void);
 

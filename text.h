@@ -22,5 +22,5 @@
 /* text */
 
 
-void text_init();
+void text_init(void);
 int load_font(string filename);

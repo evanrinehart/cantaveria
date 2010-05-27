@@ -22,8 +22,8 @@
 
 
 int load_zone(string filename);
-void unload_zone();
-void stage_debug();
+void unload_zone(void);
+void stage_debug(void);
 
 void switch_stage(string id);
 

@@ -22,5 +22,5 @@
    evanrinehart@gmail.com
 */
 
-void game_is_over(); /* cause an event to end the program */
-int is_game_over();  /* was game_is_over executed */
+void game_is_over(void); /* cause an event to end the program */
+int is_game_over(void);  /* was game_is_over executed */

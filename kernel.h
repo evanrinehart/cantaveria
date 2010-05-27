@@ -22,7 +22,7 @@
    evanrinehart@gmail.com
 */
 
-void draw();
-void update();
-void initialize();
+void draw(void);
+void update(void);
+void initialize(int argc, char* argv[]);
 

@@ -36,7 +36,7 @@ int unicode_getc(char* str, utf32* u);
 
 void rand_reset(unsigned s);
 int randi(int a, int b);
-double randf();
+double randf(void);
 
 char* path_ending(char* path);
 

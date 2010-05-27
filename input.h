@@ -63,7 +63,7 @@ typedef struct {
 void input_init(const char* filename);
 void save_input(const char* filename);
 
-input get_input();
+input get_input(void);
 void remap_last_input(enum input_button, int player);
 void print_last_raw(char* buf, int size);
 

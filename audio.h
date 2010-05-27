@@ -26,8 +26,8 @@
 
 #define BUFFER_SIZE 1024
 
-void audio_lock();
-void audio_unlock();
+void audio_lock(void);
+void audio_unlock(void);
 
-int audio_peak_level();
-int audio_rms_level();
+int audio_peak_level(void);
+int audio_rms_level(void);

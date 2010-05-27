@@ -34,27 +34,27 @@
 
 
 void video_init(int argc, char* argv[]);
-void video_quit();
+void video_quit(void);
 
-int since(); /* ms since last time since() was called */
+int since(void); /* ms since last time since() was called */
 void delay(int ms); /* wait ms ms */
 
-void update_video();
-void clear_video();
+void update_video(void);
+void clear_video(void);
 
 /* gfx control */
 int load_gfx(const char* filename);
 void draw_gfx(int gfxid, int x, int y, int X, int Y, int W, int H);
 void draw_gfx_raw(int gfxid, int x, int y, int X, int Y, int W, int H);
-void clear_gfx();
+void clear_gfx(void);
 void gfx_dimensions(int gfxid, int* w, int* h);
 void screen_dimensions(int* w, int* h);
 
 void draw_black_rect(int x, int y, int w, int h);
 
-void fps_update();
-void fps_draw();
-int get_fps();
+void fps_update(void);
+void fps_draw(void);
+int get_fps(void);
 
-void load_panic_gfx();
+void load_panic_gfx(void);
 void map_pixel(int mx, int my, int *x, int *y);

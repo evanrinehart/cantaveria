@@ -34,4 +34,4 @@ zip_dir* zip_opendir(zip_archive* arc, const char* path);
 char* zip_readdir(zip_dir* dir);
 void zip_closedir(zip_dir* dir);
 
-char* zip_geterror();
+char* zip_geterror(void);

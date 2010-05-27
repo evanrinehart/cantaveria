@@ -20,17 +20,10 @@
 
 #include <video.h>
 
-int cx = 0;
-int cy = 0;
-int cvx = 0;
-int cvy = 0;
+#include <testplayer.h>
 
-int dummy_gfx = 0;
-
-int px = 50;
-int py = 50;
-int pvx = 0;
-int pvy = 0;
+//typedef struct player player;
+static player* pl = NULL;
 
 static void update(){
 	/* 
@@ -39,34 +32,36 @@ static void update(){
 	dispatch collision events
 	execute spawn and delete events
 	*/
-	cx += cvx;
-	cy += cvy;
 
-	int colxx;
-	int colyy;
-	int colx;
-	int coly;
+	int xx;
+	int yy;
 
-	px += pvx;
-	colx = stage_xcollide(px*1024, py*1024, 8*1024, 8*1024, pvx, &colxx);
-	if(colx){
-		px = pvx > 0 ? colxx/1024 - 8 - 1 : colxx/1024 + 1;
-	}
-	
-	py += pvy;
-	coly = stage_ycollide(px*1024, py*1024, 8*1024, 8*1024, pvy, &colyy);
-	if(coly){
-		py = pvy > 0 ? colyy/1024 - 8 - 1: colyy/1024 + 1;
+	int x0 = pl->x;
+	int y0 = pl->y;
+	int x1;
+	int y1;
+
+	update_player(pl);
+	x1 = pl->x;
+	y1 = pl->y;
+
+	if(stage_xcollide(x0, y0, pl->w, pl->h, x1-x0, &xx)){
+		collide_x(pl, xx);
+		x1 = pl->x;
 	}
 
-	point_camera(cx, cy);
+	if(stage_ycollide(x1, y0, pl->w, pl->h, y1-y0, &yy)){
+		collide_y(pl, yy);
+	}
+		
 }
 
 static void draw(){
-	stage_draw_bg(cx, cy);
+	stage_draw_bg(0, 0);
 	//entity_draw_visible(cx, cy);
-	stage_draw_fg(cx, cy);
-	draw_gfx(dummy_gfx,px,py,16,0,8,8);
+	stage_draw_fg(0, 0);
+//	draw_gfx(dummy_gfx,px,py,16,0,8,8);
+	draw_player(pl);
 	//hud_draw(cx, cy);
 }
 
@@ -77,34 +72,12 @@ static void press(input in){
 		game_is_over();
 		return;
 	}
-	//printf("press: %s\n", input_str(in));
 
-	switch(in.button){
-		case LEFT_BUTTON: pvx += -1; break;
-		case RIGHT_BUTTON: pvx += 1; break;
-		case UP_BUTTON: pvy += -1; break;
-		case DOWN_BUTTON: pvy += 1; break;
-		default: break;
-	}
-
-	/*
-	send input events
-	*/
+	player_press(pl, in.button);
 }
 
 static void release(input in){
-	//printf("release: %s\n", input_str(in));
-
-	/*
-	send input events
-	*/
-	switch(in.button){
-		case LEFT_BUTTON: pvx -= -1; break;
-		case RIGHT_BUTTON: pvx -= 1; break;
-		case UP_BUTTON: pvy -= -1; break;
-		case DOWN_BUTTON: pvy -= 1; break;
-		default: break;
-	}
+	player_release(pl, in.button);
 }
 
 void setup_inner(){
@@ -112,6 +85,7 @@ void setup_inner(){
 	console_clear();
 	set_handler(update, draw, press, release);
 
+	pl = mk_test_player(16*3,4*16);
 
 	unload_zone();
 	int x = load_zone("woods");
