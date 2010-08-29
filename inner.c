@@ -8,22 +8,19 @@
 #include <util.h>
 
 #include <input.h>
-//#include <entity.h>
+#include <stage.h>
+#include <entity.h>
 #include <transfer.h>
 #include <gameover.h>
 
 #include <console.h>
 
-#include <stage.h>
 #include <camera.h>
 #include <hud.h>
 
 #include <video.h>
 
-#include <testplayer.h>
 
-//typedef struct player player;
-static player* pl = NULL;
 
 static void update(){
 	/* 
@@ -33,27 +30,10 @@ static void update(){
 	execute spawn and delete events
 	*/
 
-	int xx;
-	int yy;
 
-	int x0 = pl->x;
-	int y0 = pl->y;
-	int x1;
-	int y1;
 
-	update_player(pl);
-	x1 = pl->x;
-	y1 = pl->y;
+	entity_master_simulate();
 
-	if(stage_xcollide(x0, y0, pl->w, pl->h, x1-x0, &xx)){
-		collide_x(pl, xx);
-		x1 = pl->x;
-	}
-
-	if(stage_ycollide(x1, y0, pl->w, pl->h, y1-y0, &yy)){
-		collide_y(pl, yy);
-	}
-		
 }
 
 static void draw(){
@@ -61,8 +41,9 @@ static void draw(){
 	//entity_draw_visible(cx, cy);
 	stage_draw_fg(0, 0);
 //	draw_gfx(dummy_gfx,px,py,16,0,8,8);
-	draw_player(pl);
+//	draw_player(pl);
 	//hud_draw(cx, cy);
+	draw_entities();
 }
 
 
@@ -73,11 +54,11 @@ static void press(input in){
 		return;
 	}
 
-	player_press(pl, in.button);
+	player_press(in.player, in.button);
 }
 
 static void release(input in){
-	player_release(pl, in.button);
+	player_release(in.player, in.button);
 }
 
 void setup_inner(){
@@ -85,7 +66,9 @@ void setup_inner(){
 	console_clear();
 	set_handler(update, draw, press, release);
 
-	pl = mk_test_player(16*3,4*16);
+
+	setup_test_entities();
+
 
 	unload_zone();
 	int x = load_zone("woods");

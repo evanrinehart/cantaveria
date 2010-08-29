@@ -7,7 +7,7 @@ SRC=video.c audio.c input.c kernel.c main.c gameover.c \
     intro.c title.c splash.c inner.c \
     synth.c seq.c midi.c orc.c dsp.c \
     rng.c util.c list.c zip.c \
-    hud.c camera.c testplayer.c
+    hud.c camera.c entity.c ent0.c
 OBJ:=$(SRC:.c=.o)
 CC=gcc
 LIBS=-lSDL -lGL -lm -lz

@@ -18,26 +18,37 @@
    The Free Software Foundation, Inc.
    51 Franklin Street, Fifth Floor
    Boston, MA  02110-1301, USA
+
+   evanrinehart@gmail.com
 */
 
-struct stghit {
-	int yes;
-	int x, y;
-	int vx, vy;
-	int surface;
-	int depth;	
+typedef struct entity Y;
+typedef struct {int x,y,w,h;} rect;
+typedef struct {int a,b,c,d,e,f;} memory;
+
+struct entity {
+	int x; int y; /* spatial */
+	int z; /* z order */
+	int flbits; /* flag bits */
+	int gfx; /* image */
+	memory r; /* general registers */
+	rect box; /* used to detect collision */
+	int (*update)(Y*);
+	int (*stage)(Y*,struct stghit);
+	int (*overlap)(Y*,Y*);
+	int (*diverge)(Y*,Y*);
 };
 
-int load_zone(string filename);
-void unload_zone(void);
-void stage_debug(void);
+void draw_entities(void);
+void setup_test_entities(void);
+void entity_master_simulate(void);
 
-void switch_stage(string id);
+void player_press(int player, enum input_button button);
+void player_release(int player, enum input_button button);
 
-void stage_draw_fg(int cx, int cy);
-void stage_draw_bg(int cx, int cy);
+Y* mk_dummy_ent(int x, int y);
+int mini_rand(int g);
 
 
-struct stghit stage_collide(int x, int y, int vx, int vy);
-struct stghit stage_collide_rect(int x, int y, int w, int h, int vx, int vy);
+
 
