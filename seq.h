@@ -31,6 +31,7 @@ event* seq_advance(int samples, int* used);
 event* seq_get_immediate();
 
 /***/
+void seq_play_sound(int id);
 void seq_instant(int type, int chan, int val1, int val2);
 void seq_clear(void);
 void seq_load(list* events);

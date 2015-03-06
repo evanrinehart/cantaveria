@@ -1,16 +1,17 @@
 PROJECT=cantaveria
 CFLAGS=-g -O2 -Wall -Wextra -Wno-unused-parameter -W -Wundef \
        -Wshadow -Wbad-function-cast -Wcast-align -Wwrite-strings \
-       -Wnested-externs -Werror -Wno-unused-function -Wno-unused-variable
+       -Wnested-externs -Werror -Wno-unused-function -Wno-unused-variable \
+       -Wno-cast-align -Wno-unused-parameter
 SRC=video.c audio.c input.c kernel.c main.c gameover.c \
     loader.c graphics.c sfx.c text.c console.c music.c stage.c \
-    intro.c title.c splash.c inner.c \
+    intro.c title.c splash.c  \
     synth.c seq.c midi.c orc.c dsp.c \
     rng.c util.c list.c zip.c \
-    hud.c camera.c entity.c ent0.c
+    hud.c camera.c entity.c ent0.c soundtest.c
 OBJ:=$(SRC:.c=.o)
 CC=gcc
-LIBS=-lSDL -lGL -lm -lz
+LIBS=-lSDL -lSDLmain -lm -lz -Wl,-framework,Cocoa -framework OpenGL
 
 
 $(PROJECT): $(OBJ) data.zip

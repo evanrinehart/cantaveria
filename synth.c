@@ -258,5 +258,6 @@ void synth_init(){
 	channels[1] = make_channel_from_instrument(ORC_DEFAULT);
 	channels[2] = make_channel_from_instrument(ORC_DEFAULT);
 	channels[3] = make_channel_from_instrument(ORC_DEFAULT);
+  channels[15] = make_channel_from_instrument(ORC_TESTNOISE);
 
 }

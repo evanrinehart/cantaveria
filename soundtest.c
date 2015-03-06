@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+#include <util.h>
+#include <gameover.h>
 #include <input.h>
 #include <graphics.h>
 #include <console.h>
@@ -8,6 +10,8 @@
 
 #include <music.h>
 #include <audio.h>
+#include <midi.h>
+#include <seq.h>
 
 
 int x = 0;
@@ -18,6 +22,7 @@ static void press(input in){
 	}
 
 	if(in.button == FIRE_BUTTON){
+    seq_play_sound(0);
 		console_printf("peak %d dB, rms %d dB", audio_peak_level(), audio_rms_level());
 	}
 
@@ -58,10 +63,16 @@ void setup_inner(){
 	set_handler(update, draw, press, release);
 	console_clear();
 
-	if(music_load("last_battle.mid", MUS_TEST1) < 0){
+  // write a sound effect for the synth
+  // load a sound effect
+  // setup a event (FIRE key) to play the sound effect for the test
+
+/*
+	if(music_load("music/last_battle.mid", MUS_TEST1) < 0){
 		error_msg("open music failed\n");
 	}
 	else{
 		music_play(MUS_TEST1);
 	}
+*/
 }

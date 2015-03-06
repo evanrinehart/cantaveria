@@ -22,6 +22,8 @@
 
 #include <stdio.h>
 
+#include <SDL/SDL.h>
+
 #include <root.h>     /* QUANTUM SLEEP_MS */
 #include <video.h>    /* since() delay() */
 #include <kernel.h>   /* initialize() draw() update() */

@@ -8,6 +8,7 @@ This software comes with no warranty.
 1. This software can be used for any purpose, good or evil.
 2. Modifications must retain this license, at least in spirit.
 */
+#include <stdio.h>
 
 #include <stdlib.h>
 #include <math.h>
@@ -295,12 +296,91 @@ instrument make_karplus(){
 }
 
 
+/** sound effect testbench (TESTNOISE) **/
+
+struct sample {
+  float* samples;
+  int length;
+  int counter;
+  int enabled;
+};
+
+void sample_mix(void* ud, float out[], int count){
+  int i;
+  struct sample* data = ud;
+  int out_count;
+  int start = data->counter;
+
+  if(data->enabled == 0){
+    return;
+  }
+
+  if(data->length - data->counter < count){
+    out_count = data->length - data->counter;
+  }
+  else{
+    out_count = count;
+  }
+
+	for(i=0; i < out_count; i++){
+		out[i] = data->samples[start + i];
+	}
+
+  data->counter += out_count;
+
+  if(data->counter == data->length){
+    data->enabled = 0;
+  }
+}
+
+void sample_control(void* ud, int type, int val1, int val2, int val){
+	struct sample* data = ud;
+  data->counter = 0;
+  data->enabled = 1;
+}
+
+void sample_cleanup(void* ud){
+  struct sample* data = ud;
+  free(data->samples);
+  free(data);
+}
+
+instrument make_testnoise(){
+	instrument ins;
+  int i;
+  struct sample* data = malloc(sizeof(struct sample));
+  data->samples = malloc(44100 * sizeof(float));
+  data->length = 44100;
+  data->counter = 0;
+  data->enabled = 0;
+
+  for(i=0; i<44100; i++){
+    data->samples[i] = 2 * rand()*1.0 / RAND_MAX - 1.0;
+  }
+
+  for(i=0; i<44100; i++){
+    if(i < 22050){
+      data->samples[i] *= i*1.0/22050;
+    }
+    else{
+      data->samples[i] *= (44100-i)*1.0/44100;
+    }
+  }
+
+	ins.mix = sample_mix;
+	ins.control = sample_control;
+	ins.cleanup = sample_cleanup;
+	ins.data = data;
+	return ins;
+}
+
 
 /*** exported methods ***/
 instrument orc_load(enum instrument_name name){
 	switch(name){
 		case ORC_DEFAULT: return make_default();
 		case ORC_KARPLUS: return make_karplus();
+    case ORC_TESTNOISE: return make_testnoise();
 //		case ORC_COOL: return make_cool();
 		default: return make_default();
 	}

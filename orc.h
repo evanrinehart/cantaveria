@@ -33,6 +33,7 @@ typedef struct {
 enum instrument_name {
 ORC_DEFAULT,
 ORC_KARPLUS,
+ORC_TESTNOISE,
 ORC_UNKNOWN
 };
 
